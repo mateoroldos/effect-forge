@@ -1,0 +1,8 @@
+{
+  "name": "effect-forge",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "./scripts/prepare-effect.sh"
+  }
+}
