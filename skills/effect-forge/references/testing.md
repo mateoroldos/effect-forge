@@ -32,6 +32,18 @@ Provisioning inside a test does not itself guarantee isolation: check whether th
 
 Do not use `vi.mock`, `jest.mock`, arbitrary sleeps, or assertions against private calls.
 
+## Property tests
+
+Use fast-check when one assertion should hold across a large input space. Good properties compare independent operations or check an output invariant, for example:
+
+- `decode(encode(value)) === value`
+- `normalize(normalize(value)) === normalize(value)`
+- every legal transition preserves the entity invariant
+
+Do not generate a value from a schema and only assert that the same schema decodes it; that tests the schema against itself.
+
+In Effect tests, prefer `it.effect.prop`. Pass a Schema for valid domain inputs or use `FastCheck` from `effect/testing` for custom generation. Keep named examples and regression cases.
+
 ## Placement
 
 Test an expected failure where its policy is owned. A service authorization failure belongs in the service test; its HTTP status mapping belongs in the handler test; its field presentation belongs in a form test only when the user can correct that field.
