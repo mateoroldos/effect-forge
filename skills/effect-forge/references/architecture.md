@@ -40,6 +40,12 @@ auth-better → core, domain
 
 Applications do not import one another. Adapter packages are imported only by `apps/api`. An architecture check must enforce these directions.
 
+## Package conventions
+
+Declare each dependency in the workspace package that imports it. Put versions shared across workspaces in the root Bun catalog and reference them with `catalog:`. Use `workspace:*` for internal packages.
+
+Run unit tests through package-local `vitest run` scripts and let Turbo orchestrate them from the root. This preserves package-level caching and filtering. Add root Vitest Projects only when a concrete need such as unified coverage justifies giving up that cache boundary.
+
 ## Request flow
 
 ```text

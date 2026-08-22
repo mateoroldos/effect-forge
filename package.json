@@ -7,13 +7,14 @@
   ],
   "type": "module",
   "scripts": {
-    "check": "bun run format:check && bun run lint && bun run check-types",
+    "check": "bun run format:check && bun run lint && bun run check-types && bun run test",
     "check-types": "turbo check-types",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint --no-error-on-unmatched-pattern .",
     "lint:fix": "oxlint --fix --no-error-on-unmatched-pattern .",
-    "prepare": "./scripts/prepare-effect.sh && effect-tsgo patch --oxlint"
+    "prepare": "./scripts/prepare-effect.sh && effect-tsgo patch --oxlint",
+    "test": "turbo test"
   },
   "devDependencies": {
     "@effect/tsgo": "0.36.5",
@@ -23,5 +24,10 @@
     "turbo": "2.10.11",
     "typescript": "7.0.2"
   },
-  "packageManager": "bun@1.4.0"
+  "packageManager": "bun@1.4.0",
+  "catalog": {
+    "@effect/vitest": "4.0.0-beta.107",
+    "effect": "4.0.0-beta.107",
+    "vitest": "4.1.11"
+  }
 }
