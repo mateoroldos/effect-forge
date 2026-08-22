@@ -1,0 +1,22 @@
+{
+  "name": "@effect-forge/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./workspace-directory": "./src/workspace-directory/workspace-directory.ts",
+    "./workspace-store": "./src/workspace-directory/workspace-store.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@effect-forge/domain": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "vitest": "catalog:"
+  }
+}

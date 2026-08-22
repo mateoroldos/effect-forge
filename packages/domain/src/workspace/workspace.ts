@@ -13,6 +13,14 @@ export const WorkspaceName = Schema.String.pipe(
   Schema.brand("WorkspaceName"),
 );
 
+/** A workspace visible to its members. */
+export const Workspace = Schema.Struct({
+  id: WorkspaceId,
+  name: WorkspaceName,
+});
+
+export interface Workspace extends Schema.Schema.Type<typeof Workspace> {}
+
 /** A stable identifier for a workspace. */
 export type WorkspaceId = typeof WorkspaceId.Type;
 

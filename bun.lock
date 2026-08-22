@@ -13,6 +13,18 @@
         "typescript": "7.0.2",
       },
     },
+    "packages/core": {
+      "name": "@effect-forge/core",
+      "version": "0.0.0",
+      "dependencies": {
+        "@effect-forge/domain": "workspace:*",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "vitest": "catalog:",
+      },
+    },
     "packages/domain": {
       "name": "@effect-forge/domain",
       "version": "0.0.0",
@@ -31,6 +43,8 @@
     "vitest": "4.1.11",
   },
   "packages": {
+    "@effect-forge/core": ["@effect-forge/core@workspace:packages/core"],
+
     "@effect-forge/domain": ["@effect-forge/domain@workspace:packages/domain"],
 
     "@effect/tsgo": ["@effect/tsgo@0.36.5", "", { "optionalDependencies": { "@effect/tsgo-darwin-arm64": "0.36.5", "@effect/tsgo-darwin-x64": "0.36.5", "@effect/tsgo-linux-arm": "0.36.5", "@effect/tsgo-linux-arm64": "0.36.5", "@effect/tsgo-linux-x64": "0.36.5", "@effect/tsgo-win32-arm64": "0.36.5", "@effect/tsgo-win32-x64": "0.36.5" }, "bin": { "effect-tsgo": "dist/effect-tsgo.cjs" } }, "sha512-BHxVjeRK1/XlqYHWXkbT4W9JpOrT3sNA2wrfwQPBTojD5OSyxI2TUIltobYhWudyfuCrn770qP6uOpDjdrmghA=="],
