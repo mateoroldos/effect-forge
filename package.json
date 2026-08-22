@@ -11,8 +11,8 @@
     "check-types": "turbo check-types",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "lint": "oxlint --no-error-on-unmatched-pattern .",
-    "lint:fix": "oxlint --fix --no-error-on-unmatched-pattern .",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
     "prepare": "./scripts/prepare-effect.sh && effect-tsgo patch --oxlint",
     "test": "turbo test"
   },
