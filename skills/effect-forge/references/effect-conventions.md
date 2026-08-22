@@ -7,11 +7,8 @@ Verify these shapes against the installed Effect version before implementation.
 Domain modules contain pure schemas, values, invariants, and decisions shared across boundaries.
 
 ```ts
-export const AgentId = Schema.String.pipe(
-  Schema.check(Schema.isUUID(4)),
-  Schema.brand("AgentId"),
-)
-export type AgentId = typeof AgentId.Type
+export const AgentId = Schema.String.pipe(Schema.check(Schema.isUUID(4)), Schema.brand("AgentId"));
+export type AgentId = typeof AgentId.Type;
 ```
 
 Parse unknown input in HTTP handlers and raw provider data in adapters. Pass domain values inward.
@@ -29,7 +26,7 @@ packages/core/src/agent-directory/
 
 ```ts
 export interface Interface {
-  readonly create: (input: CreateInput) => Effect.Effect<Agent, CreateError>
+  readonly create: (input: CreateInput) => Effect.Effect<Agent, CreateError>;
 }
 
 export class Service extends Context.Service<Service, Interface>()(
@@ -37,16 +34,16 @@ export class Service extends Context.Service<Service, Interface>()(
 ) {}
 
 const make = Effect.gen(function* () {
-  const store = yield* AgentStore.Service
+  const store = yield* AgentStore.Service;
 
   const create = Effect.fn("AgentDirectory.create")(function* (input) {
-    return yield* store.create(input)
-  })
+    return yield* store.create(input);
+  });
 
-  return Service.of({ create })
-})
+  return Service.of({ create });
+});
 
-export const layerWithoutDependencies = Layer.effect(Service, make)
+export const layerWithoutDependencies = Layer.effect(Service, make);
 ```
 
 Yield stable dependencies in `make`. Pass request values such as an authenticated principal as method input. Keep method requirement channels empty unless the dependency is genuinely operation-scoped.
@@ -69,10 +66,9 @@ Adapters decode external values and translate technology failures into port fail
 Expected failures are typed values:
 
 ```ts
-export class NotFound extends Schema.TaggedErrorClass<NotFound>()(
-  "AgentDirectory.NotFound",
-  { id: AgentId },
-) {}
+export class NotFound extends Schema.TaggedErrorClass<NotFound>()("AgentDirectory.NotFound", {
+  id: AgentId,
+}) {}
 ```
 
 Translate failures at ownership boundaries. HTTP handlers project application failures into the public API error schema. Defects and interruptions remain defects and interruptions.

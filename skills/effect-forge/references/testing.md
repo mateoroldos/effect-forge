@@ -2,14 +2,14 @@
 
 Test through public interfaces. Each seam verifies the behavior it owns.
 
-| Seam | What it verifies |
-|---|---|
-| Domain | parsing, invariants, permission decisions |
-| Application service | policy and effect ordering |
-| PostgreSQL adapter | SQL, scoping, constraints, row decoding |
-| HTTP | request decoding, middleware, public error projection |
-| Web state | form error mapping, invalidation, optimistic apply and rollback |
-| End-to-end | representative critical request flows without repeating every lower-level branch |
+| Seam                | What it verifies                                                                 |
+| ------------------- | -------------------------------------------------------------------------------- |
+| Domain              | parsing, invariants, permission decisions                                        |
+| Application service | policy and effect ordering                                                       |
+| PostgreSQL adapter  | SQL, scoping, constraints, row decoding                                          |
+| HTTP                | request decoding, middleware, public error projection                            |
+| Web state           | form error mapping, invalidation, optimistic apply and rollback                  |
+| End-to-end          | representative critical request flows without repeating every lower-level branch |
 
 ## Test doubles
 

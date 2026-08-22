@@ -55,11 +55,11 @@ TanStack Start server functions do not proxy ordinary application requests. Use 
 
 ## Transport tiers
 
-| Transport | Audience |
-|---|---|
+| Transport        | Audience                                                           |
+| ---------------- | ------------------------------------------------------------------ |
 | Effect `HttpApi` | stable resources used by web, mobile, CLI, agents, or integrations |
-| Effect RPC | private UI operations or streams that may change with the web app |
-| Alchemy RPC | trusted worker-to-worker calls |
+| Effect RPC       | private UI operations or streams that may change with the web app  |
+| Alchemy RPC      | trusted worker-to-worker calls                                     |
 
 Start with `HttpApi`. Add another transport only with an operation that belongs to it.
 

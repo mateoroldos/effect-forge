@@ -1,0 +1,10 @@
+[tools]
+bun = "1.4.0"
+
+[tasks.setup]
+description = "Install the pinned toolchain and workspace dependencies"
+run = ["mise install", "bun install"]
+
+[tasks.check]
+description = "Run all repository checks"
+run = "bun run check"

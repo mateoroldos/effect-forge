@@ -2,14 +2,14 @@
 
 ## Ownership
 
-| Tool | Responsibility |
-|---|---|
-| TanStack Start | SSR, streaming, web runtime, deployment entry |
-| TanStack Router | routes, search parameters, navigation, loaders |
-| Effect Atom | remote state, Effects, caching, invalidation, optimistic updates, streams |
-| TanStack Form | form drafts, field interaction, client validation |
-| Effect Schema | canonical input validation |
-| React state | component-local presentation state |
+| Tool            | Responsibility                                                            |
+| --------------- | ------------------------------------------------------------------------- |
+| TanStack Start  | SSR, streaming, web runtime, deployment entry                             |
+| TanStack Router | routes, search parameters, navigation, loaders                            |
+| Effect Atom     | remote state, Effects, caching, invalidation, optimistic updates, streams |
+| TanStack Form   | form drafts, field interaction, client validation                         |
+| Effect Schema   | canonical input validation                                                |
+| React state     | component-local presentation state                                        |
 
 Do not add TanStack Query alongside Effect Atom.
 
