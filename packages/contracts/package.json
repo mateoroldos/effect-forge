@@ -1,0 +1,17 @@
+{
+  "name": "@effect-forge/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/api.ts",
+    "./workspaces": "./src/workspaces.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@effect-forge/domain": "workspace:*",
+    "effect": "catalog:"
+  }
+}
