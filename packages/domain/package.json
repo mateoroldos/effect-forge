@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./email-address": "./src/email-address/email-address.ts"
+    "./email-address": "./src/email-address/email-address.ts",
+    "./workspace": "./src/workspace/workspace.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
