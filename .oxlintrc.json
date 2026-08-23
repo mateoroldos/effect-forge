@@ -1,5 +1,14 @@
 {
   "$schema": "./node_modules/@effect/tsgo/oxlint-schema.json",
   "extends": ["./node_modules/@effect/tsgo/oxlint-presets/recommended.json"],
-  "ignorePatterns": [".agents/**", ".repos/**", "node_modules/**"]
+  "ignorePatterns": [".agents/**", ".repos/**", "node_modules/**"],
+  "rules": {
+    "oxc/no-barrel-file": "error",
+    "vitest/no-restricted-vi-methods": [
+      "error",
+      {
+        "mock": "Use substitute Layers instead of module mocks."
+      }
+    ]
+  }
 }
