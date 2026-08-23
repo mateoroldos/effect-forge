@@ -13,40 +13,53 @@ export type AgentId = typeof AgentId.Type;
 
 Parse unknown input in HTTP handlers and raw provider data in adapters. Pass domain values inward.
 
-## Application service
+Default records to `Schema.Struct(...)` plus a same-name interface:
+
+```ts
+export const Agent = Schema.Struct({
+  id: AgentId,
+  name: AgentName,
+});
+
+export interface Agent extends Schema.Schema.Type<typeof Agent> {}
+```
+
+Default records to `Schema.Struct`; use class semantics only when the domain requires them. Follow Effect Kit for construction and the installed Effect version's schema APIs.
+
+## Application modules
 
 ```text
 packages/core/src/agent-directory/
-├─ index.ts
 ├─ agent-directory.ts
-└─ agent-store/
-   ├─ index.ts
-   └─ agent-store.ts
+├─ agent-store.ts
+└─ agent-directory.test.ts
 ```
+
+Create a subdirectory only when several cohesive files need one shared boundary.
+
+Use file-local role names and one canonical self-exported ES module namespace:
 
 ```ts
 export interface Interface {
-  readonly create: (input: CreateInput) => Effect.Effect<Agent, CreateError>;
+  readonly create: (name: AgentName) => Effect.Effect<Agent, AgentStore.NameTaken>;
 }
 
 export class Service extends Context.Service<Service, Interface>()(
   "@effect-forge/core/AgentDirectory",
 ) {}
 
-const make = Effect.gen(function* () {
-  const store = yield* AgentStore.Service;
-
-  const create = Effect.fn("AgentDirectory.create")(function* (input) {
-    return yield* store.create(input);
-  });
-
-  return Service.of({ create });
-});
-
-export const layerWithoutDependencies = Layer.effect(Service, make);
+export * as AgentDirectory from "./agent-directory.ts";
 ```
 
-Yield stable dependencies in `make`. Pass request values such as an authenticated principal as method input. Keep method requirement channels empty unless the dependency is genuinely operation-scoped.
+Consumers use a named import without defining their own alias:
+
+```ts
+import { AgentDirectory } from "./agent-directory.ts";
+
+const directory = yield * AgentDirectory.Service;
+```
+
+Yield stable dependencies while constructing a service. Pass request values such as an authenticated principal as method input. Keep method requirement channels empty unless a dependency is genuinely operation-scoped.
 
 ## Ports and adapters
 
@@ -59,19 +72,22 @@ AgentDirectory
     └─ AgentStoreMemory
 ```
 
-Adapters decode external values and translate technology failures into port failures. Production adapters live outside `core`; substitute adapters are provided by tests.
+Adapters decode external values and translate technology failures into port failures. Production adapters live outside `core`; substitute adapters implement the same port.
 
 ## Errors
 
-Expected failures are typed values:
+Expected failures are typed values owned by the boundary that introduces them:
 
 ```ts
-export class NotFound extends Schema.TaggedErrorClass<NotFound>()("AgentDirectory.NotFound", {
-  id: AgentId,
-}) {}
+export class PersistenceError extends Schema.TaggedError<PersistenceError>()(
+  "AgentStore.PersistenceError",
+  { cause: Schema.Defect() },
+) {}
 ```
 
-Translate failures at ownership boundaries. HTTP handlers project application failures into the public API error schema. Defects and interruptions remain defects and interruptions.
+A port owns stable errors that its adapters produce. An application service owns workflow errors and may propagate port errors when it adds no new meaning. Keep technology errors behind adapters and retain underlying causes for diagnostics.
+
+HTTP handlers project application failures into public API errors. Defects and interruptions remain defects and interruptions.
 
 ## Layers
 

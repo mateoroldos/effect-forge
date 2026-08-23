@@ -32,6 +32,10 @@ Provisioning inside a test does not itself guarantee isolation: check whether th
 
 Do not use `vi.mock`, `jest.mock`, arbitrary sleeps, or assertions against private calls.
 
+### Substitute adapters
+
+A substitute Layer implements the existing port; it is not a parallel testing service. Use it through the application service when testing application behavior. A shared port contract may exercise the port directly. Do not add inspection-only services or application queries.
+
 ## Property tests
 
 Use fast-check when one assertion should hold across a large input space. Good properties compare independent operations or check an output invariant, for example:
