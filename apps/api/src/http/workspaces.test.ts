@@ -2,27 +2,47 @@ import { assert, describe, it } from "@effect/vitest";
 import { Workspaces } from "@effect-forge/contracts/workspaces";
 import { WorkspaceDirectory } from "@effect-forge/core/workspace-directory";
 import { WorkspaceStore } from "@effect-forge/core/workspace-store";
+import { CryptoTest } from "@effect-forge/core/test/crypto";
+import { DatabasePglite } from "@effect-forge/database/test/database-pglite";
+import { WorkspaceStorePostgres } from "@effect-forge/database/workspace-store-postgres";
 import { Workspace, WorkspaceId, WorkspaceName } from "@effect-forge/domain/workspace";
-import { Effect, Schema } from "effect";
+import { Effect, Layer, Schema } from "effect";
+import { ApiHttp } from "../runtime/api-http.ts";
 import { ApiTest } from "../test/api-test.ts";
 
-const idFailureLayer = ApiTest.layerWithDirectory(
+const storeLayer = WorkspaceStorePostgres.layer.pipe(Layer.provide(DatabasePglite.layer));
+const directoryLayer = WorkspaceDirectory.layerWithoutDependencies.pipe(
+  Layer.provide(Layer.merge(CryptoTest.layer, storeLayer)),
+);
+const testLayer = ApiTest.layer(
+  ApiHttp.layerWithoutDependencies.pipe(Layer.provide(directoryLayer)),
+);
+
+const idFailureDirectoryLayer = Layer.succeed(
+  WorkspaceDirectory.Service,
   WorkspaceDirectory.Service.of({
     create: () => Effect.fail(new WorkspaceDirectory.IdGenerationError({ cause: "unavailable" })),
     findById: () => Effect.die("unexpected workspace lookup"),
   }),
 );
+const idFailureLayer = ApiTest.layer(
+  ApiHttp.layerWithoutDependencies.pipe(Layer.provide(idFailureDirectoryLayer)),
+);
 
 const persistenceFailure = new WorkspaceStore.PersistenceError({ cause: "unavailable" });
-const persistenceFailureLayer = ApiTest.layerWithDirectory(
+const persistenceFailureDirectoryLayer = Layer.succeed(
+  WorkspaceDirectory.Service,
   WorkspaceDirectory.Service.of({
     create: () => Effect.fail(persistenceFailure),
     findById: () => Effect.fail(persistenceFailure),
   }),
 );
+const persistenceFailureLayer = ApiTest.layer(
+  ApiHttp.layerWithoutDependencies.pipe(Layer.provide(persistenceFailureDirectoryLayer)),
+);
 
 describe("workspace HTTP API", () => {
-  it.layer(ApiTest.layer)("creation", (it) => {
+  it.layer(testLayer)("creation", (it) => {
     it.effect("returns 201 and retrieves the workspace", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
@@ -47,7 +67,7 @@ describe("workspace HTTP API", () => {
     );
   });
 
-  it.layer(ApiTest.layer)("name conflict", (it) => {
+  it.layer(testLayer)("name conflict", (it) => {
     it.effect("returns WorkspaceNameTaken", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
@@ -85,7 +105,7 @@ describe("workspace HTTP API", () => {
     );
   });
 
-  it.layer(ApiTest.layer)("missing workspace", (it) => {
+  it.layer(testLayer)("missing workspace", (it) => {
     it.effect("returns WorkspaceNotFound", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
@@ -126,7 +146,7 @@ describe("workspace HTTP API", () => {
     );
   });
 
-  it.layer(ApiTest.layer)("malformed name", (it) => {
+  it.layer(testLayer)("malformed name", (it) => {
     it.effect("returns 400", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
@@ -140,7 +160,7 @@ describe("workspace HTTP API", () => {
     );
   });
 
-  it.layer(ApiTest.layer)("malformed identifier", (it) => {
+  it.layer(testLayer)("malformed identifier", (it) => {
     it.effect("returns 400", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
