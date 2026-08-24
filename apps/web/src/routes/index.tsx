@@ -7,7 +7,7 @@ import { FindWorkspaceForm } from "../features/workspaces/find-workspace-form.ts
 const WorkspaceSearch = Schema.Struct({ workspaceId: Schema.optional(Schema.String) });
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search) => Schema.decodeSync(WorkspaceSearch)(search),
+  validateSearch: Schema.toStandardSchemaV1(WorkspaceSearch),
   component: LandingPage,
 });
 
