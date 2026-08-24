@@ -5,7 +5,7 @@ import { NodeCrypto } from "@effect/platform-node";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as SQL from "alchemy/SQL/Postgres";
 import { Effect, Layer } from "effect";
-import { HttpRouter } from "effect/unstable/http";
+import { HttpMiddleware, HttpRouter } from "effect/unstable/http";
 import { App } from "./app.ts";
 import { Database } from "./database.ts";
 
@@ -26,8 +26,10 @@ export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
     );
     const apiLayer = App.layerWithoutDependencies.pipe(Layer.provide(directoryLayer));
 
+    const httpApp = yield* HttpRouter.toHttpEffect(apiLayer);
+
     return {
-      fetch: yield* HttpRouter.toHttpEffect(apiLayer),
+      fetch: httpApp.pipe(HttpMiddleware.cors()),
     };
   }).pipe(Effect.provide(Cloudflare.Hyperdrive.ConnectBinding)),
 ) {}
