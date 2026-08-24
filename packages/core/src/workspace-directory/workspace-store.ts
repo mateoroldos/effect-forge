@@ -1,8 +1,8 @@
-import { Workspace, WorkspaceId, WorkspaceName } from "@effect-forge/domain/workspace";
-import { Context, Effect, Option, Schema } from "effect";
+import { Workspace, WorkspaceName } from "@effect-forge/domain/workspace";
+import { Context, Effect, Schema } from "effect";
 
 export interface Interface {
-  readonly findById: (id: WorkspaceId) => Effect.Effect<Option.Option<Workspace>, PersistenceError>;
+  readonly list: Effect.Effect<ReadonlyArray<Workspace>, PersistenceError>;
   readonly insert: (workspace: Workspace) => Effect.Effect<Workspace, NameTaken | PersistenceError>;
 }
 

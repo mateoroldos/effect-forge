@@ -1,5 +1,5 @@
 import { Workspace, WorkspaceId } from "@effect-forge/domain/workspace";
-import { Effect, Layer, Option, Ref } from "effect";
+import { Effect, Layer, Ref } from "effect";
 import { WorkspaceStore } from "./workspace-store.ts";
 
 export const layer = Layer.effect(
@@ -8,8 +8,7 @@ export const layer = Layer.effect(
     const state = yield* Ref.make(new Map<WorkspaceId, Workspace>());
 
     return WorkspaceStore.Service.of({
-      findById: (id) =>
-        Ref.get(state).pipe(Effect.map((workspaces) => Option.fromNullishOr(workspaces.get(id)))),
+      list: Ref.get(state).pipe(Effect.map((workspaces) => Array.from(workspaces.values()))),
       insert: (workspace) =>
         Ref.modify(
           state,

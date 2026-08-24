@@ -1,4 +1,4 @@
-import { Workspace, WorkspaceId, WorkspaceName } from "@effect-forge/domain/workspace";
+import { Workspace, WorkspaceName } from "@effect-forge/domain/workspace";
 import { Schema } from "effect";
 import {
   HttpApiEndpoint,
@@ -8,31 +8,25 @@ import {
 } from "effect/unstable/httpapi";
 
 /** Indicates that a workspace already uses the requested name. */
-export class WorkspaceNameTaken extends Schema.TaggedError<WorkspaceNameTaken>()(
-  "Workspaces.WorkspaceNameTaken",
+export class NameTaken extends Schema.TaggedError<NameTaken>()(
+  "WorkspaceApi.NameTaken",
   { name: WorkspaceName },
   { httpApiStatus: 409 },
 ) {}
 
-/** Indicates that no workspace exists for the requested identifier. */
-export class WorkspaceNotFound extends Schema.TaggedError<WorkspaceNotFound>()(
-  "Workspaces.WorkspaceNotFound",
-  { id: WorkspaceId },
-  { httpApiStatus: 404 },
-) {}
+export const CreatePayload = Schema.Struct({ name: WorkspaceName });
 
-/** Public HTTP endpoints for creating and retrieving workspaces. */
+/** Public HTTP endpoints for listing and creating workspaces. */
 export const Group = HttpApiGroup.make("workspaces").add(
   HttpApiEndpoint.post("create", "/workspaces", {
-    payload: Schema.Struct({ name: WorkspaceName }),
+    payload: CreatePayload,
     success: Workspace.pipe(HttpApiSchema.status(201)),
-    error: [WorkspaceNameTaken, HttpApiError.InternalServerErrorNoContent],
+    error: [NameTaken, HttpApiError.InternalServerErrorNoContent],
   }),
-  HttpApiEndpoint.get("findById", "/workspaces/:id", {
-    params: { id: WorkspaceId },
-    success: Workspace,
-    error: [WorkspaceNotFound, HttpApiError.InternalServerErrorNoContent],
+  HttpApiEndpoint.get("list", "/workspaces", {
+    success: Schema.Array(Workspace),
+    error: HttpApiError.InternalServerErrorNoContent,
   }),
 );
 
-export * as Workspaces from "./workspaces.ts";
+export * as WorkspaceApi from "./workspaces.ts";

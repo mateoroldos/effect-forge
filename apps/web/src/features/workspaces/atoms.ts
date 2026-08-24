@@ -1,12 +1,26 @@
-import type { WorkspaceId } from "@effect-forge/domain/workspace";
+import type { Workspace, WorkspaceName } from "@effect-forge/domain/workspace";
+import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { AppApiClient } from "../../lib/api/app-api-client.ts";
 
-/** Retrieves one workspace and can be serialized for SSR hydration. */
-export const findWorkspaceQuery = (id: WorkspaceId) =>
-  AppApiClient.query("workspaces", "findById", {
-    params: { id },
-    serializationKey: id,
-  });
+export type WorkspaceItem =
+  | { readonly _tag: "Saved"; readonly workspace: Workspace }
+  | { readonly _tag: "Pending"; readonly name: WorkspaceName };
 
-/** Creates a workspace through the typed public API. */
-export const createWorkspaceMutation = AppApiClient.mutation("workspaces", "create");
+const listWorkspaces = AppApiClient.query("workspaces", "list", {}).pipe(
+  Atom.map(
+    AsyncResult.map((workspaces): ReadonlyArray<WorkspaceItem> =>
+      workspaces.map((workspace) => ({ _tag: "Saved", workspace })),
+    ),
+  ),
+);
+
+export const workspaces = Atom.optimistic(listWorkspaces);
+
+export const createWorkspace = Atom.optimisticFn(workspaces, {
+  reducer: (current, { payload }) =>
+    AsyncResult.map(current, (items) => [
+      ...items,
+      { _tag: "Pending" as const, name: payload.name },
+    ]),
+  fn: AppApiClient.mutation("workspaces", "create"),
+});

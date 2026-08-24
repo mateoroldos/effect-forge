@@ -1,5 +1,5 @@
 import { Workspace, WorkspaceId, WorkspaceName } from "@effect-forge/domain/workspace";
-import { Context, Crypto, Effect, Layer, Option, Schema } from "effect";
+import { Context, Crypto, Effect, Layer, Schema } from "effect";
 import { WorkspaceStore } from "./workspace-store.ts";
 
 const decodeWorkspaceId = Schema.decodeSync(WorkspaceId);
@@ -11,9 +11,7 @@ export interface Interface {
     Workspace,
     IdGenerationError | WorkspaceStore.NameTaken | WorkspaceStore.PersistenceError
   >;
-  readonly findById: (
-    id: WorkspaceId,
-  ) => Effect.Effect<Option.Option<Workspace>, WorkspaceStore.PersistenceError>;
+  readonly list: Effect.Effect<ReadonlyArray<Workspace>, WorkspaceStore.PersistenceError>;
 }
 
 /** Creates and retrieves workspaces. */
@@ -40,11 +38,7 @@ const make = Effect.gen(function* () {
     return yield* store.insert(Workspace.make({ id, name }));
   });
 
-  const findById = Effect.fn("WorkspaceDirectory.findById")((id: WorkspaceId) =>
-    store.findById(id),
-  );
-
-  return Service.of({ create, findById });
+  return Service.of({ create, list: store.list });
 });
 
 /** Builds `WorkspaceDirectory` while leaving its platform and persistence dependencies open. */

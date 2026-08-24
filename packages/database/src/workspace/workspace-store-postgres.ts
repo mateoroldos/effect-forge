@@ -1,6 +1,6 @@
 import { WorkspaceStore } from "@effect-forge/core/workspace-store";
-import { Workspace, type WorkspaceId } from "@effect-forge/domain/workspace";
-import { eq } from "drizzle-orm";
+import { Workspace } from "@effect-forge/domain/workspace";
+import { asc } from "drizzle-orm";
 import { Cause, Effect, Layer, Option, Schema } from "effect";
 import * as SqlError from "effect/unstable/sql/SqlError";
 import { DatabasePostgres } from "../database-postgres.ts";
@@ -35,24 +35,16 @@ export const layer = Layer.effect(
         ),
     );
 
-    const findById = Effect.fn("WorkspaceStorePostgres.findById")((id: WorkspaceId) =>
-      database
-        .select()
-        .from(workspaces)
-        .where(eq(workspaces.id, id))
-        .limit(1)
-        .pipe(
-          Effect.flatMap((rows) => {
-            const row = rows[0];
-            return row === undefined
-              ? Effect.succeed(Option.none())
-              : Schema.decodeEffect(Workspace)(row).pipe(Effect.map(Option.some));
-          }),
-          Effect.mapError((cause) => new WorkspaceStore.PersistenceError({ cause })),
-        ),
-    );
+    const list = database
+      .select()
+      .from(workspaces)
+      .orderBy(asc(workspaces.name))
+      .pipe(
+        Effect.flatMap(Schema.decodeEffect(Schema.Array(Workspace))),
+        Effect.mapError((cause) => new WorkspaceStore.PersistenceError({ cause })),
+      );
 
-    return WorkspaceStore.Service.of({ insert, findById });
+    return WorkspaceStore.Service.of({ insert, list });
   }),
 );
 

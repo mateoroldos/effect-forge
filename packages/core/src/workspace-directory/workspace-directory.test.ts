@@ -1,6 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { WorkspaceName } from "@effect-forge/domain/workspace";
-import { Crypto, Effect, Layer, Option, PlatformError, Schema } from "effect";
+import { Crypto, Effect, Layer, PlatformError, Schema } from "effect";
 import { CryptoTest } from "../test/crypto-test.ts";
 import { WorkspaceDirectory } from "./workspace-directory.ts";
 import { WorkspaceStoreMemory } from "./workspace-store-memory.ts";
@@ -35,10 +35,8 @@ describe("WorkspaceDirectory", () => {
         const directory = yield* WorkspaceDirectory.Service;
 
         const created = yield* directory.create(workspaceName);
-        const persisted = yield* directory.findById(created.id);
-
         assert.strictEqual(created.id, "00000000-0000-4000-8000-000000000000");
-        assert.deepEqual(persisted, Option.some(created));
+        assert.deepEqual(yield* directory.list, [created]);
       }),
     );
   });

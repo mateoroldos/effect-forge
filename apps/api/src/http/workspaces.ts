@@ -1,7 +1,7 @@
 import { AppApi } from "@effect-forge/contracts";
-import { Workspaces } from "@effect-forge/contracts/workspaces";
+import { WorkspaceApi } from "@effect-forge/contracts/workspaces";
 import { WorkspaceDirectory } from "@effect-forge/core/workspace-directory";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import { HttpApiBuilder, HttpApiError } from "effect/unstable/httpapi";
 
 /** Implements the workspace HTTP contract through `WorkspaceDirectory`. */
@@ -14,7 +14,7 @@ export const layer = HttpApiBuilder.group(AppApi.Api, "workspaces", (handlers) =
         directory.create(payload.name).pipe(
           Effect.catchTags({
             "WorkspaceStore.NameTaken": (error) =>
-              Effect.fail(new Workspaces.WorkspaceNameTaken({ name: error.name })),
+              Effect.fail(new WorkspaceApi.NameTaken({ name: error.name })),
             "WorkspaceDirectory.IdGenerationError": () =>
               Effect.fail(new HttpApiError.InternalServerError({})),
             "WorkspaceStore.PersistenceError": () =>
@@ -22,14 +22,8 @@ export const layer = HttpApiBuilder.group(AppApi.Api, "workspaces", (handlers) =
           }),
         ),
       )
-      .handle("findById", ({ params }) =>
-        directory.findById(params.id).pipe(
-          Effect.flatMap(
-            Option.match({
-              onNone: () => Effect.fail(new Workspaces.WorkspaceNotFound({ id: params.id })),
-              onSome: Effect.succeed,
-            }),
-          ),
+      .handle("list", () =>
+        directory.list.pipe(
           Effect.catchTag("WorkspaceStore.PersistenceError", () =>
             Effect.fail(new HttpApiError.InternalServerError({})),
           ),
