@@ -3,16 +3,29 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./postgres": "./src/database-postgres.ts",
+    "./workspace-store-postgres": "./src/workspace/workspace-store-postgres.ts"
+  },
   "scripts": {
     "check-types": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run"
   },
   "dependencies": {
-    "drizzle-orm": "catalog:"
+    "@effect-forge/core": "workspace:*",
+    "@effect-forge/domain": "workspace:*",
+    "@effect/sql-pg": "catalog:",
+    "drizzle-orm": "catalog:",
+    "effect": "catalog:",
+    "pg": "catalog:"
   },
   "devDependencies": {
+    "@effect/sql-pglite": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@electric-sql/pglite": "catalog:",
     "@types/bun": "catalog:",
+    "@types/pg": "catalog:",
     "drizzle-kit": "catalog:",
     "vitest": "catalog:"
   }
