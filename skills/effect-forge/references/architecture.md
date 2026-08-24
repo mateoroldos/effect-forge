@@ -6,8 +6,9 @@
 apps/
 ├─ api/
 │  ├─ src/http/              HttpApi handlers
-│  ├─ src/runtime/           service and HTTP graphs
-│  └─ alchemy.run.ts         API infrastructure
+│  ├─ src/app.ts             dependency-open HTTP application graph
+│  ├─ src/database.ts        database infrastructure resources
+│  └─ src/worker.ts          Worker entrypoint and production composition
 └─ web/
    ├─ src/routes/            TanStack Start routes
    ├─ src/features/          capability UI

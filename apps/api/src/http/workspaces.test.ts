@@ -7,16 +7,14 @@ import { DatabasePglite } from "@effect-forge/database/test/database-pglite";
 import { WorkspaceStorePostgres } from "@effect-forge/database/workspace-store-postgres";
 import { Workspace, WorkspaceId, WorkspaceName } from "@effect-forge/domain/workspace";
 import { Effect, Layer, Schema } from "effect";
-import { ApiHttp } from "../runtime/api-http.ts";
+import { App } from "../app.ts";
 import { ApiTest } from "../test/api-test.ts";
 
 const storeLayer = WorkspaceStorePostgres.layer.pipe(Layer.provide(DatabasePglite.layer));
 const directoryLayer = WorkspaceDirectory.layerWithoutDependencies.pipe(
   Layer.provide(Layer.merge(CryptoTest.layer, storeLayer)),
 );
-const testLayer = ApiTest.layer(
-  ApiHttp.layerWithoutDependencies.pipe(Layer.provide(directoryLayer)),
-);
+const testLayer = ApiTest.layer(App.layerWithoutDependencies.pipe(Layer.provide(directoryLayer)));
 
 const idFailureDirectoryLayer = Layer.succeed(
   WorkspaceDirectory.Service,
@@ -26,7 +24,7 @@ const idFailureDirectoryLayer = Layer.succeed(
   }),
 );
 const idFailureLayer = ApiTest.layer(
-  ApiHttp.layerWithoutDependencies.pipe(Layer.provide(idFailureDirectoryLayer)),
+  App.layerWithoutDependencies.pipe(Layer.provide(idFailureDirectoryLayer)),
 );
 
 const persistenceFailure = new WorkspaceStore.PersistenceError({ cause: "unavailable" });
@@ -38,7 +36,7 @@ const persistenceFailureDirectoryLayer = Layer.succeed(
   }),
 );
 const persistenceFailureLayer = ApiTest.layer(
-  ApiHttp.layerWithoutDependencies.pipe(Layer.provide(persistenceFailureDirectoryLayer)),
+  App.layerWithoutDependencies.pipe(Layer.provide(persistenceFailureDirectoryLayer)),
 );
 
 describe("workspace HTTP API", () => {

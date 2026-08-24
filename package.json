@@ -8,8 +8,10 @@
   "type": "module",
   "scripts": {
     "check": "bun run format:check && bun run lint && bun run check-types && bun run test",
-    "check-types": "turbo check-types",
+    "check-types": "tsc --noEmit && turbo check-types",
     "db:generate": "bun run --cwd packages/database db:generate",
+    "deploy": "alchemy deploy",
+    "dev": "alchemy dev",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint .",
