@@ -12,11 +12,6 @@ const storeLayer = WorkspaceStorePostgres.layer.pipe(Layer.provide(DatabasePglit
 const directoryLayer = WorkspaceDirectory.layerWithoutDependencies.pipe(
   Layer.provide(Layer.merge(CryptoTest.layer, storeLayer)),
 );
-const handlerLayer = WorkspacesHttp.layer.pipe(Layer.provide(directoryLayer));
-const apiLayer = HttpApiBuilder.layer(AppApi.Api).pipe(
-  Layer.provide(handlerLayer),
-  Layer.provide(HttpServer.layerServices),
-);
 
 /** Executes Fetch requests against the workspace API test graph. */
 export class Service extends Context.Service<
@@ -27,16 +22,21 @@ export class Service extends Context.Service<
   ) => Effect.Effect<Response, Schema.SchemaError>
 >()("@effect-forge/api/ApiTest") {}
 
-/** Provides an isolated Fetch handler backed by migrated PGlite. */
-export const layer = Layer.effect(
-  Service,
-  Effect.acquireRelease(
-    Effect.sync(() => HttpRouter.toWebHandler(apiLayer, { disableLogger: true })),
-    ({ dispose }) => Effect.promise(dispose),
-  ).pipe(
-    Effect.map(({ handler }) =>
-      Service.of(
-        Effect.fn(function* (path, options) {
+const makeLayer = (providedDirectoryLayer: typeof directoryLayer) => {
+  const handlerLayer = WorkspacesHttp.layer.pipe(Layer.provide(providedDirectoryLayer));
+  const apiLayer = HttpApiBuilder.layer(AppApi.Api).pipe(
+    Layer.provide(handlerLayer),
+    Layer.provide(HttpServer.layerServices),
+  );
+
+  return Layer.effect(
+    Service,
+    Effect.gen(function* () {
+      const { handler, dispose } = HttpRouter.toWebHandler(apiLayer, { disableLogger: true });
+      yield* Effect.addFinalizer(() => Effect.promise(dispose));
+
+      return Service.of(
+        Effect.fn("ApiTest.request")(function* (path, options) {
           const init: RequestInit = { method: options?.method ?? "GET" };
 
           if (options?.body !== undefined) {
@@ -50,9 +50,16 @@ export const layer = Layer.effect(
             handler(new Request(`http://effect-forge.test${path}`, init)),
           );
         }),
-      ),
-    ),
-  ),
-);
+      );
+    }),
+  );
+};
+
+/** Provides an isolated Fetch handler backed by migrated PGlite. */
+export const layer = makeLayer(directoryLayer);
+
+/** Provides an isolated Fetch handler with a substitute workspace directory. */
+export const layerWithDirectory = (directory: WorkspaceDirectory.Interface) =>
+  makeLayer(Layer.succeed(WorkspaceDirectory.Service, directory));
 
 export * as ApiTest from "./api-test.ts";

@@ -1,8 +1,25 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Workspaces } from "@effect-forge/contracts/workspaces";
+import { WorkspaceDirectory } from "@effect-forge/core/workspace-directory";
+import { WorkspaceStore } from "@effect-forge/core/workspace-store";
 import { Workspace, WorkspaceId, WorkspaceName } from "@effect-forge/domain/workspace";
 import { Effect, Schema } from "effect";
 import { ApiTest } from "../test/api-test.ts";
+
+const idFailureLayer = ApiTest.layerWithDirectory(
+  WorkspaceDirectory.Service.of({
+    create: () => Effect.fail(new WorkspaceDirectory.IdGenerationError({ cause: "unavailable" })),
+    findById: () => Effect.die("unexpected workspace lookup"),
+  }),
+);
+
+const persistenceFailure = new WorkspaceStore.PersistenceError({ cause: "unavailable" });
+const persistenceFailureLayer = ApiTest.layerWithDirectory(
+  WorkspaceDirectory.Service.of({
+    create: () => Effect.fail(persistenceFailure),
+    findById: () => Effect.fail(persistenceFailure),
+  }),
+);
 
 describe("workspace HTTP API", () => {
   it.layer(ApiTest.layer)("creation", (it) => {
@@ -54,6 +71,20 @@ describe("workspace HTTP API", () => {
     );
   });
 
+  it.layer(idFailureLayer)("identifier generation failure", (it) => {
+    it.effect("returns 500", () =>
+      Effect.gen(function* () {
+        const request = yield* ApiTest.Service;
+        const response = yield* request("/workspaces", {
+          method: "POST",
+          body: { name: "Effect Forge" },
+        });
+
+        assert.strictEqual(response.status, 500);
+      }),
+    );
+  });
+
   it.layer(ApiTest.layer)("missing workspace", (it) => {
     it.effect("returns WorkspaceNotFound", () =>
       Effect.gen(function* () {
@@ -66,6 +97,31 @@ describe("workspace HTTP API", () => {
           yield* Effect.promise(() => response.json()),
         );
         assert.strictEqual(error.id, id);
+      }),
+    );
+  });
+
+  it.layer(persistenceFailureLayer)("creation persistence failure", (it) => {
+    it.effect("returns 500", () =>
+      Effect.gen(function* () {
+        const request = yield* ApiTest.Service;
+        const response = yield* request("/workspaces", {
+          method: "POST",
+          body: { name: "Effect Forge" },
+        });
+
+        assert.strictEqual(response.status, 500);
+      }),
+    );
+  });
+
+  it.layer(persistenceFailureLayer)("retrieval persistence failure", (it) => {
+    it.effect("returns 500", () =>
+      Effect.gen(function* () {
+        const request = yield* ApiTest.Service;
+        const response = yield* request("/workspaces/987e6543-e21b-42d3-a456-426614174000");
+
+        assert.strictEqual(response.status, 500);
       }),
     );
   });
