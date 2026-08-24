@@ -1,18 +1,16 @@
 {
-  "name": "@effect-forge/core",
+  "name": "@effect-forge/api",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": {
-    "./test/crypto": "./src/test/crypto-test.ts",
-    "./workspace-directory": "./src/workspace-directory/workspace-directory.ts",
-    "./workspace-store": "./src/workspace-directory/workspace-store.ts"
-  },
   "scripts": {
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
+    "@effect-forge/contracts": "workspace:*",
+    "@effect-forge/core": "workspace:*",
+    "@effect-forge/database": "workspace:*",
     "@effect-forge/domain": "workspace:*",
     "effect": "catalog:"
   },

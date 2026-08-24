@@ -13,6 +13,21 @@
         "typescript": "7.0.2",
       },
     },
+    "apps/api": {
+      "name": "@effect-forge/api",
+      "version": "0.0.0",
+      "dependencies": {
+        "@effect-forge/contracts": "workspace:*",
+        "@effect-forge/core": "workspace:*",
+        "@effect-forge/database": "workspace:*",
+        "@effect-forge/domain": "workspace:*",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "vitest": "catalog:",
+      },
+    },
     "packages/contracts": {
       "name": "@effect-forge/contracts",
       "version": "0.0.0",
@@ -81,6 +96,8 @@
   },
   "packages": {
     "@drizzle-team/brocli": ["@drizzle-team/brocli@0.12.0", "", {}, "sha512-mlUE+rZ8CatQekLhnaiN91Iemdd+e2gFKooGlnRB3oPTL3VghLfX24dx7HrzMNeC1JrIB/0kpsfyty3f5HNfxQ=="],
+
+    "@effect-forge/api": ["@effect-forge/api@workspace:apps/api"],
 
     "@effect-forge/contracts": ["@effect-forge/contracts@workspace:packages/contracts"],
 

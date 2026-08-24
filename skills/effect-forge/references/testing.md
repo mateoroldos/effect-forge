@@ -18,7 +18,7 @@ Provide substitute Layers instead of mocking modules.
 - Use an in-memory Layer for service tests when it preserves the port contract.
 - Use PGlite for PostgreSQL adapter tests.
 - Use Effect test clocks and deterministic services for time and randomness.
-- Use a real test server for HTTP round-trips.
+- Exercise HTTP capabilities through the production router as Fetch-compatible `Request → Response` handlers. Use a listening test server only for runtime adapter or network lifecycle behavior.
 - Use a fresh `AtomRegistry` for each web-state test.
 - Run a shared port contract suite against each adapter when several adapters exist. Keep adapter-specific behavior, such as SQL constraints and provider error translation, in adapter tests.
 
@@ -28,7 +28,9 @@ Choose test Layer provisioning by lifecycle and isolation:
 - Use `layer(...)` when several tests intentionally share one scoped fixture and state cannot leak between them.
 - Use `it.layer(...)` when a nested group needs additional dependencies or independently built scoped setup.
 
-Provisioning inside a test does not itself guarantee isolation: check whether the Layer, its memoization, or its underlying resources are shared. Prefer isolation over removing repeated setup, and share only when fixture construction cost or resource lifecycle justifies it.
+An `it.layer` label names the fixture context or scenario; each nested `it.effect` names observable behavior. Build mutable Layers independently per scenario. Share a Layer only when one test's state cannot affect another.
+
+Keep test setup in the narrowest useful scope. Inline one-use values and operations. Use file-level fixtures for immutable values or infrastructure shared across scenarios. Add a helper only when it hides meaningful repeated mechanics; do not alias a single library call.
 
 Do not use `vi.mock`, `jest.mock`, arbitrary sleeps, or assertions against private calls.
 

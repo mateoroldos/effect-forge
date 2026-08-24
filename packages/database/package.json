@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./postgres": "./src/database-postgres.ts",
+    "./test/database-pglite": "./src/test/database-pglite.ts",
     "./workspace-store-postgres": "./src/workspace/workspace-store-postgres.ts"
   },
   "scripts": {
