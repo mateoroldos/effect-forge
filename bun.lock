@@ -41,6 +41,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@effect-forge/contracts": "workspace:*",
+        "@effect-forge/design-system": "workspace:*",
         "@effect-forge/domain": "workspace:*",
         "@effect/atom-react": "4.0.0-rc.111",
         "@tanstack/react-form": "1.33.5",

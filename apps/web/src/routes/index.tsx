@@ -1,7 +1,8 @@
 import { WorkspaceId } from "@effect-forge/domain/workspace";
 import { createFileRoute } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
-import { WorkspacePlayground } from "../features/workspaces/workspace-playground.tsx";
+import { CreateWorkspaceForm } from "../features/workspaces/create-workspace-form.tsx";
+import { FindWorkspaceForm } from "../features/workspaces/find-workspace-form.tsx";
 
 const WorkspaceSearch = Schema.Struct({ workspaceId: Schema.optional(Schema.String) });
 
@@ -49,7 +50,17 @@ function LandingPage() {
             <span>Web runtime ready</span>
           </div>
         </section>
-        <WorkspacePlayground onWorkspaceSelected={selectWorkspace} workspaceId={workspaceId} />
+        <section className="grid gap-6 lg:grid-cols-2" aria-labelledby="workspace-operations-title">
+          <h2 id="workspace-operations-title" className="sr-only">
+            Workspace operations
+          </h2>
+          <CreateWorkspaceForm onCreated={selectWorkspace} />
+          <FindWorkspaceForm
+            key={workspaceId ?? "unselected"}
+            onSelected={selectWorkspace}
+            workspaceId={workspaceId}
+          />
+        </section>
       </div>
     </main>
   );
