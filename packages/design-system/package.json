@@ -22,8 +22,8 @@
     "tailwindcss": "catalog:"
   },
   "devDependencies": {
-    "@types/react": "19.2.18",
-    "react": "19.2.8"
+    "@types/react": "catalog:",
+    "react": "catalog:"
   },
   "peerDependencies": {
     "react": ">=19",
