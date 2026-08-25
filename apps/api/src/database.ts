@@ -1,3 +1,4 @@
+import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as Drizzle from "alchemy/Drizzle";
 import * as Neon from "alchemy/Neon";
@@ -5,11 +6,19 @@ import { Effect } from "effect";
 
 /** Generates PostgreSQL migrations before provisioning the database. */
 export const postgres = Effect.gen(function* () {
+  const { stage } = yield* Alchemy.Stack;
   const schema = yield* Drizzle.Schema("ApiSchema", {
     schema: "./packages/database/src/workspace/schema.ts",
     out: "./packages/database/drizzle",
   });
-  const project = yield* Neon.Project("ApiDatabase");
+
+  const ownsProject = stage === "prod" || stage === "staging";
+  const project = ownsProject
+    ? yield* Neon.Project("ApiDatabase", {
+        region: "aws-us-east-1",
+        migrations: schema,
+      })
+    : yield* Neon.Project.ref("ApiDatabase", { stage: "staging" });
   const branch = yield* Neon.Branch("ApiDatabaseBranch", {
     project,
     migrations: schema,
