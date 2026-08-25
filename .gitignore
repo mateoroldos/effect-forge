@@ -2,10 +2,7 @@
 .env
 .env.*
 !.env.example
-node_modules
-apps/site/.astro
-apps/site/dist
-apps/web/dist
 .repos/effect
 .turbo
+node_modules
 *.tsbuildinfo
