@@ -8,6 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "turbo build",
+    "bump-ui": "bunx shadcn@latest add --overwrite -c packages/design-system $(ls packages/design-system/src/ui | sed 's/\\.tsx$//') && bun run format",
     "check": "bun run format:check && bun run lint && bun run check-types && bun run test",
     "check-types": "tsc --noEmit && turbo check-types",
     "db:generate": "bun run --cwd packages/database db:generate",

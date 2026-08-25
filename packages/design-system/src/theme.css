@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@source "./ui";
+
 @custom-variant dark (&:is(.dark *));
 
 /* Raw tokens. Every value is defined once here and once under `.dark`, so a
