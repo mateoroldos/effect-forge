@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+.mise.local.toml
 node_modules
 .repos/effect
 .turbo
