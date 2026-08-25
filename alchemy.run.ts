@@ -15,7 +15,15 @@ export default Alchemy.Stack(
   },
   Effect.gen(function* () {
     const api = yield* ApiWorker;
+    const web = yield* Cloudflare.Website.Vite("Web", {
+      rootDir: "apps/web",
+      assets: { runWorkerFirst: true },
+      compatibility: {
+        flags: ["nodejs_compat", "enable_request_signal"],
+      },
+      observability: { enabled: true },
+    });
 
-    return { apiUrl: api.url };
+    return { apiUrl: api.url, webUrl: web.url };
   }),
 );
