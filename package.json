@@ -43,6 +43,7 @@
     "@effect/sql-pglite": "4.0.0-rc.111",
     "@effect/vitest": "4.0.0-rc.111",
     "@electric-sql/pglite": "0.5.7",
+    "@tailwindcss/vite": "4.3.3",
     "@types/bun": "1.3.14",
     "@types/pg": "8.20.0",
     "alchemy": "2.0.0-beta.74",
@@ -50,6 +51,7 @@
     "drizzle-orm": "1.0.0-rc.5-ab785fc",
     "effect": "4.0.0-rc.111",
     "pg": "8.23.0",
+    "tailwindcss": "4.3.3",
     "vitest": "4.1.11"
   }
 }

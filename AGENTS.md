@@ -5,19 +5,21 @@ Read [`skills/effect-forge/SKILL.md`](skills/effect-forge/SKILL.md) before chang
 ## Boundaries
 
 ```text
-web → contracts, domain
+web → contracts, domain, design-system
 api → core, contracts, database, auth-better
 database → core, domain
 auth-better → core, domain
 contracts → domain
 core → domain
 domain → nothing
+design-system → nothing
 ```
 
 - `apps/*` are deployable composition roots.
 - `domain` contains pure shared values, schemas, and decisions.
 - `core` contains application services and the ports they own.
 - `contracts` defines the public Effect `HttpApi`.
+- `design-system` owns the shared visual vocabulary.
 - adapters translate between ports and concrete technology.
 - only composition roots provide production adapter Layers.
 
