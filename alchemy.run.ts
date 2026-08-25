@@ -17,6 +17,11 @@ export default Alchemy.Stack(
     const api = yield* ApiWorker;
     const web = yield* Cloudflare.Website.Vite("Web", {
       rootDir: "apps/web",
+      memo: {
+        include: ["**/*", "../../packages/contracts/src/**", "../../packages/domain/src/**"],
+        lockfile: true,
+      },
+      env: { VITE_API_URL: api.url.as<string>() },
       assets: { runWorkerFirst: true },
       compatibility: {
         flags: ["nodejs_compat", "enable_request_signal"],
