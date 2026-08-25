@@ -12,6 +12,7 @@
     "@effect-forge/contracts": "workspace:*",
     "@effect-forge/domain": "workspace:*",
     "@effect/atom-react": "4.0.0-rc.111",
+    "@tanstack/react-form": "1.33.5",
     "@tanstack/react-router": "1.170.32",
     "@tanstack/react-start": "1.168.49",
     "effect": "catalog:",
