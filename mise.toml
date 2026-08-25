@@ -1,10 +1,10 @@
 [tools]
 bun = "1.4.0"
 
+[env]
+ALCHEMY_PROFILE = "effect-forge"
+
 [tasks.setup]
-description = "Install the pinned toolchain and workspace dependencies"
+description = "Bootstrap a fresh checkout"
 run = ["mise install", "bun install"]
 
-[tasks.check]
-description = "Run all repository checks"
-run = "bun run check"

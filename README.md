@@ -19,4 +19,24 @@ packages/
 └─ auth-better/  Better Auth adapters
 ```
 
-Effect Forge is currently a design seed. The application scaffold has not been implemented.
+## Development
+
+Bootstrap a fresh checkout and configure local infrastructure credentials:
+
+```sh
+mise trust
+mise run setup
+bun alchemy login --configure
+```
+
+A maintainer provisions the shared staging project once:
+
+```sh
+bun run deploy:staging
+```
+
+After staging exists, each developer starts an isolated Neon branch and local Worker directly through Bun:
+
+```sh
+bun run dev
+```
