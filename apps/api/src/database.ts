@@ -2,7 +2,15 @@ import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as Drizzle from "alchemy/Drizzle";
 import * as Neon from "alchemy/Neon";
-import { Effect } from "effect";
+import { DateTime, Effect } from "effect";
+
+const branchPolicy = Effect.fn(function* (stage: string) {
+  if (stage.startsWith("pr-")) {
+    const expiresAt = DateTime.add(yield* DateTime.now, { days: 7 });
+    return { expiresAt: DateTime.formatIso(expiresAt) };
+  }
+  return stage === "prod" ? { protected: true } : {};
+});
 
 /** Generates PostgreSQL migrations before provisioning the database. */
 export const postgres = Effect.gen(function* () {
@@ -22,6 +30,7 @@ export const postgres = Effect.gen(function* () {
   const branch = yield* Neon.Branch("ApiDatabaseBranch", {
     project,
     migrations: schema,
+    ...(yield* branchPolicy(stage)),
   });
 
   return { branch, project, schema };

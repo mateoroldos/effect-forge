@@ -60,6 +60,26 @@ browser
 
 TanStack Start server functions do not proxy ordinary application requests. Use them only when SSR or server-owned credentials require a web-server boundary.
 
+## Database stages
+
+```text
+prod
+  → owns the production Neon project
+  → owns a protected production branch
+
+staging
+  → owns the shared non-production Neon project
+  → owns the staging branch
+
+dev_* or pr-*
+  → references the staging project
+  → owns an isolated stage branch
+```
+
+Deploy `staging` before developer or preview stages. Developer branches are durable. Preview branches expire after seven days as a fallback and should normally be removed with `alchemy destroy` when the pull request closes. Production and non-production never share a Neon project.
+
+Hyperdrive targets a branch's direct origin in Cloudflare and its pooled origin during local development. Migrations apply to the branch during Alchemy deployment, not during Worker startup or requests.
+
 ## Transport tiers
 
 | Transport        | Audience                                                           |
