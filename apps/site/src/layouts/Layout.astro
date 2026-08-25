@@ -1,0 +1,37 @@
+---
+import "../styles/site.css";
+import Wordmark from "../components/Wordmark.astro";
+import { site } from "../site.ts";
+
+type Props = { readonly title?: string };
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={site.description} />
+    <title>{title ? `${title} · ${site.name}` : site.name}</title>
+    <script is:inline>
+      // The design system keys dark mode off a class, so it is set before paint.
+      document.documentElement.classList.toggle("dark", matchMedia("(prefers-color-scheme: dark)").matches);
+    </script>
+  </head>
+  <body class="mx-auto flex min-h-screen max-w-2xl flex-col gap-20 px-6 py-10 text-sm/6 sm:py-14">
+    <header class="flex items-center justify-between font-mono text-sm text-muted-foreground">
+      <span class="text-foreground">effect-forge</span>
+      <a class="hover:text-foreground" href={site.repository}>github ↗</a>
+    </header>
+    <slot />
+    <footer class="mt-auto flex flex-col gap-8">
+      <Wordmark class="self-center text-[clamp(6px,2.05vw,13px)]/none text-primary" />
+      <div class="flex items-center justify-between border-t pt-6 font-mono text-xs text-muted-foreground">
+        <span>MIT</span>
+        <a class="hover:text-foreground" href={site.repository}>GitHub ↗</a>
+      </div>
+    </footer>
+  </body>
+</html>

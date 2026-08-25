@@ -1,0 +1,37 @@
+---
+import Section from "../components/Section.astro";
+
+// Rendered as one HTML string: JSX inside a <pre> would emit its own indentation.
+// Each comment names the layer, so the tree reads as the architecture rather than
+// a file listing. Adapters say so and sort last, under the ports they implement.
+const rows = [
+  { path: "AGENTS.md", comment: "conventions every agent reads" },
+  { path: "skills/effect-forge/", comment: "playbooks, loaded per task" },
+  { path: "" },
+  { path: "apps/" },
+  { path: "├─ web", comment: "TanStack Start" },
+  { path: "└─ api", comment: "Effect HttpApi" },
+  { path: "" },
+  { path: "packages/" },
+  { path: "├─ domain", comment: "the domain model" },
+  { path: "├─ core", comment: "application services and ports" },
+  { path: "├─ contracts", comment: "typed HTTP contracts" },
+  { path: "├─ design-system", comment: "shared visual vocabulary" },
+  { path: "├─ database", comment: "adapter: PostgreSQL" },
+  { path: "└─ auth-better", comment: "adapter: authentication" },
+  { path: "" },
+  { path: "alchemy.run.ts", comment: "infrastructure as code" },
+] as const;
+
+const tree = rows
+  .map(({ comment, path }) =>
+    comment === undefined
+      ? path
+      : `${path.padEnd(26)}<span class="text-muted-foreground">${comment}</span>`,
+  )
+  .join("\n");
+---
+
+<Section boxed title="Structure">
+  <pre class="overflow-x-auto font-mono text-sm/6"><code set:html={tree} /></pre>
+</Section>

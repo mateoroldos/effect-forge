@@ -1,0 +1,22 @@
+---
+import figlet from "figlet";
+import FireFont from "figlet/importable-fonts/Fire Font-s.js";
+
+type Props = { readonly class?: string };
+
+const { class: className } = Astro.props;
+
+const TEXT = "effect-forge";
+
+/* Fire Font draws with plain ASCII, so the site's mono face renders the grid exactly.
+   Trailing spaces and the blank rows figlet pads with are dropped. */
+figlet.parseFont("Fire Font-s", FireFont);
+const art = figlet
+  .textSync(TEXT, { font: "Fire Font-s" })
+  .split("\n")
+  .map((row) => row.trimEnd())
+  .join("\n")
+  .replace(/^\n+|\n+$/g, "");
+---
+
+<pre aria-label={TEXT} class={className} role="img">{art}</pre>

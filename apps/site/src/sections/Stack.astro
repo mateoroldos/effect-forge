@@ -1,0 +1,42 @@
+---
+import {
+  siBun,
+  siCloudflareworkers,
+  siDrizzle,
+  siEffect,
+  siOxc,
+  siPostgresql,
+  siTurborepo,
+  siTypescript,
+  siVitest,
+} from "simple-icons";
+import Section from "../components/Section.astro";
+
+const stack = [
+  siTypescript,
+  siEffect,
+  siBun,
+  siPostgresql,
+  siDrizzle,
+  siCloudflareworkers,
+  siOxc,
+  siVitest,
+  siTurborepo,
+];
+---
+
+<Section title="Stack">
+  {/* Drawn in `currentColor`, so the strip keeps the page palette. */}
+  <ul class="flex flex-wrap gap-2">
+    {
+      stack.map(({ path, title }) => (
+        <li class="flex items-center gap-2 rounded-md border border-muted-foreground/15 px-3 py-1.5 font-mono text-xs text-muted-foreground">
+          <svg aria-hidden="true" class="size-3.5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+            <path d={path} />
+          </svg>
+          {title}
+        </li>
+      ))
+    }
+  </ul>
+</Section>

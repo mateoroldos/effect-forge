@@ -1,0 +1,36 @@
+---
+import Section from "../components/Section.astro";
+import { site } from "../site.ts";
+---
+
+<Section boxed title="Manifesto">
+  <p class="max-w-xl font-serif text-3xl text-pretty">
+    How we build software changed. <br /><span>Our repositories need to change too.</span>
+  </p>
+  <p class="max-w-xl text-muted-foreground text-pretty">
+    Agents can produce code faster than ever and this has come with high hidden costs.
+  </p>
+  <p class="max-w-xl text-muted-foreground text-pretty">
+  Reviewing loads of agent generated code is mentally exhausting and the knowledge we have about our software is slowly degrading. At the same time, errors can now scale at an unbelievable pace rotting our repos in a few hours. 
+  </p>
+  <p class="max-w-xl text-muted-foreground text-pretty">
+  <code>effect-forge</code> is an obsessively designed and opinionated monorepo template built for improving human {"<> "} 
+    agent collaboration.
+  </p>
+  <p class="max-w-xl text-muted-foreground text-pretty">
+    It uses the principles of functional programming and type-driven development to guide agents on writing code
+    that's easy to change and understand over unmaintainable slop.
+  </p>
+  <p class="max-w-xl text-muted-foreground text-pretty">
+    With end-to-end type-safety and observability built-in
+    combined with fast deterministic checks, errors are difficult to introduce and easy to spot for
+    our robots and us.
+  </p>
+  <p class="max-w-xl text-muted-foreground text-pretty">
+    It's intended to be used as a starting point for new projects or as an educational resource. It
+    also works really well when given as an example for agents.
+  </p>
+  <a class="mt-4 text-xs text-muted-foreground/70 underline transition hover:text-foreground" href={site.notes}>
+    Read the post that inspired the project ↗
+  </a>
+</Section>

@@ -1,0 +1,64 @@
+---
+import Section from "../components/Section.astro";
+
+// Icons are inline 24-grid strokes so they inherit the theme through `currentColor`.
+const features = [
+  {
+    title: "AGENTS.md and skills",
+    icon: `<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5" /><path d="M9 13h6" /><path d="M9 17h4" />`,
+    description: "Boundaries and conventions live beside the code. Deeper guidance loads per task.",
+  },
+  {
+    title: "End-to-end typesafety",
+    icon: `<path d="M9 4 4 12l5 8" /><path d="m15 4 5 8-5 8" /><path d="m10 12 1.5 1.5L14.5 11" />`,
+    description: "Schemas shared across every package and application. Expected failures live in function signatures.",
+  },
+  {
+    title: "Fast deterministic checks",
+    icon: `<path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12z" />`,
+    description: "Format, lint, types, and tests in seconds. An agent proves its own change first without slowing down.",
+  },
+  {
+    title: "Browser to database traces",
+    icon: `<path d="M3 12h4l3-8 4 16 3-8h4" />`,
+    description: "End-to-end OTEL observability built in. Humans and agents can see what happens instead of guessing.",
+  },
+  {
+    title: "Dependency injection",
+    icon: `<path d="M12 3 3 8l9 5 9-5z" /><path d="m3 12 9 5 9-5" /><path d="m3 16 9 5 9-5" />`,
+    description: "Code is easy to change and test through Effect's injectable services.",
+  },
+  {
+    title: "Work in parallel",
+    icon: `<path d="M6 3v12" /><circle cx="18" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="M18 9a9 9 0 0 1-9 9" />`,
+    description: "Git worktrees and jj workspaces supported by default.",
+  },
+] as const;
+---
+
+<Section title="Built in">
+  <div class="grid gap-px overflow-hidden border bg-border sm:grid-cols-2">
+    {
+      features.map((feature) => (
+        <article class="flex flex-col gap-3 bg-background p-5">
+          <h3 class="flex items-center gap-2.5 font-serif text-lg">
+            <svg
+              aria-hidden="true"
+              class="size-5 shrink-0 text-primary"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.75"
+              viewBox="0 0 24 24"
+            >
+              <Fragment set:html={feature.icon} />
+            </svg>
+            {feature.title}
+          </h3>
+          <p class="text-sm/6 text-muted-foreground text-pretty">{feature.description}</p>
+        </article>
+      ))
+    }
+  </div>
+</Section>

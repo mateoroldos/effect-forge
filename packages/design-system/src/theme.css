@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:opsz,wght@14..32,400;14..32,500&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap");
 @import "tailwindcss";
 
 @source "./ui";
@@ -53,6 +54,12 @@
   --border: #362f2c; /* bg3 */
   --input: #463e3a; /* bg4 */
   --ring: #ea9875; /* ember */
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Newsreader", ui-serif, Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 /* The vocabulary consumers actually write: `bg-background`, `text-muted-foreground`,

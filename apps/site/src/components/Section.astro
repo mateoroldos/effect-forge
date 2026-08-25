@@ -1,0 +1,28 @@
+---
+type Props = { readonly title: string; readonly boxed?: boolean };
+
+const { boxed = false, title } = Astro.props;
+---
+
+{
+  boxed ? (
+    /* The title masks the top border, so the label reads as the edge of the box. */
+    <section class="relative border border-muted-foreground/15 px-6 pt-9 pb-6 rounded-md">
+      <h2 class="absolute -top-2 left-4 bg-background px-2 font-mono text-xs tracking-widest text-muted-foreground/50 uppercase">
+        {title}
+      </h2>
+      <div class="flex flex-col gap-7">
+        <slot />
+      </div>
+    </section>
+  ) : (
+    <section class="flex flex-col gap-7">
+      <h2 class="flex items-center gap-3 font-mono text-xs tracking-widest text-muted-foreground/50 uppercase">
+        <span aria-hidden="true" class="h-px w-3 bg-muted-foreground/15" />
+        {title}
+        <span aria-hidden="true" class="h-px flex-1 bg-muted-foreground/15" />
+      </h2>
+      <slot />
+    </section>
+  )
+}

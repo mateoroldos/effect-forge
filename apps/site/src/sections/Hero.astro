@@ -1,0 +1,13 @@
+---
+import { InstallCommand } from "../components/InstallCommand.tsx";
+import { site } from "../site.ts";
+---
+
+<section class="flex flex-col items-center gap-8 py-4 sm:py-8">
+  <div class="flex flex-col items-center gap-7">
+    <h1 class="font-serif text-5xl tracking-tight text-center leading-14 text-balance">
+      A TypeScript monorepo designed for <span class="whitespace-nowrap text-primary">{"human <> agent"}</span> collaboration.
+    </h1>
+  </div>
+  <InstallCommand client:load command={site.install} />
+</section>
