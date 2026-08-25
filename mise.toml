@@ -3,6 +3,7 @@ bun = "1.4.0"
 
 [env]
 ALCHEMY_PROFILE = "effect-forge"
+STAGE = "dev_{{ env.USER }}_{{ config_root | basename }}"
 
 [tasks.setup]
 description = "Bootstrap a fresh checkout"

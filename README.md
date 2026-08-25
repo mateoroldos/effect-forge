@@ -40,3 +40,5 @@ After staging exists, each developer starts an isolated Neon branch and local Wo
 ```sh
 bun run dev
 ```
+
+`mise` derives `STAGE` from the checkout directory, so every clone, `git worktree`, or `jj workspace` deploys to its own stage and gets its own Neon branch and Worker. Two agents can work in parallel without sharing state. `deploy:staging` and `deploy:prod` pass an explicit stage and are unaffected.
