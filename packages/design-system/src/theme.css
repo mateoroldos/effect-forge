@@ -5,49 +5,54 @@
 @custom-variant dark (&:is(.dark *));
 
 /* Raw tokens. Every value is defined once here and once under `.dark`, so a
-   component never branches on the active theme. */
+   component never branches on the active theme.
+
+   Dark is Cendre (cendretheme.com, `hard` depth), taken verbatim from
+   `lua/cendre/palette.lua`; each value names the token it came from. Cendre is
+   dark-only by design, so light is derived: the same ash hue (43°) inverted,
+   with `primary` and `destructive` darkened to hold contrast on paper. */
 :root {
   --radius: 0.625rem;
 
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
+  --background: #fef9f7;
+  --foreground: #221a17;
+  --card: #ffffff;
+  --card-foreground: #221a17;
+  --popover: #ffffff;
+  --popover-foreground: #221a17;
+  --primary: #b1572d;
+  --primary-foreground: #fef9f7;
+  --secondary: #f7eeea;
+  --secondary-foreground: #221a17;
+  --muted: #f7eeea;
+  --muted-foreground: #736560;
+  --accent: #f6eae5;
+  --accent-foreground: #221a17;
+  --destructive: #b83f6a;
+  --border: #e7dbd7;
+  --input: #e0d3ce;
+  --ring: #b1572d;
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
+  --background: #171311; /* bg0 */
+  --foreground: #e6d5c2; /* fg */
+  --card: #201b19; /* bg1 */
+  --card-foreground: #e6d5c2; /* fg */
+  --popover: #0f0c0a; /* bg_deep */
+  --popover-foreground: #e6d5c2; /* fg */
+  --primary: #ea9875; /* ember, Cendre's UI pigment */
+  --primary-foreground: #171311; /* bg0 */
+  --secondary: #2a2422; /* bg2 */
+  --secondary-foreground: #e6d5c2; /* fg */
+  --muted: #201b19; /* bg1 */
+  --muted-foreground: #a09384; /* fg_dim */
+  --accent: #2a2422; /* bg2 */
+  --accent-foreground: #e6d5c2; /* fg */
+  --destructive: #d25780; /* error */
+  --border: #362f2c; /* bg3 */
+  --input: #463e3a; /* bg4 */
+  --ring: #ea9875; /* ember */
 }
 
 /* The vocabulary consumers actually write: `bg-background`, `text-muted-foreground`,
