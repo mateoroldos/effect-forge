@@ -7,31 +7,24 @@ type Props = { readonly class?: string };
 
 const { class: className } = Astro.props;
 
-const TEXT = "effect-forge";
-
 /* Fire Font draws with plain ASCII, so the site's mono face renders the grid exactly.
    Rows 1-4 of a glyph are the flame and rows 5-8 the letterform: drop the letterforms
    from a line of prose and fire is all that is left. */
 figlet.parseFont("Fire Font-s", FireFont);
-const rows = (text: string) => figlet.textSync(text, { font: "Fire Font-s" }).split("\n");
-
-const wordmark = rows(TEXT).slice(1, 9).map((row) => row.trimEnd()).join("\n");
-const fire = rows(`${site.description} `.repeat(4)).slice(1, 5).join("\n");
+const fire = figlet
+  .textSync(`${site.description} `.repeat(4), { font: "Fire Font-s" })
+  .split("\n")
+  .slice(1, 5)
+  .join("\n");
 ---
 
-<div class:list={["flex justify-center pb-[0.35em] font-mono text-[clamp(6px,2.05vw,13px)]/none text-primary", className]}>
-  <div class="relative flex w-full items-end justify-center">
-    {/* One fire, wider than any viewport, burning out well before the page edges. */}
-    <div
-      aria-hidden="true"
-      class="absolute inset-0 flex items-end justify-center overflow-hidden text-primary/45 mask-x-from-78% mask-x-to-92%"
-    >
-      <pre>{fire}</pre>
-    </div>
-    <div class="relative">
-      {/* Wider than the wordmark and fading outward, so the fire dies into it instead of being cut. */}
-      <div class="absolute inset-y-0 -inset-x-[15%] bg-background mask-x-from-89% mask-x-to-100%"></div>
-      <pre class="relative" aria-label={TEXT} role="img">{wordmark}</pre>
-    </div>
-  </div>
+<div
+  aria-hidden="true"
+  class:list={[
+    "flex justify-center overflow-hidden pb-[0.35em] font-mono text-[clamp(6px,2.05vw,13px)]/none text-primary/40",
+    "mask-x-from-58% mask-x-to-112%",
+    className,
+  ]}
+>
+  <pre>{fire}</pre>
 </div>
