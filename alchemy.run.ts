@@ -26,6 +26,7 @@ export default Alchemy.Stack(
         lockfile: true,
       },
       env: { VITE_API_URL: api.url.as<string>() },
+      ...(stage === "prod" ? { domain: "app.effect-forge.com" } : {}),
       compatibility: {
         flags: ["nodejs_compat", "enable_request_signal"],
       },

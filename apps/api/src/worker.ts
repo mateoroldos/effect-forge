@@ -2,6 +2,7 @@ import { WorkspaceDirectory } from "@effect-forge/core/workspace-directory";
 import { DatabasePostgres } from "@effect-forge/database/postgres";
 import { WorkspaceStorePostgres } from "@effect-forge/database/workspace-store-postgres";
 import { NodeCrypto } from "@effect/platform-node";
+import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as SQL from "alchemy/SQL/Postgres";
 import { Effect, Layer } from "effect";
@@ -11,11 +12,16 @@ import { Database } from "./database.ts";
 
 export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
   "ApiWorker",
-  {
-    main: import.meta.url,
-    compatibility: { flags: ["nodejs_compat"] },
-    observability: { enabled: true },
-  },
+  Effect.gen(function* () {
+    const { stage } = yield* Alchemy.Stack;
+
+    return {
+      main: import.meta.url,
+      ...(stage === "prod" ? { domain: "api.effect-forge.com" } : {}),
+      compatibility: { flags: ["nodejs_compat"] },
+      observability: { enabled: true },
+    };
+  }),
   Effect.gen(function* () {
     const hyperdrive = yield* Cloudflare.Hyperdrive.Connect(Database.hyperdrive);
     const postgresLayer = SQL.PostgresLayer({ url: hyperdrive.connectionString });

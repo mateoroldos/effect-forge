@@ -27,7 +27,6 @@ export default Alchemy.Stack(
             // Workers and static assets.
             "Workers Scripts Write",
             "Workers KV Storage Write",
-            "Workers Routes Write",
             "Workers Observability Write",
             "Workers Tail Read",
             "Hyperdrive Write",
@@ -38,6 +37,15 @@ export default Alchemy.Stack(
           ],
           resources: {
             [`com.cloudflare.api.account.${accountId}`]: "*",
+          },
+        },
+        {
+          effect: "allow",
+          permissionGroups: ["Workers Routes Write", "Zone Read", "DNS Write"],
+          resources: {
+            [`com.cloudflare.api.account.${accountId}`]: {
+              "com.cloudflare.api.account.zone.*": "*",
+            },
           },
         },
       ],
