@@ -9,7 +9,7 @@ const branchPolicy = Effect.fn(function* (stage: string) {
     const expiresAt = DateTime.add(yield* DateTime.now, { days: 7 });
     return { expiresAt: DateTime.formatIso(expiresAt) };
   }
-  return stage === "prod" ? { protected: true } : {};
+  return {};
 });
 
 /** Generates PostgreSQL migrations before provisioning the database. */
