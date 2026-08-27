@@ -1,3 +1,4 @@
+import { Toaster } from "@effect-forge/design-system/ui/sonner";
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import appCss from "../app.css?url";
@@ -34,6 +35,7 @@ function Document({ children }: Readonly<{ children: ReactNode }>) {
       </head>
       <body>
         {children}
+        <Toaster />
         <Scripts />
       </body>
     </html>
