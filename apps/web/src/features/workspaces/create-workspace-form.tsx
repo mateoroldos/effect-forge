@@ -3,19 +3,13 @@ import { WorkspaceApi } from "@effect-forge/contracts/workspaces";
 import { Button } from "@effect-forge/design-system/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@effect-forge/design-system/ui/field";
 import { Input } from "@effect-forge/design-system/ui/input";
-import type { WorkspaceName } from "@effect-forge/domain/workspace";
+import { toast } from "@effect-forge/design-system/ui/sonner";
 import { useForm } from "@tanstack/react-form";
-import { Cause, Effect, Exit, Option, Schema } from "effect";
-import { useState } from "react";
+import { Cause, Effect, Exit, Match, Option, Schema } from "effect";
 import { createWorkspace } from "./atoms.ts";
-
-type RequestError = "NameTaken" | "RequestFailed";
 
 export function CreateWorkspaceForm() {
   const create = useAtomSet(createWorkspace, { mode: "promiseExit" });
-  const [requestErrors, setRequestErrors] = useState<ReadonlyMap<WorkspaceName, RequestError>>(
-    new Map(),
-  );
 
   const form = useForm({
     defaultValues: { name: "" },
@@ -25,24 +19,35 @@ export function CreateWorkspaceForm() {
         Effect.gen(function* () {
           const payload = yield* Schema.decodeEffect(WorkspaceApi.CreatePayload)(value);
 
-          setRequestErrors((current) => {
-            const next = new Map(current);
-            next.delete(payload.name);
-            return next;
-          });
-
           const result = create({ payload });
           form.reset();
 
           void result.then((exit) => {
             if (Exit.isFailure(exit)) {
-              const error = Option.exists(
-                Cause.findErrorOption(exit.cause),
-                Schema.is(WorkspaceApi.NameTaken),
-              )
-                ? "NameTaken"
-                : "RequestFailed";
-              setRequestErrors((current) => new Map(current).set(payload.name, error));
+              Option.match(Cause.findErrorOption(exit.cause), {
+                onNone: () =>
+                  toast.error(`Could not create “${payload.name}”`, {
+                    description: "Please try again.",
+                  }),
+                onSome: (error) =>
+                  Match.value(error).pipe(
+                    Match.tags({
+                      "WorkspaceApi.NameTaken": (error) =>
+                        toast.error(`Could not create “${error.name}”`, {
+                          description: "That workspace name is already taken.",
+                          action: {
+                            label: "Try again",
+                            onClick: () => form.setFieldValue("name", error.name),
+                          },
+                        }),
+                    }),
+                    Match.orElse(() =>
+                      toast.error(`Could not create “${payload.name}”`, {
+                        description: "Please try again.",
+                      }),
+                    ),
+                  ),
+              });
             }
           });
         }),
@@ -88,13 +93,6 @@ export function CreateWorkspaceForm() {
           )}
         />
       </FieldGroup>
-      {[...requestErrors].map(([name, error]) => (
-        <FieldError className="mt-3" key={name}>
-          {error === "NameTaken"
-            ? `Could not create “${name}”: that name is already taken.`
-            : `Could not create “${name}”.`}
-        </FieldError>
-      ))}
     </form>
   );
 }
