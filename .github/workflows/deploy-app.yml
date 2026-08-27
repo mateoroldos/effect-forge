@@ -1,0 +1,45 @@
+name: Deploy app
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  # Developer stages reference the staging Neon project, so staging remains manually deployable.
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: Stage to deploy
+        type: choice
+        default: prod
+        options: [prod, staging]
+
+# Cloudflare.state() does not lock concurrent deployments to the same stage.
+concurrency:
+  group: deploy-app-${{ inputs.stage || 'prod' }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      - name: Deploy EffectForge
+        run: bun alchemy deploy --stage "$STAGE" --yes
+        env:
+          STAGE: ${{ inputs.stage || 'prod' }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
