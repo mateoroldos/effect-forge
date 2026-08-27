@@ -26,7 +26,6 @@ export default Alchemy.Stack(
         lockfile: true,
       },
       env: { VITE_API_URL: api.url.as<string>() },
-      assets: { runWorkerFirst: true },
       compatibility: {
         flags: ["nodejs_compat", "enable_request_signal"],
       },
