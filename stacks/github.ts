@@ -41,7 +41,12 @@ export default Alchemy.Stack(
         },
         {
           effect: "allow",
-          permissionGroups: ["Workers Routes Write", "Zone Read", "DNS Write"],
+          permissionGroups: [
+            "Workers Routes Write",
+            "Zone Read",
+            "DNS Write",
+            "Dynamic URL Redirects Write",
+          ],
           resources: {
             [`com.cloudflare.api.account.${accountId}`]: {
               "com.cloudflare.api.account.zone.*": "*",
