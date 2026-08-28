@@ -1,6 +1,6 @@
 <p align="center">
-  <img src=".github/assets/logo-light.svg#gh-light-mode-only" alt="effect-forge" width="640">
-  <img src=".github/assets/logo-dark.svg#gh-dark-mode-only" alt="effect-forge" width="640">
+  <img src=".github/assets/logo-light.svg#gh-light-mode-only" alt="effect-forge" width="400">
+  <img src=".github/assets/logo-dark.svg#gh-dark-mode-only" alt="effect-forge" width="400">
 </p>
 
 <p align="center">A TypeScript monorepo designed for <strong>human &lt;&gt; agent</strong> collaboration.</p>
