@@ -24,8 +24,7 @@ packages/
 
 adapters/
 ├─ database-postgres/src/     PostgreSQL port implementations
-├─ auth-better/src/           Better Auth port implementations
-└─ telemetry-*/src/           runtime telemetry integrations
+└─ auth-better/src/           Better Auth port implementations
 
 alchemy.run.ts               stack composition
 AGENTS.md                    repository rules
@@ -35,17 +34,16 @@ skills/effect-forge/         task guidance
 ## Dependency graph
 
 ```text
-web → contracts, domain, ui, telemetry adapters
+web → contracts, domain, ui, Maple browser SDK
 api → core, contracts, database and auth adapters, Alchemy telemetry
 contracts → domain
 core → domain
 database-postgres → core, domain
 auth-better → core, domain
-telemetry adapters → nothing
 ui → nothing
 ```
 
-Applications do not import one another. `packages/*` contain application-owned or shared technology-neutral modules. `adapters/*` translate concrete technology into owned ports or runtime Layers and are selected only by composition roots. The API uses Alchemy's Worker-native telemetry integration; the web composition root may import a browser telemetry adapter. The architecture check enforces these directions.
+Applications do not import one another. `packages/*` contain application-owned or shared technology-neutral modules. `adapters/*` translate concrete technology into owned ports and are selected only by composition roots. The API uses Alchemy's Worker-native telemetry integration; the web composition root installs Maple's browser-native telemetry Layer directly. The architecture check enforces these directions.
 
 ## Package conventions
 
@@ -112,4 +110,6 @@ The root `alchemy.run.ts` composes the web and API infrastructure factories. Tan
 
 Application code uses Effect's `Tracer`, `Logger`, and `Metric` vocabulary. The API composition installs Alchemy's generic OTLP Layer outside production and its Axiom integration in production; Alchemy owns Worker bindings, per-event exporters, and request-completion flushing.
 
-Local API telemetry defaults to unauthenticated Maple OTLP at `http://localhost:4318`. Hosted Maple requires both `MAPLE_ENDPOINT` and `MAPLE_INGEST_KEY`; the key becomes a redacted bearer authorization binding. Preview Workers must use hosted configuration because they cannot reach a developer's local collector.
+Local API telemetry defaults to unauthenticated Maple OTLP at `http://127.0.0.1:4318`. Hosted Maple requires both `MAPLE_ENDPOINT` and `MAPLE_INGEST_KEY`; the key becomes a redacted bearer authorization binding. Preview Workers must use hosted configuration because they cannot reach a developer's local collector.
+
+In development, client-only composition installs Maple's documented keyless browser Layer before creating the Atom registry. It exports directly to `VITE_MAPLE_ENDPOINT` and is excluded from SSR and production builds. Local Maple does not expose session or replay ingest routes, so replay and session metadata remain disabled.

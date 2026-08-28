@@ -87,6 +87,7 @@
         "@effect-forge/domain": "workspace:*",
         "@effect-forge/ui": "workspace:*",
         "@effect/atom-react": "4.0.0-rc.111",
+        "@maple-dev/effect-sdk": "0.8.0",
         "@tanstack/react-form": "1.33.5",
         "@tanstack/react-router": "1.170.32",
         "@tanstack/react-start": "1.168.49",
@@ -574,6 +575,8 @@
     "@libsql/linux-x64-musl": ["@libsql/linux-x64-musl@0.5.29", "", { "os": "linux", "cpu": "x64" }, "sha512-gquqwA/39tH4pFl+J9n3SOMSymjX+6kZ3kWgY3b94nXFTwac9bnFNMffIomgvlFaC4ArVqMnOZD3nuJ3H3VO1w=="],
 
     "@libsql/win32-x64-msvc": ["@libsql/win32-x64-msvc@0.5.29", "", { "os": "win32", "cpu": "x64" }, "sha512-4/0CvEdhi6+KjMxMaVbFM2n2Z44escBRoEYpR+gZg64DdetzGnYm8mcNLcoySaDJZNaBd6wz5DNdgRmcI4hXcg=="],
+
+    "@maple-dev/effect-sdk": ["@maple-dev/effect-sdk@0.8.0", "", { "dependencies": { "std-env": "^4.0.0" }, "peerDependencies": { "effect": ">=4.0.0-rc.108" } }, "sha512-HlZ8XgFKLUFm3FwcSLezW/sivIZOXuuk9Bb2Ehe7JivBJVHyeFMwo/c7OB6mLxdwMKwl6RFviej473xdYWyN6A=="],
 
     "@mrleebo/prisma-ast": ["@mrleebo/prisma-ast@0.13.1", "", { "dependencies": { "chevrotain": "^10.5.0", "lilconfig": "^2.1.0" } }, "sha512-XyroGQXcHrZdvmrGJvsA9KNeOOgGMg1Vg9OlheUsBOSKznLMDl+YChxbkboRHvtFYJEMRYmlV3uoo/njCw05iw=="],
 

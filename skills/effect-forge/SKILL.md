@@ -29,7 +29,7 @@ Read the nearest `AGENTS.md`, inspect installed dependency versions, and follow 
 | `packages/ui`                | shared React components and visual theme                 |
 | `adapters/database-postgres` | PostgreSQL port implementations                          |
 | `adapters/auth-better`       | Better Auth port implementations                         |
-| `adapters/telemetry-*`       | runtime observability integrations                       |
+| `apps/*` composition roots   | runtime-native observability Layers                      |
 
 ## Capability path
 

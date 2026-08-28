@@ -13,6 +13,7 @@
     "@effect-forge/domain": "workspace:*",
     "@effect-forge/ui": "workspace:*",
     "@effect/atom-react": "4.0.0-rc.111",
+    "@maple-dev/effect-sdk": "0.8.0",
     "@tanstack/react-form": "1.33.5",
     "@tanstack/react-router": "1.170.32",
     "@tanstack/react-start": "1.168.49",

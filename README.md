@@ -53,14 +53,16 @@ mise run setup
 bun alchemy login --configure
 ```
 
-Local API telemetry defaults to unauthenticated Maple OTLP at `http://localhost:4318`. To use hosted Maple, including from preview Workers, configure both values in the root `.env` or deployment environment:
+Local API and browser telemetry use keyless Maple OTLP at `http://127.0.0.1:4318`. Override the endpoints with `MAPLE_ENDPOINT` and `VITE_MAPLE_ENDPOINT`.
+
+Preview API telemetry requires hosted Maple because Workers cannot reach the local collector:
 
 ```sh
 MAPLE_ENDPOINT=https://ingest.maple.dev
 MAPLE_INGEST_KEY=...
 ```
 
-Preview Workers cannot reach a collector running on your machine.
+Local Maple does not support browser sessions or replay.
 
 Start the application:
 
