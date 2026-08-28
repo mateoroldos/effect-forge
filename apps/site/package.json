@@ -22,7 +22,6 @@
     "@tailwindcss/vite": "catalog:",
     "@types/figlet": "^1.7.0",
     "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "tailwindcss": "catalog:"
+    "@types/react-dom": "catalog:"
   }
 }

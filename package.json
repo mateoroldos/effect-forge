@@ -10,7 +10,7 @@
   "scripts": {
     "build": "turbo build",
     "bump-ui": "bunx shadcn@latest add --overwrite -c packages/ui $(ls packages/ui/src/ui | sed 's/\\.tsx$//') && bun run format",
-    "check": "bun run format:check && bun run lint && bun run check:architecture && bun run check-types && bun run test",
+    "check": "bun run format:check && bun run lint && bun run check:architecture && bun run knip && bun run check-types && bun run test",
     "check:architecture": "bun scripts/check-architecture.ts",
     "check-types": "tsc --noEmit && turbo check-types",
     "db:generate": "bun run --cwd adapters/database-postgres db:generate",
@@ -18,6 +18,7 @@
     "dev:site": "alchemy dev alchemy.site.ts",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
+    "knip": "knip",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
     "prepare": "./scripts/prepare-effect.sh && effect-tsgo patch --oxlint",
@@ -30,7 +31,9 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@effect/language-service": "0.87.2",
     "@effect/tsgo": "0.36.5",
+    "knip": "6.33.0",
     "oxfmt": "0.64.0",
     "oxlint": "1.78.0",
     "oxlint-tsgolint": "7.0.2001",

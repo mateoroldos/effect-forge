@@ -1,0 +1,16 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  // Modules re-export themselves (`export * as X from "./x.ts"`) to publish a
+  // namespace. Knip cannot follow member access through that cycle, so every
+  // export in those files reads as unused.
+  "exclude": ["exports", "types"],
+  "workspaces": {
+    ".": {
+      "entry": ["alchemy.run.ts", "alchemy.site.ts", "stacks/*.ts", "scripts/*.ts"],
+    },
+    "apps/site": {
+      // figlet's types are used only from .astro files, which knip cannot read.
+      "ignoreDependencies": ["@types/figlet"],
+    },
+  },
+}
