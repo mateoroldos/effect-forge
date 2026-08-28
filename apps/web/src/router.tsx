@@ -1,10 +1,10 @@
 import { createRouter } from "@tanstack/react-router";
-import { AtomRegistryProvider, makeAtomRegistry } from "./lib/atoms/registry.tsx";
+import { AtomRegistryProvider, createAtomRegistry } from "./lib/atoms/registry.tsx";
 import { routeTree } from "./routeTree.gen.ts";
 
 /** Creates an isolated router and Atom registry for each application request. */
 export const getRouter = () => {
-  const atomRegistry = makeAtomRegistry();
+  const atomRegistry = createAtomRegistry();
 
   return createRouter({
     routeTree,

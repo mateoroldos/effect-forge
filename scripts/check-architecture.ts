@@ -1,4 +1,4 @@
-const allowedDependencies: Readonly<Record<string, ReadonlySet<string>>> = {
+const allowedDependencies = {
   "@effect-forge/api": new Set([
     "@effect-forge/contracts",
     "@effect-forge/core",
@@ -8,15 +8,15 @@ const allowedDependencies: Readonly<Record<string, ReadonlySet<string>>> = {
   "@effect-forge/contracts": new Set(["@effect-forge/domain"]),
   "@effect-forge/core": new Set(["@effect-forge/domain"]),
   "@effect-forge/database-postgres": new Set(["@effect-forge/core", "@effect-forge/domain"]),
-  "@effect-forge/ui": new Set(),
-  "@effect-forge/domain": new Set(),
+  "@effect-forge/ui": new Set<string>(),
+  "@effect-forge/domain": new Set<string>(),
   "@effect-forge/site": new Set(["@effect-forge/ui"]),
   "@effect-forge/web": new Set([
     "@effect-forge/contracts",
     "@effect-forge/ui",
     "@effect-forge/domain",
   ]),
-};
+} satisfies Readonly<Record<string, ReadonlySet<string>>>;
 
 const manifests = [
   ...new Bun.Glob("apps/*/package.json").scanSync(),

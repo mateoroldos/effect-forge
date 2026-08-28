@@ -18,9 +18,8 @@ export default Alchemy.Stack(
       cwd: "apps/site",
       outdir: "dist",
       dev: { command: "bun run dev", cwd: "apps/site" },
-      ...(stage === "prod"
-        ? { domain: { name: "effect-forge.com", redirects: ["www.effect-forge.com"] } }
-        : {}),
+      domain:
+        stage === "prod" ? { name: "effect-forge.com", redirects: ["www.effect-forge.com"] } : null,
     });
 
     return { siteUrl: site.url };

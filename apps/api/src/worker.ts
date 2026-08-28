@@ -16,7 +16,7 @@ export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
 
     return {
       main: import.meta.url,
-      ...(stage === "prod" ? { domain: "api.effect-forge.com" } : {}),
+      domain: stage === "prod" ? "api.effect-forge.com" : null,
       compatibility: { flags: ["nodejs_compat"] },
       observability: { enabled: true },
     };
