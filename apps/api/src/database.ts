@@ -16,8 +16,8 @@ const branchPolicy = Effect.fn(function* (stage: string) {
 export const postgres = Effect.gen(function* () {
   const { stage } = yield* Alchemy.Stack;
   const schema = yield* Drizzle.Schema("ApiSchema", {
-    schema: "./packages/database/src/workspace/schema.ts",
-    out: "./packages/database/drizzle",
+    schema: "./adapters/database-postgres/src/workspace/schema.ts",
+    out: "./adapters/database-postgres/drizzle",
   });
 
   const ownsProject = stage === "prod" || stage === "staging";

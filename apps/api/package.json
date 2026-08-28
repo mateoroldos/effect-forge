@@ -10,7 +10,7 @@
   "dependencies": {
     "@effect-forge/contracts": "workspace:*",
     "@effect-forge/core": "workspace:*",
-    "@effect-forge/database": "workspace:*",
+    "@effect-forge/database-postgres": "workspace:*",
     "@effect-forge/domain": "workspace:*",
     "@effect/platform-node": "catalog:",
     "alchemy": "catalog:",

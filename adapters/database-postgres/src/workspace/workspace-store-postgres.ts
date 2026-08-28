@@ -3,14 +3,14 @@ import { Workspace } from "@effect-forge/domain/workspace";
 import { asc } from "drizzle-orm";
 import { Cause, Effect, Layer, Option, Schema } from "effect";
 import * as SqlError from "effect/unstable/sql/SqlError";
-import { DatabasePostgres } from "../database-postgres.ts";
+import { Database } from "../internal/database.ts";
 import { workspaces } from "./schema.ts";
 
 /** Provides PostgreSQL-backed workspace persistence. */
 export const layer = Layer.effect(
   WorkspaceStore.Service,
   Effect.gen(function* () {
-    const database = yield* DatabasePostgres.Service;
+    const database = yield* Database.Service;
 
     const insert = Effect.fn("WorkspaceStorePostgres.insert")((workspace: Workspace) =>
       database

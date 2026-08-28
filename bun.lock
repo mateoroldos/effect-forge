@@ -19,13 +19,34 @@
         "typescript": "7.0.2",
       },
     },
+    "adapters/database-postgres": {
+      "name": "@effect-forge/database-postgres",
+      "version": "0.0.0",
+      "dependencies": {
+        "@effect-forge/core": "workspace:*",
+        "@effect-forge/domain": "workspace:*",
+        "@effect/sql-pg": "catalog:",
+        "drizzle-orm": "catalog:",
+        "effect": "catalog:",
+        "pg": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/sql-pglite": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@electric-sql/pglite": "catalog:",
+        "@types/bun": "catalog:",
+        "@types/pg": "catalog:",
+        "drizzle-kit": "catalog:",
+        "vitest": "catalog:",
+      },
+    },
     "apps/api": {
       "name": "@effect-forge/api",
       "version": "0.0.0",
       "dependencies": {
         "@effect-forge/contracts": "workspace:*",
         "@effect-forge/core": "workspace:*",
-        "@effect-forge/database": "workspace:*",
+        "@effect-forge/database-postgres": "workspace:*",
         "@effect-forge/domain": "workspace:*",
         "@effect/platform-node": "catalog:",
         "alchemy": "catalog:",
@@ -97,27 +118,6 @@
       },
       "devDependencies": {
         "@effect/vitest": "catalog:",
-        "vitest": "catalog:",
-      },
-    },
-    "packages/database": {
-      "name": "@effect-forge/database",
-      "version": "0.0.0",
-      "dependencies": {
-        "@effect-forge/core": "workspace:*",
-        "@effect-forge/domain": "workspace:*",
-        "@effect/sql-pg": "catalog:",
-        "drizzle-orm": "catalog:",
-        "effect": "catalog:",
-        "pg": "catalog:",
-      },
-      "devDependencies": {
-        "@effect/sql-pglite": "catalog:",
-        "@effect/vitest": "catalog:",
-        "@electric-sql/pglite": "catalog:",
-        "@types/bun": "catalog:",
-        "@types/pg": "catalog:",
-        "drizzle-kit": "catalog:",
         "vitest": "catalog:",
       },
     },
@@ -362,7 +362,7 @@
 
     "@effect-forge/core": ["@effect-forge/core@workspace:packages/core"],
 
-    "@effect-forge/database": ["@effect-forge/database@workspace:packages/database"],
+    "@effect-forge/database-postgres": ["@effect-forge/database-postgres@workspace:adapters/database-postgres"],
 
     "@effect-forge/design-system": ["@effect-forge/design-system@workspace:packages/design-system"],
 

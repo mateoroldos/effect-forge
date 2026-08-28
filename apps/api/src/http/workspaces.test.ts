@@ -3,14 +3,13 @@ import { WorkspaceApi } from "@effect-forge/contracts/workspaces";
 import { WorkspaceDirectory } from "@effect-forge/core/workspace-directory";
 import { WorkspaceStore } from "@effect-forge/core/workspace-store";
 import { CryptoTest } from "@effect-forge/core/test/crypto";
-import { DatabasePglite } from "@effect-forge/database/test/database-pglite";
-import { WorkspaceStorePostgres } from "@effect-forge/database/workspace-store-postgres";
+import { PersistencePglite } from "@effect-forge/database-postgres/test";
 import { Workspace, WorkspaceName } from "@effect-forge/domain/workspace";
 import { Effect, Layer, Schema } from "effect";
 import { App } from "../app.ts";
 import { ApiTest } from "../test/api-test.ts";
 
-const storeLayer = WorkspaceStorePostgres.layer.pipe(Layer.provide(DatabasePglite.layer));
+const storeLayer = PersistencePglite.layer;
 const directoryLayer = WorkspaceDirectory.layerWithoutDependencies.pipe(
   Layer.provide(Layer.merge(CryptoTest.layer, storeLayer)),
 );

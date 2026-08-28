@@ -1,6 +1,5 @@
 import { WorkspaceDirectory } from "@effect-forge/core/workspace-directory";
-import { DatabasePostgres } from "@effect-forge/database/postgres";
-import { WorkspaceStorePostgres } from "@effect-forge/database/workspace-store-postgres";
+import { PersistencePostgres } from "@effect-forge/database-postgres";
 import { NodeCrypto } from "@effect/platform-node";
 import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
@@ -25,8 +24,7 @@ export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
   Effect.gen(function* () {
     const hyperdrive = yield* Cloudflare.Hyperdrive.Connect(Database.hyperdrive);
     const postgresLayer = SQL.PostgresLayer({ url: hyperdrive.connectionString });
-    const databaseLayer = DatabasePostgres.layer.pipe(Layer.provide(postgresLayer));
-    const storeLayer = WorkspaceStorePostgres.layer.pipe(Layer.provide(databaseLayer));
+    const storeLayer = PersistencePostgres.layer.pipe(Layer.provide(postgresLayer));
     const directoryLayer = WorkspaceDirectory.layerWithoutDependencies.pipe(
       Layer.provide(Layer.merge(NodeCrypto.layer, storeLayer)),
     );

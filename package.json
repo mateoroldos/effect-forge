@@ -13,7 +13,7 @@
     "check": "bun run format:check && bun run lint && bun run check:architecture && bun run check-types && bun run test",
     "check:architecture": "bun scripts/check-architecture.ts",
     "check-types": "tsc --noEmit && turbo check-types",
-    "db:generate": "bun run --cwd packages/database db:generate",
+    "db:generate": "bun run --cwd adapters/database-postgres db:generate",
     "dev": "alchemy dev",
     "dev:site": "alchemy dev alchemy.site.ts",
     "format": "oxfmt",

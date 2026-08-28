@@ -2,12 +2,12 @@ import { PgliteClient } from "@effect/sql-pglite";
 import { makeWithDefaults } from "drizzle-orm/effect-pglite";
 import { migrate } from "drizzle-orm/effect-pglite/migrator";
 import { Effect, Layer } from "effect";
-import { DatabasePostgres } from "../database-postgres.ts";
+import { Database } from "../internal/database.ts";
 import { migrationConfig } from "../migrations.ts";
+import { WorkspaceStorePostgres } from "../workspace/workspace-store-postgres.ts";
 
-/** Provides an isolated migrated PGlite database for tests. */
-export const layer = Layer.effect(
-  DatabasePostgres.Service,
+const databaseLayer = Layer.effect(
+  Database.Service,
   Effect.gen(function* () {
     const database = yield* makeWithDefaults();
     yield* migrate(database, migrationConfig);
@@ -15,4 +15,7 @@ export const layer = Layer.effect(
   }),
 ).pipe(Layer.provide(PgliteClient.layer()));
 
-export * as DatabasePglite from "./database-pglite.ts";
+/** Provides every PostgreSQL persistence port through an isolated migrated PGlite database. */
+export const layer = WorkspaceStorePostgres.layer.pipe(Layer.provide(databaseLayer));
+
+export * as PersistencePglite from "./persistence-pglite.ts";
