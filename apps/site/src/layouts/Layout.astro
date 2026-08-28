@@ -24,7 +24,7 @@ const { title } = Astro.props;
     <div class="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-20 px-6 pt-10 sm:pt-14">
       <header class="flex items-center justify-between font-mono text-sm text-muted-foreground">
         <span class="text-foreground">effect-forge</span>
-        <a class="hover:text-foreground" href={site.repository}>github ↗</a>
+        <a class="hover:text-foreground" href={site.repository} target="_blank" rel="noopener">github ↗</a>
       </header>
       <slot />
     </div>
@@ -33,7 +33,7 @@ const { title } = Astro.props;
         class="mx-auto flex max-w-2xl items-center justify-between border-t px-6 pt-6 font-mono text-xs text-muted-foreground"
       >
         <span>MIT</span>
-        <a class="hover:text-foreground" href={site.repository}>GitHub ↗</a>
+        <a class="hover:text-foreground" href={site.repository} target="_blank" rel="noopener">GitHub ↗</a>
       </div>
       <Flames class="mt-12" />
     </footer>
