@@ -7,7 +7,8 @@ import * as SQL from "alchemy/SQL/Postgres";
 import { Effect, Layer } from "effect";
 import { HttpMiddleware, HttpRouter } from "effect/unstable/http";
 import { App } from "./app.ts";
-import { Database } from "./database.ts";
+import { Database } from "./infrastructure/database.ts";
+import { Telemetry } from "./infrastructure/telemetry.ts";
 
 export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
   "ApiWorker",
@@ -35,5 +36,5 @@ export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
     return {
       fetch: httpApp.pipe(HttpMiddleware.cors()),
     };
-  }).pipe(Effect.provide(Cloudflare.Hyperdrive.ConnectBinding)),
+  }).pipe(Effect.provide(Layer.merge(Cloudflare.Hyperdrive.ConnectBinding, Telemetry.layer))),
 ) {}

@@ -1,5 +1,6 @@
 import ApiWorker from "./apps/api/src/worker.ts";
 import * as Alchemy from "alchemy";
+import * as Axiom from "alchemy/Axiom";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as Drizzle from "alchemy/Drizzle";
 import * as GitHub from "alchemy/GitHub";
@@ -10,7 +11,7 @@ import { Config, Effect, Layer } from "effect";
 export default Alchemy.Stack(
   "EffectForge",
   {
-    providers: Layer.merge(Drizzle.providers(), Neon.providers()).pipe(
+    providers: Layer.mergeAll(Axiom.providers(), Drizzle.providers(), Neon.providers()).pipe(
       Layer.provideMerge(Cloudflare.providers()),
       Layer.provideMerge(GitHub.providers()),
     ),

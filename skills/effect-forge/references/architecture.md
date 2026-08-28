@@ -7,7 +7,7 @@ apps/
 ├─ api/
 │  ├─ src/http/              HttpApi handlers
 │  ├─ src/app.ts             dependency-open HTTP application graph
-│  ├─ src/database.ts        database infrastructure resources
+│  ├─ src/infrastructure/    database and telemetry resources
 │  └─ src/worker.ts          Worker entrypoint and production composition
 └─ web/
    ├─ src/routes/            TanStack Start routes
@@ -36,7 +36,7 @@ skills/effect-forge/         task guidance
 
 ```text
 web → contracts, domain, ui, telemetry adapters
-api → core, contracts, database, auth, and telemetry adapters
+api → core, contracts, database and auth adapters, Alchemy telemetry
 contracts → domain
 core → domain
 database-postgres → core, domain
@@ -45,7 +45,7 @@ telemetry adapters → nothing
 ui → nothing
 ```
 
-Applications do not import one another. `packages/*` contain application-owned or shared technology-neutral modules. `adapters/*` translate concrete technology into owned ports or runtime Layers and are selected only by composition roots. Both web and API composition roots may import runtime-appropriate telemetry adapters. The architecture check enforces these directions.
+Applications do not import one another. `packages/*` contain application-owned or shared technology-neutral modules. `adapters/*` translate concrete technology into owned ports or runtime Layers and are selected only by composition roots. The API uses Alchemy's Worker-native telemetry integration; the web composition root may import a browser telemetry adapter. The architecture check enforces these directions.
 
 ## Package conventions
 
@@ -104,6 +104,12 @@ Create an `AtomRegistry` for each SSR request, seed it from route data when need
 
 ## Composition
 
-`apps/api` composes application services, adapters, handlers, middleware, and the HTTP server. `apps/web` composes the React application, Atom registry, transport clients, and SSR runtime.
+`apps/api` composes application services, adapters, handlers, middleware, telemetry, and the HTTP server. `apps/web` composes the React application, Atom registry, transport clients, and SSR runtime.
 
 The root `alchemy.run.ts` composes the web and API infrastructure factories. TanStack Start deploys to Cloudflare through Alchemy's Vite website support. Each app provisions only the resources it consumes.
+
+## Telemetry
+
+Application code uses Effect's `Tracer`, `Logger`, and `Metric` vocabulary. The API composition installs Alchemy's generic OTLP Layer outside production and its Axiom integration in production; Alchemy owns Worker bindings, per-event exporters, and request-completion flushing.
+
+Local API telemetry defaults to unauthenticated Maple OTLP at `http://localhost:4318`. Hosted Maple requires both `MAPLE_ENDPOINT` and `MAPLE_INGEST_KEY`; the key becomes a redacted bearer authorization binding. Preview Workers must use hosted configuration because they cannot reach a developer's local collector.

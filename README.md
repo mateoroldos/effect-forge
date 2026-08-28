@@ -28,6 +28,7 @@ skills/effect-forge/     playbooks, loaded per task
 apps/
 ├─ web                   TanStack Start application
 ├─ api                   Effect HTTP API
+│  └─ src/infrastructure database and telemetry composition
 └─ site                  the project's landing page
 
 packages/
@@ -51,6 +52,15 @@ mise trust
 mise run setup
 bun alchemy login --configure
 ```
+
+Local API telemetry defaults to unauthenticated Maple OTLP at `http://localhost:4318`. To use hosted Maple, including from preview Workers, configure both values in the root `.env` or deployment environment:
+
+```sh
+MAPLE_ENDPOINT=https://ingest.maple.dev
+MAPLE_INGEST_KEY=...
+```
+
+Preview Workers cannot reach a collector running on your machine.
 
 Start the application:
 
