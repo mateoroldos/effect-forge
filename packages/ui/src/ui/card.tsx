@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@effect-forge/design-system/cn";
+import { cn } from "@effect-forge/ui/cn";
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (

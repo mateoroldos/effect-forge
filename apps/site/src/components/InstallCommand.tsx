@@ -1,4 +1,4 @@
-import { Button } from "@effect-forge/design-system/ui/button";
+import { Button } from "@effect-forge/ui/ui/button";
 import { useState } from "react";
 
 export const InstallCommand = ({ command }: { readonly command: string }) => {

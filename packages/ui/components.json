@@ -11,11 +11,11 @@
     "prefix": ""
   },
   "aliases": {
-    "components": "@effect-forge/design-system/ui",
-    "ui": "@effect-forge/design-system/ui",
-    "lib": "@effect-forge/design-system/cn",
-    "utils": "@effect-forge/design-system/cn",
-    "hooks": "@effect-forge/design-system/hooks"
+    "components": "@effect-forge/ui/ui",
+    "ui": "@effect-forge/ui/ui",
+    "lib": "@effect-forge/ui/cn",
+    "utils": "@effect-forge/ui/cn",
+    "hooks": "@effect-forge/ui/hooks"
   },
   "iconLibrary": "lucide"
 }

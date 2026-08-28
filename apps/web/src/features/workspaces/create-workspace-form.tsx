@@ -1,9 +1,9 @@
 import { useAtomSet } from "@effect/atom-react";
 import { WorkspaceApi } from "@effect-forge/contracts/workspaces";
-import { Button } from "@effect-forge/design-system/ui/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@effect-forge/design-system/ui/field";
-import { Input } from "@effect-forge/design-system/ui/input";
-import { toast } from "@effect-forge/design-system/ui/sonner";
+import { Button } from "@effect-forge/ui/ui/button";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@effect-forge/ui/ui/field";
+import { Input } from "@effect-forge/ui/ui/input";
+import { toast } from "@effect-forge/ui/ui/sonner";
 import { useForm } from "@tanstack/react-form";
 import { Cause, Effect, Exit, Match, Option, Schema } from "effect";
 import { createWorkspace } from "./atoms.ts";

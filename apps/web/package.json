@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@effect-forge/contracts": "workspace:*",
-    "@effect-forge/design-system": "workspace:*",
     "@effect-forge/domain": "workspace:*",
+    "@effect-forge/ui": "workspace:*",
     "@effect/atom-react": "4.0.0-rc.111",
     "@tanstack/react-form": "1.33.5",
     "@tanstack/react-router": "1.170.32",

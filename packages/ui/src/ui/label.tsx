@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Label as LabelPrimitive } from "radix-ui";
 
-import { cn } from "@effect-forge/design-system/cn";
+import { cn } from "@effect-forge/ui/cn";
 
 function Label({ className, ...props }: React.ComponentProps<typeof LabelPrimitive.Root>) {
   return (

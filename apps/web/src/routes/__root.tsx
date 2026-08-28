@@ -1,4 +1,4 @@
-import { Toaster } from "@effect-forge/design-system/ui/sonner";
+import { Toaster } from "@effect-forge/ui/ui/sonner";
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import appCss from "../app.css?url";

@@ -8,12 +8,12 @@ const allowedDependencies: Readonly<Record<string, ReadonlySet<string>>> = {
   "@effect-forge/contracts": new Set(["@effect-forge/domain"]),
   "@effect-forge/core": new Set(["@effect-forge/domain"]),
   "@effect-forge/database-postgres": new Set(["@effect-forge/core", "@effect-forge/domain"]),
-  "@effect-forge/design-system": new Set(),
+  "@effect-forge/ui": new Set(),
   "@effect-forge/domain": new Set(),
-  "@effect-forge/site": new Set(["@effect-forge/design-system"]),
+  "@effect-forge/site": new Set(["@effect-forge/ui"]),
   "@effect-forge/web": new Set([
     "@effect-forge/contracts",
-    "@effect-forge/design-system",
+    "@effect-forge/ui",
     "@effect-forge/domain",
   ]),
 };

@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@effect-forge/design-system/cn";
+import { cn } from "@effect-forge/ui/cn";
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (

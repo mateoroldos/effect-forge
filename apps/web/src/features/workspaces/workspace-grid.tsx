@@ -1,5 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
-import { Skeleton } from "@effect-forge/design-system/ui/skeleton";
+import { Skeleton } from "@effect-forge/ui/ui/skeleton";
 import type { ReactNode } from "react";
 import { AsyncResult } from "effect/unstable/reactivity";
 import { workspaces } from "./atoms.ts";

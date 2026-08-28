@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Separator as SeparatorPrimitive } from "radix-ui";
 
-import { cn } from "@effect-forge/design-system/cn";
+import { cn } from "@effect-forge/ui/cn";
 
 function Separator({
   className,

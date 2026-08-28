@@ -5,7 +5,7 @@
     "jsx": "react-jsx",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "paths": {
-      "@effect-forge/design-system/*": ["./src/*"]
+      "@effect-forge/ui/*": ["./src/*"]
     }
   }
 }

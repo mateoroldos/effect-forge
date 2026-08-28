@@ -61,7 +61,7 @@
       "name": "@effect-forge/site",
       "version": "0.0.0",
       "dependencies": {
-        "@effect-forge/design-system": "workspace:*",
+        "@effect-forge/ui": "workspace:*",
         "astro": "7.2.7",
         "figlet": "^1.11.4",
         "react": "catalog:",
@@ -82,8 +82,8 @@
       "version": "0.0.0",
       "dependencies": {
         "@effect-forge/contracts": "workspace:*",
-        "@effect-forge/design-system": "workspace:*",
         "@effect-forge/domain": "workspace:*",
+        "@effect-forge/ui": "workspace:*",
         "@effect/atom-react": "4.0.0-rc.111",
         "@tanstack/react-form": "1.33.5",
         "@tanstack/react-router": "1.170.32",
@@ -121,8 +121,19 @@
         "vitest": "catalog:",
       },
     },
-    "packages/design-system": {
-      "name": "@effect-forge/design-system",
+    "packages/domain": {
+      "name": "@effect-forge/domain",
+      "version": "0.0.0",
+      "dependencies": {
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "vitest": "catalog:",
+      },
+    },
+    "packages/ui": {
+      "name": "@effect-forge/ui",
       "version": "0.0.0",
       "dependencies": {
         "class-variance-authority": "0.7.1",
@@ -139,17 +150,6 @@
       "peerDependencies": {
         "react": ">=19",
         "react-dom": ">=19",
-      },
-    },
-    "packages/domain": {
-      "name": "@effect-forge/domain",
-      "version": "0.0.0",
-      "dependencies": {
-        "effect": "catalog:",
-      },
-      "devDependencies": {
-        "@effect/vitest": "catalog:",
-        "vitest": "catalog:",
       },
     },
   },
@@ -364,11 +364,11 @@
 
     "@effect-forge/database-postgres": ["@effect-forge/database-postgres@workspace:adapters/database-postgres"],
 
-    "@effect-forge/design-system": ["@effect-forge/design-system@workspace:packages/design-system"],
-
     "@effect-forge/domain": ["@effect-forge/domain@workspace:packages/domain"],
 
     "@effect-forge/site": ["@effect-forge/site@workspace:apps/site"],
+
+    "@effect-forge/ui": ["@effect-forge/ui@workspace:packages/ui"],
 
     "@effect-forge/web": ["@effect-forge/web@workspace:apps/web"],
 

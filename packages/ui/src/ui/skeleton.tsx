@@ -1,4 +1,4 @@
-import { cn } from "@effect-forge/design-system/cn";
+import { cn } from "@effect-forge/ui/cn";
 import type { ComponentProps } from "react";
 
 function Skeleton({ className, ...props }: ComponentProps<"div">) {

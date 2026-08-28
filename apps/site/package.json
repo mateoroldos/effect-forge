@@ -10,7 +10,7 @@
     "dev": "astro dev"
   },
   "dependencies": {
-    "@effect-forge/design-system": "workspace:*",
+    "@effect-forge/ui": "workspace:*",
     "astro": "7.2.7",
     "figlet": "^1.11.4",
     "react": "catalog:",
