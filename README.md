@@ -34,8 +34,10 @@ packages/
 ├─ domain                the domain model
 ├─ core                  application services and ports
 ├─ contracts             typed HTTP contracts
-├─ design-system         shared visual vocabulary
-└─ database              adapter: PostgreSQL
+└─ ui                    shared visual vocabulary
+
+adapters/
+└─ database-postgres     PostgreSQL port implementations
 
 alchemy.run.ts           infrastructure as code
 ```

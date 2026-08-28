@@ -3,7 +3,7 @@ import Section from "../components/Section.astro";
 
 // Rendered as one HTML string: JSX inside a <pre> would emit its own indentation.
 // Each comment names the layer, so the tree reads as the architecture rather than
-// a file listing. Adapters say so and sort last, under the ports they implement.
+// a file listing.
 const rows = [
   { path: "AGENTS.md", comment: "conventions every agent reads" },
   { path: "skills/effect-forge/", comment: "playbooks, loaded per task" },
@@ -16,9 +16,12 @@ const rows = [
   { path: "├─ domain", comment: "the domain model" },
   { path: "├─ core", comment: "application services and ports" },
   { path: "├─ contracts", comment: "typed HTTP contracts" },
-  { path: "├─ design-system", comment: "shared visual vocabulary" },
-  { path: "├─ database", comment: "adapter: PostgreSQL" },
-  { path: "└─ auth-better", comment: "adapter: authentication" },
+  { path: "└─ ui", comment: "shared visual vocabulary" },
+  { path: "" },
+  { path: "adapters/" },
+  { path: "├─ database-postgres", comment: "PostgreSQL" },
+  { path: "├─ auth-better", comment: "authentication" },
+  { path: "└─ telemetry-maple", comment: "runtime observability" },
   { path: "" },
   { path: "alchemy.run.ts", comment: "infrastructure as code" },
 ] as const;

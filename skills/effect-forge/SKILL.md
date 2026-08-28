@@ -19,15 +19,17 @@ Read the nearest `AGENTS.md`, inspect installed dependency versions, and follow 
 
 ## Repository model
 
-| Location               | Responsibility                                           |
-| ---------------------- | -------------------------------------------------------- |
-| `apps/web`             | TanStack Start, React, Effect Atom, and typed API client |
-| `apps/api`             | HTTP handlers and production Layer composition           |
-| `packages/domain`      | pure shared domain vocabulary                            |
-| `packages/core`        | application services and owned ports                     |
-| `packages/contracts`   | public Effect `HttpApi` contracts                        |
-| `packages/database`    | PostgreSQL port adapters                                 |
-| `packages/auth-better` | Better Auth port adapters                                |
+| Location                     | Responsibility                                           |
+| ---------------------------- | -------------------------------------------------------- |
+| `apps/web`                   | TanStack Start, React, Effect Atom, and typed API client |
+| `apps/api`                   | HTTP handlers and production Layer composition           |
+| `packages/domain`            | pure shared domain vocabulary                            |
+| `packages/core`              | application services and owned ports                     |
+| `packages/contracts`         | public Effect `HttpApi` contracts                        |
+| `packages/ui`                | shared React components and visual theme                 |
+| `adapters/database-postgres` | PostgreSQL port implementations                          |
+| `adapters/auth-better`       | Better Auth port implementations                         |
+| `adapters/telemetry-*`       | runtime observability integrations                       |
 
 ## Capability path
 

@@ -2,6 +2,7 @@
   "name": "effect-forge",
   "private": true,
   "workspaces": [
+    "adapters/*",
     "apps/*",
     "packages/*"
   ],
@@ -9,7 +10,8 @@
   "scripts": {
     "build": "turbo build",
     "bump-ui": "bunx shadcn@latest add --overwrite -c packages/design-system $(ls packages/design-system/src/ui | sed 's/\\.tsx$//') && bun run format",
-    "check": "bun run format:check && bun run lint && bun run check-types && bun run test",
+    "check": "bun run format:check && bun run lint && bun run check:architecture && bun run check-types && bun run test",
+    "check:architecture": "bun scripts/check-architecture.ts",
     "check-types": "tsc --noEmit && turbo check-types",
     "db:generate": "bun run --cwd packages/database db:generate",
     "dev": "alchemy dev",

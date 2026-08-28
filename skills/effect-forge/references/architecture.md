@@ -20,8 +20,12 @@ packages/
 ├─ domain/src/<capability>/
 ├─ core/src/<service>/
 ├─ contracts/src/<api>/
-├─ database/src/<adapter>/
-└─ auth-better/src/<adapter>/
+└─ ui/src/                    shared visual vocabulary
+
+adapters/
+├─ database-postgres/src/     PostgreSQL port implementations
+├─ auth-better/src/           Better Auth port implementations
+└─ telemetry-*/src/           runtime telemetry integrations
 
 alchemy.run.ts               stack composition
 AGENTS.md                    repository rules
@@ -31,15 +35,17 @@ skills/effect-forge/         task guidance
 ## Dependency graph
 
 ```text
-web → contracts, domain
-api → core, contracts, database, auth-better
+web → contracts, domain, ui, telemetry adapters
+api → core, contracts, database, auth, and telemetry adapters
 contracts → domain
 core → domain
-database → core, domain
+database-postgres → core, domain
 auth-better → core, domain
+telemetry adapters → nothing
+ui → nothing
 ```
 
-Applications do not import one another. Adapter packages are imported only by `apps/api`. An architecture check must enforce these directions.
+Applications do not import one another. `packages/*` contain application-owned or shared technology-neutral modules. `adapters/*` translate concrete technology into owned ports or runtime Layers and are selected only by composition roots. Both web and API composition roots may import runtime-appropriate telemetry adapters. The architecture check enforces these directions.
 
 ## Package conventions
 
@@ -55,7 +61,7 @@ browser
   → apps/api HttpApi handler
   → packages/core application service
   → application-owned port
-  → PostgreSQL or Better Auth adapter
+  → adapters/database-postgres or adapters/auth-better
 ```
 
 TanStack Start server functions do not proxy ordinary application requests. Use them only when SSR or server-owned credentials require a web-server boundary.

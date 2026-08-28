@@ -12,7 +12,7 @@ packages/core/src/agent-directory/
   AgentDirectory service
   AgentStore port
 
-packages/database/src/agent-store-postgres/
+adapters/database-postgres/src/agent-store-postgres/
   AgentStore PostgreSQL adapter
 
 packages/contracts/src/agents-api/
