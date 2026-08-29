@@ -7,6 +7,7 @@
   "workspaces": {
     ".": {
       "entry": ["alchemy.run.ts", "alchemy.site.ts", "stacks/*.ts", "scripts/*.ts"],
+      "ignoreBinaries": ["maple"],
     },
     "apps/site": {
       // figlet's types are used only from .astro files, which knip cannot read.

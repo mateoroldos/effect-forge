@@ -35,7 +35,7 @@ skills/effect-forge/         task guidance
 
 ```text
 web → contracts, domain, ui, Maple browser SDK
-api → core, contracts, database and auth adapters, Alchemy telemetry
+api → core, contracts, database and auth adapters, OTLP telemetry
 contracts → domain
 core → domain
 database-postgres → core, domain
@@ -43,7 +43,7 @@ auth-better → core, domain
 ui → nothing
 ```
 
-Applications do not import one another. `packages/*` contain application-owned or shared technology-neutral modules. `adapters/*` translate concrete technology into owned ports and are selected only by composition roots. The API uses Alchemy's Worker-native telemetry integration; the web composition root installs Maple's browser-native telemetry Layer directly. The architecture check enforces these directions.
+Applications do not import one another. `packages/*` contain application-owned or shared technology-neutral modules. `adapters/*` translate concrete technology into owned ports and are selected only by composition roots. Effect's observability services are the telemetry seam: the API uses Alchemy's Worker-native OTLP lifecycle to export to Maple, while the web composition root installs Maple's browser-native Layer directly. The architecture check enforces these directions.
 
 ## Package conventions
 
@@ -108,8 +108,6 @@ The root `alchemy.run.ts` composes the web and API infrastructure factories. Tan
 
 ## Telemetry
 
-Application code uses Effect's `Tracer`, `Logger`, and `Metric` vocabulary. The API composition installs Alchemy's generic OTLP Layer outside production and its Axiom integration in production; Alchemy owns Worker bindings, per-event exporters, and request-completion flushing.
+Effect's observability services are the application seam, and telemetry is disabled by default. When enabled, the API exports OTLP to Maple through Alchemy's Worker lifecycle; the browser installs Maple in its Atom runtime so HTTP spans propagate trace context.
 
-Local API telemetry defaults to unauthenticated Maple OTLP at `http://127.0.0.1:4318`. Hosted Maple requires both `MAPLE_ENDPOINT` and `MAPLE_INGEST_KEY`; the key becomes a redacted bearer authorization binding. Preview Workers must use hosted configuration because they cannot reach a developer's local collector.
-
-In development, client-only composition installs Maple's documented keyless browser Layer before creating the Atom registry. It exports directly to `VITE_MAPLE_ENDPOINT` and is excluded from SSR and production builds. Local Maple does not expose session or replay ingest routes, so replay and session metadata remain disabled.
+Local Maple is keyless at `http://127.0.0.1:4318`. Hosted Maple requires separate server and browser ingest keys. Session metadata, replay, and TanStack Start server telemetry remain disabled.

@@ -1,5 +1,6 @@
 [tools]
 bun = "1.4.0"
+"github:MapleTechLabs/maple" = "0.0.21"
 
 [env]
 ALCHEMY_PROFILE = "effect-forge"

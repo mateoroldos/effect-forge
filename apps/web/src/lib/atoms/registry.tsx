@@ -1,7 +1,7 @@
 import { RegistryContext, scheduleTask } from "@effect/atom-react";
 import { Atom, AtomRegistry } from "effect/unstable/reactivity";
 import type { ReactNode } from "react";
-import { browserTelemetryLayer } from "../telemetry.ts";
+import { browserTelemetryLayer } from "../browser-telemetry.ts";
 
 if (browserTelemetryLayer !== undefined) {
   Atom.runtime.addGlobalLayer(browserTelemetryLayer);

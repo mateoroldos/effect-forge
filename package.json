@@ -15,6 +15,7 @@
     "check-types": "tsc --noEmit && turbo check-types",
     "db:generate": "bun run --cwd adapters/database-postgres db:generate",
     "dev": "alchemy dev",
+    "dev:telemetry": "maple start --offline --background && TELEMETRY_ENABLED=true MAPLE_ENDPOINT=http://127.0.0.1:4318 alchemy dev",
     "dev:site": "alchemy dev alchemy.site.ts",
     "format": "oxfmt",
     "format:check": "oxfmt --check",

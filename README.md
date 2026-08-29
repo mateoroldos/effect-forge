@@ -53,21 +53,25 @@ mise run setup
 bun alchemy login --configure
 ```
 
-Local API and browser telemetry use keyless Maple OTLP at `http://127.0.0.1:4318`. Override the endpoints with `MAPLE_ENDPOINT` and `VITE_MAPLE_ENDPOINT`.
-
-Preview API telemetry requires hosted Maple because Workers cannot reach the local collector:
-
-```sh
-MAPLE_ENDPOINT=https://ingest.maple.dev
-MAPLE_INGEST_KEY=...
-```
-
-Local Maple does not support browser sessions or replay.
-
-Start the application:
+[Maple](https://maple.dev) is an OpenTelemetry-native platform for exploring traces, logs, and metrics. Effect Forge can send correlated browser and API telemetry to Maple, but keeps it disabled by default:
 
 ```sh
 bun run dev
+```
+
+Enable telemetry with a local Maple instance:
+
+```sh
+bun run dev:telemetry
+```
+
+To connect a deployment to hosted Maple, provide its endpoint and separate server and browser ingest keys:
+
+```sh
+TELEMETRY_ENABLED=true
+MAPLE_ENDPOINT=https://ingest.maple.dev
+MAPLE_INGEST_KEY=...          # private server ingest key
+MAPLE_BROWSER_INGEST_KEY=...  # publishable browser ingest key
 ```
 
 `mise` derives `STAGE` from the user and checkout directory. Each clone, `git worktree`, or `jj workspace` therefore gets its own Neon branch and local Alchemy stage, branched from the staging project — so staging has to exist first.
