@@ -8,5 +8,5 @@ STAGE = "dev_{{ env.USER }}_{{ config_root | basename }}"
 
 [tasks.setup]
 description = "Bootstrap a fresh checkout"
-run = ["mise install", "bun install"]
+run = ["mise install", "bun install", "test -e .env || cp .env.example .env"]
 
