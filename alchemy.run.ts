@@ -48,3 +48,31 @@ export default Alchemy.Stack(
     return { apiUrl: api.url, webUrl: web.url };
   }),
 );
+
+const resolveBrowserTelemetryEnv = (stage: string) =>
+  Effect.gen(function* () {
+    const enabled = yield* Config.boolean("TELEMETRY_ENABLED").pipe(Config.withDefault(false));
+    if (!enabled) return { VITE_TELEMETRY_ENABLED: "false" };
+
+    const endpoint = yield* Config.url("MAPLE_ENDPOINT").pipe(
+      Config.withDefault(
+        new URL(stage.startsWith("dev_") ? "http://127.0.0.1:4318" : "https://ingest.maple.dev"),
+      ),
+    );
+    const local = ["127.0.0.1", "::1", "[::1]", "localhost"].includes(endpoint.hostname);
+    const ingestKey = local
+      ? yield* Config.option(Config.string("MAPLE_BROWSER_INGEST_KEY"))
+      : Option.some(yield* Config.string("MAPLE_BROWSER_INGEST_KEY"));
+
+    return Option.match(ingestKey, {
+      onNone: () => ({
+        VITE_TELEMETRY_ENABLED: "true",
+        VITE_MAPLE_ENDPOINT: endpoint.toString(),
+      }),
+      onSome: (key) => ({
+        VITE_TELEMETRY_ENABLED: "true",
+        VITE_MAPLE_ENDPOINT: endpoint.toString(),
+        VITE_MAPLE_INGEST_KEY: key,
+      }),
+    });
+  });
