@@ -20,6 +20,7 @@ const applicationRequirements = Layer.merge(CryptoDeterministic.layer, Persisten
 const served = Layer.unwrap(
   Effect.gen(function* () {
     const provider = yield* AuthBetter.make({
+      baseUrl: new URL("http://effect-forge.test"),
       basePath: AppApi.authBasePath,
       provider: ProviderId.make("better-auth"),
       secret: Redacted.make("test-secret-test-secret-test-secret"),

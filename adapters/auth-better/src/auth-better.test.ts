@@ -14,6 +14,7 @@ const serve = (fetch: AuthBetter.Instance["fetch"], request: Request) =>
 
 const makeAdapter = (cookieDomain: string | null = null) =>
   AuthBetter.make({
+    baseUrl: new URL("http://localhost"),
     basePath: "/auth",
     provider: ProviderId.make("better-auth"),
     secret: Redacted.make("test-secret-test-secret-test-secret"),
