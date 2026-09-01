@@ -30,6 +30,7 @@ export default Alchemy.Stack(
       },
       env: {
         VITE_API_URL: stageHost?.origin ?? api.url.as<string>(),
+        VITE_SEARCH_INDEXABLE: String(stage === "prod"),
         ...browserTelemetryEnv,
       },
       domain: stageHost?.hostname ?? null,

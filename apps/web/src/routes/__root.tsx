@@ -1,6 +1,7 @@
 import { Toaster } from "@effect-forge/ui/ui/sonner";
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { searchIndexable } from "../lib/environment.ts";
 import appCss from "../app.css?url";
 
 export const Route = createRootRoute({
@@ -14,6 +15,7 @@ export const Route = createRootRoute({
         content: "Effect Forge turns typed Effect applications into production systems.",
       },
       { title: "Effect Forge" },
+      ...(searchIndexable ? [] : [{ name: "robots", content: "noindex, nofollow" }]),
     ],
   }),
   component: Root,
