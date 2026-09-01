@@ -6,7 +6,11 @@ export class Service extends Context.Service<
   Service,
   (
     path: string,
-    options?: { readonly method?: string; readonly body?: unknown },
+    options?: {
+      readonly method?: string;
+      readonly body?: unknown;
+      readonly headers?: Record<string, string>;
+    },
   ) => Effect.Effect<Response, Schema.SchemaError>
 >()("@effect-forge/api/ApiTest") {}
 
@@ -20,10 +24,13 @@ export const layer = <E>(apiLayer: Layer.Layer<never, E, HttpRouter.HttpRouter>)
 
       return Service.of(
         Effect.fn("ApiTest.request")(function* (path, options) {
-          const init: RequestInit = { method: options?.method ?? "GET" };
+          const init: RequestInit = {
+            method: options?.method ?? "GET",
+            headers: { ...options?.headers },
+          };
 
           if (options?.body !== undefined) {
-            init.headers = { "content-type": "application/json" };
+            init.headers = { ...options?.headers, "content-type": "application/json" };
             init.body = yield* Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown))(
               options.body,
             );

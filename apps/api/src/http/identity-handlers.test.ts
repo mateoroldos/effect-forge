@@ -1,8 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { IdentityDirectory } from "@effect-forge/core/identity-directory";
 import { ProviderAccount } from "@effect-forge/core/provider-account";
 import { CryptoDeterministic } from "@effect-forge/core/test/crypto-deterministic";
-import { WorkspaceDirectory } from "@effect-forge/core/workspace-directory";
 import { PersistencePglite } from "@effect-forge/database-postgres/test/persistence-pglite";
 import { Principal } from "@effect-forge/domain/identity";
 import { Effect, Layer, Option, Schema } from "effect";
@@ -16,9 +14,9 @@ const account = Schema.decodeSync(ProviderAccount)({
   email: "ada@example.com",
   name: "Ada Lovelace",
 });
-const storeLayer = PersistencePglite.layer;
-const coreLayer = Layer.mergeAll(IdentityDirectory.layer, WorkspaceDirectory.layer).pipe(
-  Layer.provide(Layer.merge(CryptoDeterministic.layer, storeLayer)),
+const applicationRequirements = Layer.merge(
+  CryptoDeterministic.layer,
+  PersistencePglite.layer,
 );
 const signedIn = Layer.succeed(RequestAuth.Authenticator, {
   identify: () => Effect.succeedSome(account),
@@ -27,7 +25,9 @@ const signedOut = Layer.succeed(RequestAuth.Authenticator, {
   identify: () => Effect.succeed(Option.none()),
 });
 const serve = (authenticator: typeof signedIn) =>
-  ApiTest.layer(App.layer.pipe(Layer.provide(Layer.merge(coreLayer, authenticator))));
+  ApiTest.layer(
+    App.layer.pipe(Layer.provide(Layer.merge(applicationRequirements, authenticator))),
+  );
 
 const testLayer = serve(signedIn);
 const anonymousLayer = serve(signedOut);
