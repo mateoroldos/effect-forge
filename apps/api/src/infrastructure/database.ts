@@ -36,6 +36,14 @@ export const postgres = Effect.gen(function* () {
   return { branch, project, schema };
 });
 
+/**
+ * Addresses the branch directly, for work that runs before a request exists.
+ *
+ * Hyperdrive mints its connection string per invocation inside the Worker, so deploy-time
+ * migrations cannot use it.
+ */
+export const originUrl = Effect.map(postgres, ({ branch }) => branch.connectionUri);
+
 /** Provides edge-pooled database connectivity with read-after-write consistency. */
 export const hyperdrive = Effect.gen(function* () {
   const { branch } = yield* postgres;

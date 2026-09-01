@@ -38,6 +38,7 @@ packages/
 └─ ui                    shared visual vocabulary
 
 adapters/
+├─ auth-better           Better Auth inbound adapter
 └─ database-postgres     PostgreSQL port implementations
 
 alchemy.run.ts           infrastructure as code

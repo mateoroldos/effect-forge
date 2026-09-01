@@ -5,14 +5,21 @@ import type { RuntimeContext } from "alchemy";
 import type { HttpEffect } from "alchemy/Http";
 import { Effect, Option, Redacted, Schema } from "effect";
 
+/** Hosts a request may name when the deployed origin is only known at request time. */
+export interface DerivedBaseUrl {
+  readonly allowedHosts: ReadonlyArray<string>;
+}
+
 /** Operational options for the Better Auth inbound adapter. */
 export interface Options {
+  /** The public origin this API is reached at, or the hosts it may derive one from. */
+  readonly baseUrl: URL | DerivedBaseUrl;
   /** The absolute path selected by the API for authentication routes. */
   readonly basePath: `/${string}`;
   /** The durable provider namespace for Better Auth subjects. */
   readonly provider: ProviderId;
-  /** The secret used to sign and verify Better Auth sessions. */
-  readonly secret: Redacted.Redacted<string>;
+  /** The secret signing sessions, or `null` to let the platform provision a stable one. */
+  readonly secret: Redacted.Redacted<string> | null;
   /** Browser origins allowed to start authentication flows and receive sessions. */
   readonly trustedOrigins: ReadonlyArray<string>;
   /** The parent domain the browser shares with this API, or `null` when they share none. */
@@ -50,25 +57,31 @@ const decodeProviderAccount = Schema.decodeUnknownEffect(ProviderAccount);
 /** Builds one Better Auth integration while leaving database selection open. */
 export const make = (options: Options): Effect.Effect<Instance, never, Database> =>
   Effect.gen(function* () {
-    const { cookieDomain } = options;
-    const auth = yield* BetterAuth({
+    const { baseUrl, cookieDomain, secret } = options;
+    const authOptions = {
       id: "ApplicationAuth",
+      baseURL:
+        baseUrl instanceof URL ? baseUrl.origin : { allowedHosts: [...baseUrl.allowedHosts] },
       basePath: options.basePath,
       emailAndPassword: { enabled: true },
-      secret: options.secret,
       trustedOrigins: [...options.trustedOrigins],
       // Sharing a parent domain keeps the session cookie first-party, which Safari
       // requires. Without one it must survive a cross-site request instead.
       advanced: {
         defaultCookieAttributes: {
-          sameSite: cookieDomain === null ? "none" : "lax",
+          sameSite: cookieDomain === null ? ("none" as const) : ("lax" as const),
           secure: true,
           httpOnly: true,
         },
         crossSubDomainCookies:
           cookieDomain === null ? { enabled: false } : { enabled: true, domain: cookieDomain },
       },
-    });
+    };
+
+    // Omitting the secret lets the platform provision one that is stable across deploys.
+    const auth = yield* secret === null
+      ? BetterAuth(authOptions)
+      : BetterAuth({ ...authOptions, secret });
 
     const identify = Effect.fn("AuthBetter.identify")((headers: Headers) =>
       auth.getSession(headers).pipe(

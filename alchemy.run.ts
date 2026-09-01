@@ -1,4 +1,4 @@
-import ApiWorker from "./apps/api/src/worker.ts";
+import ApiWorker, { webDomain } from "./apps/api/src/worker.ts";
 import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as Drizzle from "alchemy/Drizzle";
@@ -27,7 +27,7 @@ export default Alchemy.Stack(
         lockfile: true,
       },
       env: { VITE_API_URL: api.url.as<string>(), ...browserTelemetryEnv },
-      domain: stage === "prod" ? "app.effect-forge.com" : null,
+      domain: stage === "prod" ? webDomain : null,
       compatibility: {
         flags: ["nodejs_compat", "enable_request_signal"],
       },
