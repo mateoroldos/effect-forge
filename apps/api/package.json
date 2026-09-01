@@ -8,6 +8,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@alchemy.run/better-auth": "2.0.0-beta.74",
     "@effect-forge/auth-better": "workspace:*",
     "@effect-forge/contracts": "workspace:*",
     "@effect-forge/core": "workspace:*",

@@ -1,8 +1,8 @@
-CREATE TABLE "identity_links" (
-	"identity_source" varchar(100),
-	"external_subject" varchar(255),
+CREATE TABLE "provider_identities" (
+	"provider" varchar(100),
+	"subject" varchar(255),
 	"user_id" uuid NOT NULL,
-	CONSTRAINT "identity_links_pkey" PRIMARY KEY("identity_source","external_subject")
+	CONSTRAINT "provider_identities_pkey" PRIMARY KEY("provider","subject")
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
@@ -25,6 +25,6 @@ CREATE TABLE "workspaces" (
 );
 --> statement-breakpoint
 CREATE INDEX "workspace_members_user_id_index" ON "workspace_members" ("user_id");--> statement-breakpoint
-ALTER TABLE "identity_links" ADD CONSTRAINT "identity_links_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "provider_identities" ADD CONSTRAINT "provider_identities_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "workspace_members" ADD CONSTRAINT "workspace_members_workspace_id_workspaces_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "workspace_members" ADD CONSTRAINT "workspace_members_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;

@@ -1,6 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Memory } from "@alchemy.run/better-auth";
-import { IdentitySourceId } from "@effect-forge/core/provider-account";
+import { ProviderId } from "@effect-forge/core/provider-account";
 import { RuntimeContext } from "alchemy";
 import { Effect, Layer, Option, Redacted, Schema } from "effect";
 import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
@@ -14,7 +14,7 @@ const serve = (fetch: AuthBetter.Instance["fetch"], request: Request) =>
 
 const makeAdapter = AuthBetter.make({
   basePath: "/auth",
-  identitySource: IdentitySourceId.make("better-auth"),
+  provider: ProviderId.make("better-auth"),
   secret: Redacted.make("test-secret-test-secret-test-secret"),
 });
 
@@ -49,7 +49,7 @@ describe("AuthBetter", () => {
       if (Option.isSome(identified)) {
         assert.deepEqual(identified.value, {
           identity: {
-            source: "better-auth",
+            provider: "better-auth",
             subject: identified.value.identity.subject,
           },
           email: "ada@example.com",

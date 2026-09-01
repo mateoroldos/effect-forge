@@ -1,5 +1,5 @@
 import { useAtomSet } from "@effect/atom-react";
-import { WorkspaceApi } from "@effect-forge/contracts/workspaces";
+import { WorkspaceApi } from "@effect-forge/contracts/workspace-api";
 import { Button } from "@effect-forge/ui/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@effect-forge/ui/ui/field";
 import { Input } from "@effect-forge/ui/ui/input";

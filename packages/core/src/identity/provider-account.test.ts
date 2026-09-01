@@ -8,12 +8,12 @@ describe("ProviderAccount", () => {
   it.effect("parses provider-neutral identity and profile claims", () =>
     Effect.gen(function* () {
       const account = yield* decodeAccount({
-        identity: { source: "primary", subject: "provider-user-1" },
+        identity: { provider: "primary", subject: "provider-user-1" },
         email: "ada@example.com",
         name: "Ada Lovelace",
       });
 
-      assert.strictEqual(account.identity.source, "primary");
+      assert.strictEqual(account.identity.provider, "primary");
       assert.strictEqual(account.identity.subject, "provider-user-1");
     }),
   );
@@ -21,8 +21,8 @@ describe("ProviderAccount", () => {
   it.effect("rejects empty identity parts", () =>
     Effect.gen(function* () {
       for (const identity of [
-        { source: "", subject: "provider-user-1" },
-        { source: "primary", subject: "" },
+        { provider: "", subject: "provider-user-1" },
+        { provider: "primary", subject: "" },
       ]) {
         const result = yield* Effect.result(
           decodeAccount({ identity, email: "ada@example.com", name: "Ada Lovelace" }),

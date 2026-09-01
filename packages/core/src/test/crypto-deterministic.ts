@@ -25,4 +25,4 @@ export const randomUUIDFailureLayer = (error: PlatformError.PlatformError) =>
     }),
   ).pipe(Layer.provide(layer));
 
-export * as CryptoTest from "./crypto-test.ts";
+export * as CryptoDeterministic from "./crypto-deterministic.ts";

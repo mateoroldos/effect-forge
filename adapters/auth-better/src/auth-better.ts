@@ -1,20 +1,16 @@
 import { BetterAuth } from "@alchemy.run/better-auth";
-import { CloudflareHyperdrive } from "@alchemy.run/better-auth/CloudflareHyperdrive";
 import { Database } from "@alchemy.run/better-auth/Database";
-import { IdentitySourceId, ProviderAccount } from "@effect-forge/core/provider-account";
+import { ProviderAccount, ProviderId } from "@effect-forge/core/provider-account";
 import type { RuntimeContext } from "alchemy";
 import type { HttpEffect } from "alchemy/Http";
 import { Effect, Option, Redacted, Schema } from "effect";
 
-/** Absolute path where the API mounts its authentication provider. */
-export type BasePath = `/${string}`;
-
 /** Operational options for the Better Auth inbound adapter. */
 export interface Options {
   /** The absolute path selected by the API for authentication routes. */
-  readonly basePath: BasePath;
-  /** The durable issuer namespace for Better Auth subjects. */
-  readonly identitySource: IdentitySourceId;
+  readonly basePath: `/${string}`;
+  /** The durable provider namespace for Better Auth subjects. */
+  readonly provider: ProviderId;
   /** The secret used to sign and verify Better Auth sessions. */
   readonly secret: Redacted.Redacted<string>;
 }
@@ -28,14 +24,14 @@ export interface Instance {
     headers: Headers,
   ) => Effect.Effect<
     Option.Option<ProviderAccount>,
-    AuthenticationUnavailable | InvalidProviderAccount,
+    SessionUnavailable | InvalidProviderAccount,
     RuntimeContext
   >;
 }
 
-/** Indicates that Better Auth could not verify the current request. */
-export class AuthenticationUnavailable extends Schema.TaggedError<AuthenticationUnavailable>()(
-  "AuthBetter.AuthenticationUnavailable",
+/** Indicates that Better Auth could not read the current session. */
+export class SessionUnavailable extends Schema.TaggedError<SessionUnavailable>()(
+  "AuthBetter.SessionUnavailable",
   { cause: Schema.Defect() },
 ) {}
 
@@ -59,13 +55,13 @@ export const make = (options: Options): Effect.Effect<Instance, never, Database>
 
     const identify = Effect.fn("AuthBetter.identify")((headers: Headers) =>
       auth.getSession(headers).pipe(
-        Effect.mapError((cause) => new AuthenticationUnavailable({ cause })),
+        Effect.mapError((cause) => new SessionUnavailable({ cause })),
         Effect.flatMap((session) =>
           session === null
             ? Effect.succeedNone
             : decodeProviderAccount({
                 identity: {
-                  source: options.identitySource,
+                  provider: options.provider,
                   subject: session.user.id,
                 },
                 email: session.user.email,
@@ -80,11 +76,5 @@ export const make = (options: Options): Effect.Effect<Instance, never, Database>
 
     return { fetch: auth.fetch, identify };
   });
-
-/** Builds the Better Auth integration over an Alchemy Hyperdrive connection. */
-export const makeWithHyperdrive = (
-  options: Options,
-  connection: Parameters<typeof CloudflareHyperdrive>[0],
-) => make(options).pipe(Effect.provide(CloudflareHyperdrive(connection)));
 
 export * as AuthBetter from "./auth-better.ts";

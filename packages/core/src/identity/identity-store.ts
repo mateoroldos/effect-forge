@@ -7,7 +7,7 @@ export interface Interface {
   readonly resolveOrCreate: (
     account: ProviderAccount,
     candidateUserId: UserId,
-  ) => Effect.Effect<Principal, AccountConflict | PersistenceError>;
+  ) => Effect.Effect<Principal, EmailTaken | PersistenceError>;
 }
 
 /** Maps provider accounts to application principals atomically. */
@@ -15,11 +15,8 @@ export class Service extends Context.Service<Service, Interface>()(
   "@effect-forge/core/IdentityStore",
 ) {}
 
-/** Indicates that an account email belongs to a different external identity. */
-export class AccountConflict extends Schema.TaggedError<AccountConflict>()(
-  "IdentityStore.AccountConflict",
-  {},
-) {}
+/** Indicates that the account email already belongs to a different provider identity. */
+export class EmailTaken extends Schema.TaggedError<EmailTaken>()("IdentityStore.EmailTaken", {}) {}
 
 /** Indicates that application identity persistence is unavailable. */
 export class PersistenceError extends Schema.TaggedError<PersistenceError>()(

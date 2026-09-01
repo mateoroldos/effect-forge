@@ -1,50 +1,65 @@
 import { WorkspaceStore } from "@effect-forge/core/workspace-store";
+import { UserId } from "@effect-forge/domain/identity";
 import { Workspace } from "@effect-forge/domain/workspace";
-import { asc } from "drizzle-orm";
-import { Cause, Effect, Layer, Option, Schema } from "effect";
-import * as SqlError from "effect/unstable/sql/SqlError";
+import { WorkspaceRole } from "@effect-forge/domain/workspace-member";
+import { asc, eq } from "drizzle-orm";
+import { Effect, Layer, Schema } from "effect";
 import { Database } from "../internal/database.ts";
-import { workspaces } from "./schema.ts";
+import { workspaceMembers, workspaces } from "./schema.ts";
 
-/** Provides PostgreSQL-backed workspace persistence. */
+/** Provides PostgreSQL-backed principal-scoped workspace persistence. */
+const ownerRole: WorkspaceRole = "owner";
+
 export const layer = Layer.effect(
   WorkspaceStore.Service,
   Effect.gen(function* () {
     const database = yield* Database.Service;
 
-    const insert = Effect.fn("WorkspaceStorePostgres.insert")((workspace: Workspace) =>
-      database
-        .insert(workspaces)
-        .values({ id: workspace.id, name: workspace.name })
-        .pipe(
-          Effect.mapError((cause) => {
-            if (Cause.isCause(cause.cause)) {
-              const failure = Cause.findErrorOption(cause.cause);
-              if (
-                Option.isSome(failure) &&
-                Schema.is(SqlError.SqlError)(failure.value) &&
-                Schema.is(SqlError.UniqueViolation)(failure.value.reason) &&
-                failure.value.reason.constraint === "workspaces_name_unique"
-              ) {
-                return new WorkspaceStore.NameTaken({ name: workspace.name });
+    const create = Effect.fn("WorkspaceStorePostgres.create")(
+      (workspace: Workspace, ownerId: UserId) =>
+        database
+          .transaction((transaction) =>
+            Effect.gen(function* () {
+              const inserted = yield* transaction
+                .insert(workspaces)
+                .values(workspace)
+                .onConflictDoNothing({ target: workspaces.name })
+                .returning({ id: workspaces.id });
+              if (inserted.length === 0) {
+                return yield* new WorkspaceStore.NameTaken({ name: workspace.name });
               }
-            }
-            return new WorkspaceStore.PersistenceError({ cause });
-          }),
-          Effect.as(workspace),
+
+              yield* transaction.insert(workspaceMembers).values({
+                workspaceId: workspace.id,
+                userId: ownerId,
+                role: ownerRole,
+              });
+              return workspace;
+            }),
+          )
+          .pipe(
+            Effect.mapError((cause) =>
+              Schema.is(WorkspaceStore.NameTaken)(cause)
+                ? cause
+                : new WorkspaceStore.PersistenceError({ cause }),
+            ),
+          ),
+    );
+
+    const list = Effect.fn("WorkspaceStorePostgres.list")((userId: UserId) =>
+      database
+        .select({ id: workspaces.id, name: workspaces.name })
+        .from(workspaceMembers)
+        .innerJoin(workspaces, eq(workspaceMembers.workspaceId, workspaces.id))
+        .where(eq(workspaceMembers.userId, userId))
+        .orderBy(asc(workspaces.name))
+        .pipe(
+          Effect.flatMap(Schema.decodeEffect(Schema.Array(Workspace))),
+          Effect.mapError((cause) => new WorkspaceStore.PersistenceError({ cause })),
         ),
     );
 
-    const list = database
-      .select()
-      .from(workspaces)
-      .orderBy(asc(workspaces.name))
-      .pipe(
-        Effect.flatMap(Schema.decodeEffect(Schema.Array(Workspace))),
-        Effect.mapError((cause) => new WorkspaceStore.PersistenceError({ cause })),
-      );
-
-    return WorkspaceStore.Service.of({ insert, list });
+    return WorkspaceStore.Service.of({ create, list });
   }),
 );
 

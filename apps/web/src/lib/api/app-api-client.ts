@@ -1,4 +1,4 @@
-import { Api } from "@effect-forge/contracts";
+import { AppApi } from "@effect-forge/contracts";
 import { FetchHttpClient } from "effect/unstable/http";
 import { AtomHttpApi } from "effect/unstable/reactivity";
 import { apiBaseUrl } from "../environment.ts";
@@ -7,7 +7,7 @@ import { apiBaseUrl } from "../environment.ts";
 export class AppApiClient extends AtomHttpApi.Service<AppApiClient>()(
   "@effect-forge/web/AppApiClient",
   {
-    api: Api,
+    api: AppApi.Api,
     httpClient: FetchHttpClient.layer,
     baseUrl: apiBaseUrl,
   },
