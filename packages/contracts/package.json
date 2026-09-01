@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/app-api.ts",
+    "./identity-api": "./src/identity-api.ts",
     "./workspace-api": "./src/workspace-api.ts"
   },
   "scripts": {
