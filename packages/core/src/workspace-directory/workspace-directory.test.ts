@@ -1,6 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { WorkspaceName } from "@effect-forge/domain/workspace";
-import { Crypto, Effect, Layer, PlatformError, Schema } from "effect";
+import { Effect, Layer, PlatformError, Schema } from "effect";
 import { CryptoTest } from "../test/crypto-test.ts";
 import { WorkspaceDirectory } from "./workspace-directory.ts";
 import { WorkspaceStoreMemory } from "./workspace-store-memory.ts";
@@ -17,15 +17,10 @@ const cryptoError = PlatformError.badArgument({
   method: "randomUUIDv4",
   description: "failed",
 });
-const cryptoFailureLayer = Layer.effect(
-  Crypto.Crypto,
-  Effect.gen(function* () {
-    const crypto = yield* Crypto.Crypto;
-    return Crypto.Crypto.of({ ...crypto, randomUUIDv4: Effect.fail(cryptoError) });
-  }),
-).pipe(Layer.provide(CryptoTest.layer));
 const idFailureLayer = WorkspaceDirectory.layerWithoutDependencies.pipe(
-  Layer.provideMerge(Layer.merge(cryptoFailureLayer, WorkspaceStoreMemory.layer)),
+  Layer.provideMerge(
+    Layer.merge(CryptoTest.randomUUIDFailureLayer(cryptoError), WorkspaceStoreMemory.layer),
+  ),
 );
 
 describe("WorkspaceDirectory", () => {
