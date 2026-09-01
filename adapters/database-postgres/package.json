@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/persistence-postgres.ts",
-    "./test": "./src/test/persistence-pglite.ts"
+    "./test/persistence-pglite": "./src/test/persistence-pglite.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/api.ts",
-    "./workspaces": "./src/workspaces.ts"
+    ".": "./src/app-api.ts",
+    "./workspace-api": "./src/workspace-api.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit"

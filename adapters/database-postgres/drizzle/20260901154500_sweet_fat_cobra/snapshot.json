@@ -1,12 +1,12 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "c0da13a4-1a56-4466-b4b5-2bc8119e626f",
+  "id": "49782252-b207-410c-8f63-99f074ca3905",
   "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
     {
       "isRlsEnabled": false,
-      "name": "identity_links",
+      "name": "provider_identities",
       "entityType": "tables",
       "schema": "public"
     },
@@ -36,10 +36,10 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "identity_source",
+      "name": "provider",
       "entityType": "columns",
       "schema": "public",
-      "table": "identity_links"
+      "table": "provider_identities"
     },
     {
       "type": "varchar(255)",
@@ -49,10 +49,10 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "external_subject",
+      "name": "subject",
       "entityType": "columns",
       "schema": "public",
-      "table": "identity_links"
+      "table": "provider_identities"
     },
     {
       "type": "uuid",
@@ -65,7 +65,7 @@
       "name": "user_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "identity_links"
+      "table": "provider_identities"
     },
     {
       "type": "uuid",
@@ -200,10 +200,10 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "identity_links_user_id_users_id_fkey",
+      "name": "provider_identities_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "identity_links"
+      "table": "provider_identities"
     },
     {
       "nameExplicit": false,
@@ -232,12 +232,12 @@
       "table": "workspace_members"
     },
     {
-      "columns": ["identity_source", "external_subject"],
+      "columns": ["provider", "subject"],
       "nameExplicit": false,
-      "name": "identity_links_pkey",
+      "name": "provider_identities_pkey",
       "entityType": "pks",
       "schema": "public",
-      "table": "identity_links"
+      "table": "provider_identities"
     },
     {
       "columns": ["workspace_id", "user_id"],

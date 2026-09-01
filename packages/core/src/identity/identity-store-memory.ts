@@ -1,15 +1,15 @@
 import { Principal } from "@effect-forge/domain/identity";
 import { Effect, Layer, Ref } from "effect";
 import { IdentityStore } from "./identity-store.ts";
-import type { ExternalIdentity } from "./provider-account.ts";
+import type { ProviderIdentity } from "./provider-account.ts";
 
 interface Entry {
-  readonly identity: ExternalIdentity;
+  readonly identity: ProviderIdentity;
   readonly principal: Principal;
 }
 
-const sameIdentity = (left: ExternalIdentity, right: ExternalIdentity) =>
-  left.source === right.source && left.subject === right.subject;
+const sameIdentity = (left: ProviderIdentity, right: ProviderIdentity) =>
+  left.provider === right.provider && left.subject === right.subject;
 
 /** Provides atomic in-memory application identity persistence for tests. */
 export const layer = Layer.effect(
@@ -24,7 +24,7 @@ export const layer = Layer.effect(
           (
             entries,
           ): readonly [
-            Effect.Effect<Principal, IdentityStore.AccountConflict>,
+            Effect.Effect<Principal, IdentityStore.EmailTaken>,
             ReadonlyArray<Entry>,
           ] => {
             const linked = entries.find((entry) => sameIdentity(entry.identity, account.identity));
@@ -34,7 +34,7 @@ export const layer = Layer.effect(
 
             const emailTaken = entries.some((entry) => entry.principal.email === account.email);
             if (emailTaken) {
-              return [Effect.fail(new IdentityStore.AccountConflict()), entries] as const;
+              return [Effect.fail(new IdentityStore.EmailTaken()), entries] as const;
             }
 
             const principal = Principal.make({

@@ -1,12 +1,17 @@
+import { UserId } from "@effect-forge/domain/identity";
 import { Workspace, WorkspaceName } from "@effect-forge/domain/workspace";
 import { Context, Effect, Schema } from "effect";
 
+/** Persistence required by principal-scoped workspace operations. */
 export interface Interface {
-  readonly list: Effect.Effect<ReadonlyArray<Workspace>, PersistenceError>;
-  readonly insert: (workspace: Workspace) => Effect.Effect<Workspace, NameTaken | PersistenceError>;
+  readonly create: (
+    workspace: Workspace,
+    ownerId: UserId,
+  ) => Effect.Effect<Workspace, NameTaken | PersistenceError>;
+  readonly list: (userId: UserId) => Effect.Effect<ReadonlyArray<Workspace>, PersistenceError>;
 }
 
-/** Persists workspaces for workspace application operations. */
+/** Persists workspaces with membership ownership. */
 export class Service extends Context.Service<Service, Interface>()(
   "@effect-forge/core/WorkspaceStore",
 ) {}

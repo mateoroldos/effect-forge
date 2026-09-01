@@ -11,15 +11,15 @@ export const users = pgTable(
   (table) => [unique("users_email_unique").on(table.email)],
 );
 
-/** Links structured external identities to application-owned users. */
-export const identityLinks = pgTable(
-  "identity_links",
+/** Links provider identities to application-owned users. */
+export const providerIdentities = pgTable(
+  "provider_identities",
   {
-    identitySource: varchar("identity_source", { length: 100 }).notNull(),
-    externalSubject: varchar("external_subject", { length: 255 }).notNull(),
+    provider: varchar("provider", { length: 100 }).notNull(),
+    subject: varchar("subject", { length: 255 }).notNull(),
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
   },
-  (table) => [primaryKey({ columns: [table.identitySource, table.externalSubject] })],
+  (table) => [primaryKey({ columns: [table.provider, table.subject] })],
 );

@@ -1,6 +1,7 @@
+import { CloudflareHyperdrive } from "@alchemy.run/better-auth/CloudflareHyperdrive";
 import { AuthBetter } from "@effect-forge/auth-better";
-import { Auth } from "@effect-forge/core/auth";
-import { IdentitySourceId } from "@effect-forge/core/provider-account";
+import { IdentityDirectory } from "@effect-forge/core/identity-directory";
+import { ProviderId } from "@effect-forge/core/provider-account";
 import { WorkspaceDirectory } from "@effect-forge/core/workspace-directory";
 import { PersistencePostgres } from "@effect-forge/database-postgres";
 import { NodeCrypto } from "@effect/platform-node";
@@ -9,7 +10,8 @@ import * as Cloudflare from "alchemy/Cloudflare";
 import * as SQL from "alchemy/SQL/Postgres";
 import { Config, Effect, Layer } from "effect";
 import { HttpMiddleware, HttpRouter } from "effect/unstable/http";
-import { App } from "./app.ts";
+import { App } from "./http/app.ts";
+import { RequestAuth } from "./http/request-auth.ts";
 import { Database } from "./infrastructure/database.ts";
 import { Telemetry } from "./infrastructure/telemetry.ts";
 
@@ -32,28 +34,31 @@ export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
     const runtime = yield* Cloudflare.Worker;
     const hyperdrive = yield* Cloudflare.Hyperdrive.Connect(Database.hyperdrive);
     const postgresLayer = SQL.PostgresLayer({ url: hyperdrive.connectionString });
-    const storeLayer = PersistencePostgres.layer.pipe(Layer.provide(postgresLayer));
-    const applicationLayer = Layer.merge(
-      Auth.layerWithoutDependencies,
-      WorkspaceDirectory.layerWithoutDependencies,
-    ).pipe(Layer.provide(Layer.merge(NodeCrypto.layer, storeLayer)));
-    const betterAuth = yield* AuthBetter.makeWithHyperdrive(
-      {
-        basePath: authBasePath,
-        identitySource: IdentitySourceId.make("better-auth"),
-        secret: yield* Config.redacted("AUTH_SECRET"),
-      },
-      Database.hyperdrive,
+    const persistenceLayer = PersistencePostgres.layer.pipe(Layer.provide(postgresLayer));
+    const coreLayer = Layer.merge(IdentityDirectory.layer, WorkspaceDirectory.layer).pipe(
+      Layer.provide(Layer.merge(NodeCrypto.layer, persistenceLayer)),
     );
+    const betterAuth = yield* AuthBetter.make({
+      basePath: authBasePath,
+      provider: ProviderId.make("better-auth"),
+      secret: yield* Config.redacted("AUTH_SECRET"),
+    }).pipe(Effect.provide(CloudflareHyperdrive(Database.hyperdrive)));
 
-    const onRuntime = <A, E, R>(effect: Effect.Effect<A, E, R | Alchemy.RuntimeContext>) =>
-      Effect.provideService(effect, Alchemy.RuntimeContext, runtime);
+    const authenticatorLayer = Layer.succeed(RequestAuth.Authenticator, {
+      identify: (headers) =>
+        betterAuth.identify(headers).pipe(
+          Effect.provideService(Alchemy.RuntimeContext, runtime),
+          Effect.mapError((cause) => new RequestAuth.IdentificationFailed({ cause })),
+        ),
+    });
 
     const routerLayer = Layer.merge(
-      App.layer({ identify: (headers) => onRuntime(betterAuth.identify(headers)) }).pipe(
-        Layer.provide(applicationLayer),
+      App.layer.pipe(Layer.provide(Layer.merge(coreLayer, authenticatorLayer))),
+      HttpRouter.add(
+        "*",
+        `${authBasePath}/*`,
+        Effect.provideService(betterAuth.fetch, Alchemy.RuntimeContext, runtime),
       ),
-      HttpRouter.add("*", `${authBasePath}/*`, onRuntime(betterAuth.fetch)),
     );
     const httpApp = yield* HttpRouter.toHttpEffect(routerLayer);
 

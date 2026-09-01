@@ -4,7 +4,7 @@ import { Principal, UserId } from "@effect-forge/domain/identity";
 import { and, eq } from "drizzle-orm";
 import { Effect, Layer, Schema } from "effect";
 import { Database } from "../internal/database.ts";
-import { identityLinks, users } from "./schema.ts";
+import { providerIdentities, users } from "./schema.ts";
 
 const decodePrincipal = Schema.decodeUnknownEffect(Principal);
 
@@ -21,12 +21,12 @@ export const layer = Layer.effect(
             Effect.gen(function* () {
               const [linked] = yield* transaction
                 .select({ userId: users.id, email: users.email, name: users.name })
-                .from(identityLinks)
-                .innerJoin(users, eq(identityLinks.userId, users.id))
+                .from(providerIdentities)
+                .innerJoin(users, eq(providerIdentities.userId, users.id))
                 .where(
                   and(
-                    eq(identityLinks.identitySource, account.identity.source),
-                    eq(identityLinks.externalSubject, account.identity.subject),
+                    eq(providerIdentities.provider, account.identity.provider),
+                    eq(providerIdentities.subject, account.identity.subject),
                   ),
                 )
                 .limit(1);
@@ -40,23 +40,23 @@ export const layer = Layer.effect(
               if (inserted.length === 0) {
                 const [concurrentLink] = yield* transaction
                   .select({ userId: users.id, email: users.email, name: users.name })
-                  .from(identityLinks)
-                  .innerJoin(users, eq(identityLinks.userId, users.id))
+                  .from(providerIdentities)
+                  .innerJoin(users, eq(providerIdentities.userId, users.id))
                   .where(
                     and(
-                      eq(identityLinks.identitySource, account.identity.source),
-                      eq(identityLinks.externalSubject, account.identity.subject),
+                      eq(providerIdentities.provider, account.identity.provider),
+                      eq(providerIdentities.subject, account.identity.subject),
                     ),
                   )
                   .limit(1);
                 if (concurrentLink !== undefined) return yield* decodePrincipal(concurrentLink);
 
-                return yield* new IdentityStore.AccountConflict();
+                return yield* new IdentityStore.EmailTaken();
               }
 
-              yield* transaction.insert(identityLinks).values({
-                identitySource: account.identity.source,
-                externalSubject: account.identity.subject,
+              yield* transaction.insert(providerIdentities).values({
+                provider: account.identity.provider,
+                subject: account.identity.subject,
                 userId: candidateUserId,
               });
 
@@ -69,7 +69,7 @@ export const layer = Layer.effect(
           )
           .pipe(
             Effect.mapError((cause) =>
-              Schema.is(IdentityStore.AccountConflict)(cause)
+              Schema.is(IdentityStore.EmailTaken)(cause)
                 ? cause
                 : new IdentityStore.PersistenceError({ cause }),
             ),

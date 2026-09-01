@@ -24,13 +24,18 @@ export const Group = HttpApiGroup.make("workspaces").add(
     error: [
       NameTaken,
       HttpApiError.UnauthorizedNoContent,
+      HttpApiError.ConflictNoContent,
       HttpApiError.InternalServerErrorNoContent,
     ],
   }),
   HttpApiEndpoint.get("list", "/workspaces", {
     success: Schema.Array(Workspace),
-    error: [HttpApiError.UnauthorizedNoContent, HttpApiError.InternalServerErrorNoContent],
+    error: [
+      HttpApiError.UnauthorizedNoContent,
+      HttpApiError.ConflictNoContent,
+      HttpApiError.InternalServerErrorNoContent,
+    ],
   }),
 );
 
-export * as WorkspaceApi from "./workspaces.ts";
+export * as WorkspaceApi from "./workspace-api.ts";

@@ -17,12 +17,6 @@ export const UserName = Schema.String.pipe(
 /** A user's display name. */
 export type UserName = typeof UserName.Type;
 
-/** An application-owned user. */
-export const User = Schema.Struct({ id: UserId, email: EmailAddress, name: UserName });
-
-/** An application-owned user. */
-export interface User extends Schema.Schema.Type<typeof User> {}
-
 /** The application identity associated with an authenticated request. */
 export const Principal = Schema.Struct({ userId: UserId, email: EmailAddress, name: UserName });
 

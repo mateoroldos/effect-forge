@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./auth": "./src/auth/auth.ts",
-    "./identity-store": "./src/auth/identity-store.ts",
-    "./provider-account": "./src/auth/provider-account.ts",
-    "./test/crypto": "./src/test/crypto-test.ts",
-    "./workspace-directory": "./src/workspace-directory/workspace-directory.ts",
-    "./workspace-store": "./src/workspace-directory/workspace-store.ts"
+    "./identity-directory": "./src/identity/identity-directory.ts",
+    "./identity-store": "./src/identity/identity-store.ts",
+    "./provider-account": "./src/identity/provider-account.ts",
+    "./test/crypto-deterministic": "./src/test/crypto-deterministic.ts",
+    "./workspace-directory": "./src/workspace/workspace-directory.ts",
+    "./workspace-store": "./src/workspace/workspace-store.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
