@@ -9,36 +9,27 @@ import * as Cloudflare from "alchemy/Cloudflare";
 import * as SQL from "alchemy/SQL/Postgres";
 import { Config, Effect, Layer, Option } from "effect";
 import { HttpMiddleware, HttpRouter } from "effect/unstable/http";
+import { stageHostFor, zoneName } from "../../../stacks/stage-host.ts";
 import { App } from "./http/app.ts";
 import { RequestAuth } from "./http/request-auth.ts";
 import { Database } from "./infrastructure/database.ts";
 import { Telemetry } from "./infrastructure/telemetry.ts";
 
-/** The registered domain production is served from. */
-const rootDomain = "effect-forge.com";
+/** Hosts local development is reached at, which no stage assigns. */
+const localHosts = ["localhost", "localhost:*", "127.0.0.1:*"];
 
-/** The production hostname of this API. */
-const apiDomain = `api.${rootDomain}`;
-
-/** The production hostname of the web application, which this API trusts. */
-export const webDomain = `app.${rootDomain}`;
-
-/** Hosts other stages are reached at, which Cloudflare assigns per deploy. */
-const derivedHosts = ["*.workers.dev", "localhost", "localhost:*", "127.0.0.1:*"];
-
-/** Whether a browser origin belongs to a stage whose hostname the stack cannot know. */
-const isDerivedOrigin = (origin: string) => {
+/** Whether a browser origin is a local development server. */
+const isLocalOrigin = (origin: string) => {
   if (!URL.canParse(origin)) return false;
   const { protocol, hostname } = new URL(origin);
 
-  if (protocol === "http:") return hostname === "localhost" || hostname === "127.0.0.1";
-  return protocol === "https:" && hostname.endsWith(".workers.dev");
+  return protocol === "http:" && (hostname === "localhost" || hostname === "127.0.0.1");
 };
 
-/** What production pins; absent everywhere else, where hostnames are matched by shape. */
+/** What every deployed stage pins; absent only in local development. */
 const config = Config.all({
   apiUrl: Config.option(Config.url("AUTH_BASE_URL")),
-  cookieDomain: Config.option(Config.nonEmptyString("AUTH_COOKIE_DOMAIN")),
+  secure: Config.boolean("AUTH_SECURE").pipe(Config.withDefault(true)),
   webOrigin: Config.option(Config.nonEmptyString("WEB_ORIGIN")),
 });
 
@@ -46,39 +37,44 @@ export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
   "ApiWorker",
   Effect.gen(function* () {
     const { stage } = yield* Alchemy.Stack;
-    const production = stage === "prod";
+    const stageHost = stageHostFor(stage);
 
     return {
       main: import.meta.url,
-      domain: production ? apiDomain : null,
-      env: production
-        ? {
-            AUTH_BASE_URL: `https://${apiDomain}`,
-            AUTH_COOKIE_DOMAIN: rootDomain,
-            WEB_ORIGIN: `https://${webDomain}`,
-          }
-        : {},
+      workersDev: stageHost === null,
+      routes:
+        stageHost === null
+          ? []
+          : [{ pattern: `${stageHost.hostname}${AppApi.apiBasePath}/*`, zoneName }],
+      env:
+        stageHost === null
+          ? { AUTH_SECURE: "false" }
+          : {
+              AUTH_BASE_URL: stageHost.origin,
+              WEB_ORIGIN: stageHost.origin,
+              AUTH_SECURE: "true",
+            },
       compatibility: { flags: ["nodejs_compat"] },
       observability: { enabled: true },
     };
   }),
   Effect.gen(function* () {
-    const { apiUrl, cookieDomain, webOrigin } = yield* config;
+    const { apiUrl, secure, webOrigin } = yield* config;
     const runtime = yield* Cloudflare.Worker;
     const hyperdrive = yield* Cloudflare.Hyperdrive.Connect(Database.hyperdrive);
     const originUrl = yield* Database.originUrl;
     const postgresLayer = SQL.PostgresLayer({ url: hyperdrive.connectionString });
     const persistenceLayer = PersistencePostgres.layer.pipe(Layer.provide(postgresLayer));
     const betterAuth = yield* AuthBetter.make({
-      baseUrl: Option.getOrElse(apiUrl, () => ({ allowedHosts: derivedHosts })),
+      baseUrl: Option.getOrElse(apiUrl, () => ({ allowedHosts: localHosts })),
       basePath: AppApi.authBasePath,
       provider: ProviderId.make("better-auth"),
       secret: null,
       trustedOrigins: Option.match(webOrigin, {
-        onNone: () => derivedHosts,
+        onNone: () => localHosts,
         onSome: (origin) => [origin],
       }),
-      cookieDomain: Option.getOrNull(cookieDomain),
+      secure,
     }).pipe(Effect.provide(CloudflareHyperdrive(Database.hyperdrive, { migrate: originUrl })));
 
     const authenticatorLayer = Layer.succeed(RequestAuth.Authenticator, {
@@ -102,15 +98,9 @@ export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
     const httpApp = yield* HttpRouter.toHttpEffect(routerLayer);
 
     return {
-      fetch: httpApp.pipe(
-        HttpMiddleware.cors({
-          allowedOrigins: Option.match(webOrigin, {
-            onNone: () => isDerivedOrigin,
-            onSome: (origin) => [origin],
-          }),
-          credentials: true,
-        }),
-      ),
+      fetch: Option.isNone(webOrigin)
+        ? httpApp.pipe(HttpMiddleware.cors({ allowedOrigins: isLocalOrigin, credentials: true }))
+        : httpApp,
     };
   }).pipe(Effect.provide(Layer.merge(Cloudflare.Hyperdrive.ConnectBinding, Telemetry.layer))),
 ) {}

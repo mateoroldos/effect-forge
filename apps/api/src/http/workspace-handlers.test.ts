@@ -63,7 +63,7 @@ describe("workspace HTTP API", () => {
     it.effect("returns 201 for creation", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
-        const response = yield* request("/workspaces", {
+        const response = yield* request("/api/workspaces", {
           method: "POST",
           body: { name: workspace.name },
         });
@@ -81,7 +81,7 @@ describe("workspace HTTP API", () => {
     it.effect("returns 200 for listing", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
-        const response = yield* request("/workspaces");
+        const response = yield* request("/api/workspaces");
 
         assert.strictEqual(response.status, 200);
         assert.deepEqual(
@@ -96,7 +96,7 @@ describe("workspace HTTP API", () => {
     it.effect("returns 400 for malformed input", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
-        const response = yield* request("/workspaces", {
+        const response = yield* request("/api/workspaces", {
           method: "POST",
           body: { name: " untrimmed" },
         });
@@ -110,7 +110,7 @@ describe("workspace HTTP API", () => {
     it.effect("returns WorkspaceApi.NameTaken", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
-        const response = yield* request("/workspaces", {
+        const response = yield* request("/api/workspaces", {
           method: "POST",
           body: { name: workspace.name },
         });
@@ -130,7 +130,7 @@ describe("workspace HTTP API", () => {
     it.effect("returns 500", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
-        const response = yield* request("/workspaces", {
+        const response = yield* request("/api/workspaces", {
           method: "POST",
           body: { name: workspace.name },
         });
@@ -144,7 +144,7 @@ describe("workspace HTTP API", () => {
     it.effect("returns 500 for creation", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
-        const response = yield* request("/workspaces", {
+        const response = yield* request("/api/workspaces", {
           method: "POST",
           body: { name: workspace.name },
         });
@@ -156,7 +156,7 @@ describe("workspace HTTP API", () => {
     it.effect("returns 500 for listing", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
-        assert.strictEqual((yield* request("/workspaces")).status, 500);
+        assert.strictEqual((yield* request("/api/workspaces")).status, 500);
       }),
     );
   });

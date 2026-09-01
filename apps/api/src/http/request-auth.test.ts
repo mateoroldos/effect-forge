@@ -25,7 +25,7 @@ const served = Layer.unwrap(
       provider: ProviderId.make("better-auth"),
       secret: Redacted.make("test-secret-test-secret-test-secret"),
       trustedOrigins: ["http://effect-forge.test"],
-      cookieDomain: null,
+      secure: true,
     });
 
     const authenticator = Layer.succeed(RequestAuth.Authenticator, {
@@ -71,7 +71,7 @@ describe("request authentication", () => {
         const request = yield* ApiTest.Service;
         const cookie = yield* signUp("ada@example.com");
 
-        const response = yield* request("/me", { headers: { cookie } });
+        const response = yield* request("/api/me", { headers: { cookie } });
 
         assert.strictEqual(response.status, 200);
         const principal = yield* Schema.decodeUnknownEffect(Principal)(
@@ -86,14 +86,14 @@ describe("request authentication", () => {
         const request = yield* ApiTest.Service;
         const cookie = yield* signUp("grace@example.com");
 
-        const created = yield* request("/workspaces", {
+        const created = yield* request("/api/workspaces", {
           method: "POST",
           body: { name: "Effect Forge" },
           headers: { cookie },
         });
         assert.strictEqual(created.status, 201);
 
-        const listed = yield* request("/workspaces", { headers: { cookie } });
+        const listed = yield* request("/api/workspaces", { headers: { cookie } });
         assert.strictEqual(listed.status, 200);
         const workspaces = yield* Schema.decodeUnknownEffect(Schema.Array(Workspace))(
           yield* Effect.promise(() => listed.json()),
@@ -107,14 +107,14 @@ describe("request authentication", () => {
     it.effect("serves public health without authentication", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
-        assert.strictEqual((yield* request("/health")).status, 200);
+        assert.strictEqual((yield* request("/api/health")).status, 200);
       }),
     );
 
     it.effect("rejects an authenticated endpoint", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
-        assert.strictEqual((yield* request("/me")).status, 401);
+        assert.strictEqual((yield* request("/api/me")).status, 401);
       }),
     );
   });
