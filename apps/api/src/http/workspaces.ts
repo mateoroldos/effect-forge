@@ -1,11 +1,11 @@
-import { AppApi } from "@effect-forge/contracts";
 import { WorkspaceApi } from "@effect-forge/contracts/workspaces";
 import { WorkspaceDirectory } from "@effect-forge/core/workspace-directory";
 import { Effect } from "effect";
 import { HttpApiBuilder, HttpApiError } from "effect/unstable/httpapi";
+import { protectedApi } from "./request-auth.ts";
 
 /** Implements the workspace HTTP contract through `WorkspaceDirectory`. */
-export const layer = HttpApiBuilder.group(AppApi.Api, "workspaces", (handlers) =>
+export const layer = HttpApiBuilder.group(protectedApi, "workspaces", (handlers) =>
   Effect.gen(function* () {
     const directory = yield* WorkspaceDirectory.Service;
 

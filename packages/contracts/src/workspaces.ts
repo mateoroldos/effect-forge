@@ -21,11 +21,15 @@ export const Group = HttpApiGroup.make("workspaces").add(
   HttpApiEndpoint.post("create", "/workspaces", {
     payload: CreatePayload,
     success: Workspace.pipe(HttpApiSchema.status(201)),
-    error: [NameTaken, HttpApiError.InternalServerErrorNoContent],
+    error: [
+      NameTaken,
+      HttpApiError.UnauthorizedNoContent,
+      HttpApiError.InternalServerErrorNoContent,
+    ],
   }),
   HttpApiEndpoint.get("list", "/workspaces", {
     success: Schema.Array(Workspace),
-    error: HttpApiError.InternalServerErrorNoContent,
+    error: [HttpApiError.UnauthorizedNoContent, HttpApiError.InternalServerErrorNoContent],
   }),
 );
 
