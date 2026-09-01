@@ -1,0 +1,24 @@
+{
+  "name": "@effect-forge/auth-better",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/auth-better.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@alchemy.run/better-auth": "2.0.0-beta.74",
+    "@effect-forge/core": "workspace:*",
+    "alchemy": "catalog:",
+    "better-auth": "^1.6.2",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "vitest": "catalog:"
+  }
+}
