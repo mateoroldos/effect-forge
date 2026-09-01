@@ -13,6 +13,10 @@ export interface Options {
   readonly provider: ProviderId;
   /** The secret used to sign and verify Better Auth sessions. */
   readonly secret: Redacted.Redacted<string>;
+  /** Browser origins allowed to start authentication flows and receive sessions. */
+  readonly trustedOrigins: ReadonlyArray<string>;
+  /** The parent domain the browser shares with this API, or `null` when they share none. */
+  readonly cookieDomain: string | null;
 }
 
 /** HTTP handling and account identification backed by one Better Auth instance. */
@@ -46,11 +50,24 @@ const decodeProviderAccount = Schema.decodeUnknownEffect(ProviderAccount);
 /** Builds one Better Auth integration while leaving database selection open. */
 export const make = (options: Options): Effect.Effect<Instance, never, Database> =>
   Effect.gen(function* () {
+    const { cookieDomain } = options;
     const auth = yield* BetterAuth({
       id: "ApplicationAuth",
       basePath: options.basePath,
       emailAndPassword: { enabled: true },
       secret: options.secret,
+      trustedOrigins: [...options.trustedOrigins],
+      // Sharing a parent domain keeps the session cookie first-party, which Safari
+      // requires. Without one it must survive a cross-site request instead.
+      advanced: {
+        defaultCookieAttributes: {
+          sameSite: cookieDomain === null ? "none" : "lax",
+          secure: true,
+          httpOnly: true,
+        },
+        crossSubDomainCookies:
+          cookieDomain === null ? { enabled: false } : { enabled: true, domain: cookieDomain },
+      },
     });
 
     const identify = Effect.fn("AuthBetter.identify")((headers: Headers) =>
