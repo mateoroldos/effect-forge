@@ -12,13 +12,7 @@ export type CurrentPrincipal =
 
 const signedOut = { _tag: "SignedOut" } as const;
 
-/**
- * Asks the API who the request's session belongs to, over the cookie the browser just sent.
- *
- * The document request carries the session because the API shares a cookie parent with this
- * application. A stage without one leaves the cookie host-only on the API, and every request
- * resolves signed out here.
- */
+/** Forwards the document request's host-only session to `/api/me` before rendering. */
 const resolve = Effect.gen(function* () {
   const cookie = getRequestHeader("cookie");
   if (cookie === undefined) return signedOut;

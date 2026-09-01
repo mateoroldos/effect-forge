@@ -26,7 +26,7 @@ describe("identity HTTP API", () => {
     it.effect("returns 200 and the request principal", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
-        const response = yield* request("/me");
+        const response = yield* request("/api/me");
 
         assert.strictEqual(response.status, 200);
         assert.deepEqual(

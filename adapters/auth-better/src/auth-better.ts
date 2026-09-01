@@ -22,8 +22,8 @@ export interface Options {
   readonly secret: Redacted.Redacted<string> | null;
   /** Browser origins allowed to start authentication flows and receive sessions. */
   readonly trustedOrigins: ReadonlyArray<string>;
-  /** The parent domain the browser shares with this API, or `null` when they share none. */
-  readonly cookieDomain: string | null;
+  /** Whether the browser reaches this API over HTTPS, which local development does not. */
+  readonly secure: boolean;
 }
 
 /** HTTP handling and account identification backed by one Better Auth instance. */
@@ -57,7 +57,7 @@ const decodeProviderAccount = Schema.decodeUnknownEffect(ProviderAccount);
 /** Builds one Better Auth integration while leaving database selection open. */
 export const make = (options: Options): Effect.Effect<Instance, never, Database> =>
   Effect.gen(function* () {
-    const { baseUrl, cookieDomain, secret } = options;
+    const { baseUrl, secret, secure } = options;
     const authOptions = {
       id: "ApplicationAuth",
       baseURL:
@@ -65,16 +65,14 @@ export const make = (options: Options): Effect.Effect<Instance, never, Database>
       basePath: options.basePath,
       emailAndPassword: { enabled: true },
       trustedOrigins: [...options.trustedOrigins],
-      // Sharing a parent domain keeps the session cookie first-party, which Safari
-      // requires. Without one it must survive a cross-site request instead.
       advanced: {
+        cookiePrefix: "ef",
         defaultCookieAttributes: {
-          sameSite: cookieDomain === null ? ("none" as const) : ("lax" as const),
-          secure: true,
+          sameSite: "lax" as const,
+          secure,
           httpOnly: true,
         },
-        crossSubDomainCookies:
-          cookieDomain === null ? { enabled: false } : { enabled: true, domain: cookieDomain },
+        crossSubDomainCookies: { enabled: false },
       },
     };
 

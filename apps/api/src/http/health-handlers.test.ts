@@ -18,7 +18,7 @@ describe("health HTTP API", () => {
     it.effect("returns 200", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
-        const response = yield* request("/health");
+        const response = yield* request("/api/health");
 
         assert.strictEqual(response.status, 200);
         assert.deepEqual(yield* Effect.promise(() => response.json()), { status: "ok" });

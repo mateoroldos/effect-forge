@@ -1,4 +1,4 @@
-import ApiWorker, { webDomain } from "./apps/api/src/worker.ts";
+import ApiWorker from "./apps/api/src/worker.ts";
 import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as Drizzle from "alchemy/Drizzle";
@@ -6,6 +6,7 @@ import * as GitHub from "alchemy/GitHub";
 import * as Neon from "alchemy/Neon";
 import * as Output from "alchemy/Output";
 import { Config, Effect, Layer, Option } from "effect";
+import { stageHostFor } from "./stacks/stage-host.ts";
 
 export default Alchemy.Stack(
   "EffectForge",
@@ -18,6 +19,7 @@ export default Alchemy.Stack(
   },
   Effect.gen(function* () {
     const { stage } = yield* Alchemy.Stack;
+    const stageHost = stageHostFor(stage);
     const browserTelemetryEnv = yield* resolveBrowserTelemetryEnv(stage);
     const api = yield* ApiWorker;
     const web = yield* Cloudflare.Website.Vite("Web", {
@@ -26,8 +28,11 @@ export default Alchemy.Stack(
         include: ["**/*", "../../packages/contracts/src/**", "../../packages/domain/src/**"],
         lockfile: true,
       },
-      env: { VITE_API_URL: api.url.as<string>(), ...browserTelemetryEnv },
-      domain: stage === "prod" ? webDomain : null,
+      env: {
+        VITE_API_URL: stageHost?.origin ?? api.url.as<string>(),
+        ...browserTelemetryEnv,
+      },
+      domain: stageHost?.hostname ?? null,
       compatibility: {
         flags: ["nodejs_compat", "enable_request_signal"],
       },
@@ -45,7 +50,7 @@ export default Alchemy.Stack(
       });
     }
 
-    return { apiUrl: api.url, webUrl: web.url };
+    return { apiUrl: stageHost?.origin ?? api.url, webUrl: web.url };
   }),
 );
 

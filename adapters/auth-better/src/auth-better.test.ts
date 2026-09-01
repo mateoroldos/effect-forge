@@ -12,14 +12,14 @@ const serve = (fetch: AuthBetter.Instance["fetch"], request: Request) =>
     Effect.map(HttpServerResponse.toWeb),
   );
 
-const makeAdapter = (cookieDomain: string | null = null) =>
+const makeAdapter = (secure = true) =>
   AuthBetter.make({
     baseUrl: new URL("http://localhost"),
     basePath: "/auth",
     provider: ProviderId.make("better-auth"),
     secret: Redacted.make("test-secret-test-secret-test-secret"),
     trustedOrigins: ["http://localhost"],
-    cookieDomain,
+    secure,
   });
 
 const signUp = (adapter: AuthBetter.Instance, email: string) =>
@@ -76,33 +76,35 @@ describe("AuthBetter", () => {
     }).pipe(Effect.provide(testLayer), Effect.scoped),
   );
 
-  it.live("sends cross-site cookies when no parent domain is shared", () =>
+  it.live("sets secure host-only cookies for deployed HTTPS", () =>
     Effect.gen(function* () {
       const adapter = yield* makeAdapter();
       const response = yield* signUp(adapter, "grace@example.com");
+      const cookies = response.headers.getSetCookie();
 
+      assert.isNotEmpty(cookies);
       assert.isTrue(
-        response.headers
-          .getSetCookie()
-          .every((value) => /;\s*samesite=none/i.test(value) && /;\s*secure/i.test(value)),
-        "cookies must survive a cross-site request",
+        cookies.every(
+          (value) =>
+            !/;\s*domain=/i.test(value) &&
+            /;\s*samesite=lax/i.test(value) &&
+            /;\s*secure/i.test(value),
+        ),
+        "deployed cookies must be host-only, Lax, and Secure",
       );
     }).pipe(Effect.provide(testLayer), Effect.scoped),
   );
 
-  it.live("scopes cookies to the shared parent domain when there is one", () =>
+  it.live("permits host-only cookies over local HTTP", () =>
     Effect.gen(function* () {
-      const adapter = yield* makeAdapter("effect-forge.test");
+      const adapter = yield* makeAdapter(false);
       const response = yield* signUp(adapter, "alan@example.com");
+      const cookies = response.headers.getSetCookie();
 
+      assert.isNotEmpty(cookies);
       assert.isTrue(
-        response.headers
-          .getSetCookie()
-          .every(
-            (value) =>
-              /;\s*domain=effect-forge\.test/i.test(value) && /;\s*samesite=lax/i.test(value),
-          ),
-        "cookies must stay first-party across the shared domain",
+        cookies.every((value) => !/;\s*domain=/i.test(value) && !/;\s*secure/i.test(value)),
+        "local cookies must be host-only and available over HTTP",
       );
     }).pipe(Effect.provide(testLayer), Effect.scoped),
   );
