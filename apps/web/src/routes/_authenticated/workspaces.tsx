@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CreateWorkspaceForm } from "../features/workspaces/create-workspace-form.tsx";
-import { WorkspaceGrid } from "../features/workspaces/workspace-grid.tsx";
+import { CreateWorkspaceForm } from "../../features/workspaces/create-workspace-form.tsx";
+import { WorkspaceGrid } from "../../features/workspaces/workspace-grid.tsx";
 
-export const Route = createFileRoute("/workspaces")({ component: WorkspacesRoute });
+export const Route = createFileRoute("/_authenticated/workspaces")({ component: WorkspacesRoute });
 
 function WorkspacesRoute() {
   return (
-    <main className="mx-auto min-h-screen max-w-5xl px-6 py-16">
+    <>
       <header className="mb-10">
         <p className="text-sm font-medium text-muted-foreground">Effect Forge</p>
         <h1 className="mt-2 text-4xl font-semibold tracking-tight">Workspaces</h1>
@@ -18,6 +18,6 @@ function WorkspacesRoute() {
         <CreateWorkspaceForm />
       </section>
       <WorkspaceGrid />
-    </main>
+    </>
   );
 }
