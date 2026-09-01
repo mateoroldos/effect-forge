@@ -5,7 +5,9 @@
   "type": "module",
   "exports": {
     "./email-address": "./src/email-address/email-address.ts",
-    "./workspace": "./src/workspace/workspace.ts"
+    "./identity": "./src/identity/identity.ts",
+    "./workspace": "./src/workspace/workspace.ts",
+    "./workspace-member": "./src/workspace/workspace-member.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
