@@ -8,6 +8,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@effect-forge/auth-better": "workspace:*",
     "@effect-forge/contracts": "workspace:*",
     "@effect-forge/core": "workspace:*",
     "@effect-forge/database-postgres": "workspace:*",
