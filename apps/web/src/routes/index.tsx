@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({ component: LandingPage });
 
@@ -19,6 +19,12 @@ function LandingPage() {
           A typed path from browser interactions to Effect services and PostgreSQL—without hiding
           the seams that keep production software dependable.
         </p>
+        <Link
+          className="mt-10 inline-block rounded-md bg-stone-900 px-5 py-3 text-sm font-medium text-stone-50"
+          to="/workspaces"
+        >
+          Open your workspaces
+        </Link>
         <div
           className="mt-10 flex items-center gap-3 text-sm text-stone-600"
           aria-label="Application status"

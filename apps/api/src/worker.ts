@@ -1,4 +1,5 @@
 import { CloudflareHyperdrive } from "@alchemy.run/better-auth/CloudflareHyperdrive";
+import { AppApi } from "@effect-forge/contracts";
 import { AuthBetter } from "@effect-forge/auth-better";
 import { IdentityDirectory } from "@effect-forge/core/identity-directory";
 import { ProviderId } from "@effect-forge/core/provider-account";
@@ -14,8 +15,6 @@ import { App } from "./http/app.ts";
 import { RequestAuth } from "./http/request-auth.ts";
 import { Database } from "./infrastructure/database.ts";
 import { Telemetry } from "./infrastructure/telemetry.ts";
-
-const authBasePath = "/auth";
 
 /** Everything the stack must bind, yielded by both effects so they cannot drift. */
 const config = Config.all({
@@ -50,7 +49,7 @@ export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
       Layer.provide(Layer.merge(NodeCrypto.layer, persistenceLayer)),
     );
     const betterAuth = yield* AuthBetter.make({
-      basePath: authBasePath,
+      basePath: AppApi.authBasePath,
       provider: ProviderId.make("better-auth"),
       secret: authSecret,
       trustedOrigins: webOrigins,
@@ -69,7 +68,7 @@ export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
       App.layer.pipe(Layer.provide(Layer.merge(coreLayer, authenticatorLayer))),
       HttpRouter.add(
         "*",
-        `${authBasePath}/*`,
+        `${AppApi.authBasePath}/*`,
         Effect.provideService(betterAuth.fetch, Alchemy.RuntimeContext, runtime),
       ),
     );

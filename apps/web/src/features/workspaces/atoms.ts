@@ -14,7 +14,14 @@ const listWorkspaces = AppApiClient.query("workspaces", "list", {}).pipe(
   ),
 );
 
-export const workspaces = Atom.optimistic(listWorkspaces);
+/**
+ * The workspaces the current principal belongs to.
+ *
+ * Held back from the server render: the API authorises this by a session cookie the browser
+ * holds, and a fetch from the server render carries no cookie jar, so it would only ever ask
+ * anonymously and be refused.
+ */
+export const workspaces = Atom.optimistic(listWorkspaces).pipe(Atom.withServerValueInitial);
 
 export const createWorkspace = Atom.optimisticFn(workspaces, {
   reducer: (current, { payload }) =>
