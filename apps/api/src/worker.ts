@@ -7,7 +7,7 @@ import { NodeCrypto } from "@effect/platform-node";
 import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as SQL from "alchemy/SQL/Postgres";
-import { Config, Effect, Layer, Option } from "effect";
+import { Effect, Layer } from "effect";
 import { HttpMiddleware, HttpRouter } from "effect/unstable/http";
 import { stageHostFor, zoneName } from "../../../stacks/stage-host.ts";
 import { App } from "./http/app.ts";
@@ -26,13 +26,6 @@ const isLocalOrigin = (origin: string) => {
   return protocol === "http:" && (hostname === "localhost" || hostname === "127.0.0.1");
 };
 
-/** What every deployed stage pins; absent only in local development. */
-const config = Config.all({
-  apiUrl: Config.option(Config.url("AUTH_BASE_URL")),
-  secure: Config.boolean("AUTH_SECURE").pipe(Config.withDefault(true)),
-  webOrigin: Config.option(Config.nonEmptyString("WEB_ORIGIN")),
-});
-
 export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
   "ApiWorker",
   Effect.gen(function* () {
@@ -46,35 +39,25 @@ export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
         stageHost === null
           ? []
           : [{ pattern: `${stageHost.hostname}${AppApi.apiBasePath}/*`, zoneName }],
-      env:
-        stageHost === null
-          ? { AUTH_SECURE: "false" }
-          : {
-              AUTH_BASE_URL: stageHost.origin,
-              WEB_ORIGIN: stageHost.origin,
-              AUTH_SECURE: "true",
-            },
       compatibility: { flags: ["nodejs_compat"] },
       observability: { enabled: true },
     };
   }),
   Effect.gen(function* () {
-    const { apiUrl, secure, webOrigin } = yield* config;
+    const { stage } = yield* Alchemy.Stack;
+    const stageHost = stageHostFor(stage);
     const runtime = yield* Cloudflare.Worker;
     const hyperdrive = yield* Cloudflare.Hyperdrive.Connect(Database.hyperdrive);
     const originUrl = yield* Database.originUrl;
     const postgresLayer = SQL.PostgresLayer({ url: hyperdrive.connectionString });
     const persistenceLayer = PersistencePostgres.layer.pipe(Layer.provide(postgresLayer));
     const betterAuth = yield* AuthBetter.make({
-      baseUrl: Option.getOrElse(apiUrl, () => ({ allowedHosts: localHosts })),
+      baseUrl: stageHost === null ? { allowedHosts: localHosts } : new URL(stageHost.origin),
       basePath: AppApi.authBasePath,
       provider: ProviderId.make("better-auth"),
       secret: null,
-      trustedOrigins: Option.match(webOrigin, {
-        onNone: () => localHosts,
-        onSome: (origin) => [origin],
-      }),
-      secure,
+      trustedOrigins: stageHost === null ? localHosts : [stageHost.origin],
+      secure: stageHost !== null,
     }).pipe(Effect.provide(CloudflareHyperdrive(Database.hyperdrive, { migrate: originUrl })));
 
     const authenticatorLayer = Layer.succeed(RequestAuth.Authenticator, {
@@ -98,9 +81,10 @@ export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
     const httpApp = yield* HttpRouter.toHttpEffect(routerLayer);
 
     return {
-      fetch: Option.isNone(webOrigin)
-        ? httpApp.pipe(HttpMiddleware.cors({ allowedOrigins: isLocalOrigin, credentials: true }))
-        : httpApp,
+      fetch:
+        stageHost === null
+          ? httpApp.pipe(HttpMiddleware.cors({ allowedOrigins: isLocalOrigin, credentials: true }))
+          : httpApp,
     };
   }).pipe(Effect.provide(Layer.merge(Cloudflare.Hyperdrive.ConnectBinding, Telemetry.layer))),
 ) {}
