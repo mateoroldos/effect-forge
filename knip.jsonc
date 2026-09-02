@@ -13,5 +13,9 @@
       // figlet's types are used only from .astro files, which knip cannot read.
       "ignoreDependencies": ["@types/figlet"],
     },
+    "apps/web": {
+      // Cloudflare provides this virtual runtime module; it is not an npm dependency.
+      "ignoreDependencies": ["cloudflare"],
+    },
   },
 }

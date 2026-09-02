@@ -8,6 +8,37 @@ import * as Output from "alchemy/Output";
 import { Config, Effect, Layer, Option } from "effect";
 import { stageHostFor } from "./stacks/stage-host.ts";
 
+export class WebWorker extends Cloudflare.Website.Vite<WebWorker>()(
+  "Web",
+  Effect.gen(function* () {
+    const { stage } = yield* Alchemy.Stack;
+    const stageHost = stageHostFor(stage);
+    const browserTelemetryEnv = yield* resolveBrowserTelemetryEnv(stage).pipe(Effect.orDie);
+    const api = yield* ApiWorker;
+
+    return {
+      rootDir: "apps/web",
+      memo: {
+        include: ["**/*", "../../packages/contracts/src/**", "../../packages/domain/src/**"],
+        lockfile: true,
+      },
+      env: {
+        API: api,
+        VITE_API_URL: stageHost?.origin ?? api.url.as<string>(),
+        VITE_SEARCH_INDEXABLE: String(stage === "prod"),
+        ...browserTelemetryEnv,
+      },
+      domain: stageHost?.hostname ?? null,
+      compatibility: {
+        flags: ["nodejs_compat", "enable_request_signal"],
+      },
+      observability: { enabled: true },
+    };
+  }),
+) {}
+
+export type WebWorkerEnv = Cloudflare.InferEnv<typeof WebWorker>;
+
 export default Alchemy.Stack(
   "EffectForge",
   {
@@ -20,25 +51,8 @@ export default Alchemy.Stack(
   Effect.gen(function* () {
     const { stage } = yield* Alchemy.Stack;
     const stageHost = stageHostFor(stage);
-    const browserTelemetryEnv = yield* resolveBrowserTelemetryEnv(stage);
     const api = yield* ApiWorker;
-    const web = yield* Cloudflare.Website.Vite("Web", {
-      rootDir: "apps/web",
-      memo: {
-        include: ["**/*", "../../packages/contracts/src/**", "../../packages/domain/src/**"],
-        lockfile: true,
-      },
-      env: {
-        VITE_API_URL: stageHost?.origin ?? api.url.as<string>(),
-        VITE_SEARCH_INDEXABLE: String(stage === "prod"),
-        ...browserTelemetryEnv,
-      },
-      domain: stageHost?.hostname ?? null,
-      compatibility: {
-        flags: ["nodejs_compat", "enable_request_signal"],
-      },
-      observability: { enabled: true },
-    });
+    const web = yield* WebWorker;
 
     if (stage.startsWith("pr-")) {
       const pullRequest = yield* Config.int("PULL_REQUEST");
