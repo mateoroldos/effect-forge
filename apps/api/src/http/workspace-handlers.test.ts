@@ -21,6 +21,13 @@ const workspace = Workspace.make({
   id: WorkspaceId.make("123e4567-e89b-42d3-a456-426614174000"),
   name: WorkspaceName.make("Effect Forge"),
 });
+const assertNoContent = Effect.fn("assertNoContent")(function* (
+  response: Response,
+  status: number,
+) {
+  assert.strictEqual(response.status, status);
+  assert.strictEqual(yield* Effect.promise(() => response.text()), "");
+});
 
 const serve = (directory: Layer.Layer<WorkspaceDirectory.Service>) =>
   ApiTest.layer(
@@ -135,7 +142,7 @@ describe("workspace HTTP API", () => {
           body: { name: workspace.name },
         });
 
-        assert.strictEqual(response.status, 500);
+        yield* assertNoContent(response, 500);
       }),
     );
   });
@@ -149,14 +156,14 @@ describe("workspace HTTP API", () => {
           body: { name: workspace.name },
         });
 
-        assert.strictEqual(response.status, 500);
+        yield* assertNoContent(response, 500);
       }),
     );
 
     it.effect("returns 500 for listing", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
-        assert.strictEqual((yield* request("/api/workspaces")).status, 500);
+        yield* assertNoContent(yield* request("/api/workspaces"), 500);
       }),
     );
   });
