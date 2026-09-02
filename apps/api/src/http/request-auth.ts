@@ -29,7 +29,7 @@ export class Authenticator extends Context.Service<
 /** Rejects unauthenticated requests and provides the principal behind the rest. */
 export class Middleware extends HttpApiMiddleware.Service<
   Middleware,
-  { provides: CurrentPrincipal; requires: Authenticator | IdentityDirectory.Service }
+  { provides: CurrentPrincipal }
 >()("@effect-forge/api/RequestAuth", {
   error: [
     HttpApiError.UnauthorizedNoContent,
@@ -38,34 +38,37 @@ export class Middleware extends HttpApiMiddleware.Service<
   ],
 }) {}
 
-export const layer = Layer.succeed(
+/** Builds request authentication while leaving identity and credential adapters open. */
+export const layer = Layer.effect(
   Middleware,
-  Middleware.of((httpEffect) =>
-    Effect.gen(function* () {
-      const request = yield* HttpServerRequest.HttpServerRequest;
-      const { identify } = yield* Authenticator;
-      const identities = yield* IdentityDirectory.Service;
+  Effect.gen(function* () {
+    const { identify } = yield* Authenticator;
+    const identities = yield* IdentityDirectory.Service;
 
-      const account = yield* identify(new Headers(request.headers)).pipe(
-        Effect.mapError(() => new HttpApiError.InternalServerError({})),
-      );
-      const authenticated = yield* Option.match(account, {
-        onNone: () => Effect.fail(new HttpApiError.Unauthorized({})),
-        onSome: Effect.succeed,
-      });
-      const principal = yield* identities.resolve(authenticated).pipe(
-        Effect.catchTags({
-          "IdentityStore.EmailTaken": () => Effect.fail(new HttpApiError.Conflict({})),
-          "IdentityStore.PersistenceError": () =>
-            Effect.fail(new HttpApiError.InternalServerError({})),
-          "IdentityDirectory.IdGenerationError": () =>
-            Effect.fail(new HttpApiError.InternalServerError({})),
-        }),
-      );
+    return Middleware.of((httpEffect) =>
+      Effect.gen(function* () {
+        const request = yield* HttpServerRequest.HttpServerRequest;
+        const account = yield* identify(new Headers(request.headers)).pipe(
+          Effect.mapError(() => new HttpApiError.InternalServerError({})),
+        );
+        const authenticated = yield* Option.match(account, {
+          onNone: () => Effect.fail(new HttpApiError.Unauthorized({})),
+          onSome: Effect.succeed,
+        });
+        const principal = yield* identities.resolve(authenticated).pipe(
+          Effect.catchTags({
+            "IdentityStore.EmailTaken": () => Effect.fail(new HttpApiError.Conflict({})),
+            "IdentityStore.PersistenceError": () =>
+              Effect.fail(new HttpApiError.InternalServerError({})),
+            "IdentityDirectory.IdGenerationError": () =>
+              Effect.fail(new HttpApiError.InternalServerError({})),
+          }),
+        );
 
-      return yield* Effect.provideService(httpEffect, CurrentPrincipal, principal);
-    }),
-  ),
+        return yield* Effect.provideService(httpEffect, CurrentPrincipal, principal);
+      }),
+    );
+  }),
 );
 
 export * as RequestAuth from "./request-auth.ts";
