@@ -5,4 +5,5 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [tanstackStart(), viteReact(), tailwindcss()],
+  build: { rolldownOptions: { external: ["cloudflare:workers"] } },
 });
