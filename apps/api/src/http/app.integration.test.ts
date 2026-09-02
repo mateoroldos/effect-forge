@@ -16,7 +16,7 @@ import { RequestAuth } from "./request-auth.ts";
 
 const applicationRequirements = Layer.merge(CryptoDeterministic.layer, PersistencePglite.layer);
 
-/** The Worker's composition, over an in-memory provider instead of Hyperdrive. */
+/** The complete HTTP application with deterministic local infrastructure. */
 const served = Layer.unwrap(
   Effect.gen(function* () {
     const provider = yield* AuthBetter.make({
@@ -64,57 +64,78 @@ const signUp = Effect.fn("signUp")(function* (email: string) {
     .join("; ");
 });
 
-describe("request authentication", () => {
-  it.layer(testLayer)("session from the provider", (it) => {
-    it.effect("resolves the principal the session belongs to", () =>
-      Effect.gen(function* () {
-        const request = yield* ApiTest.Service;
-        const cookie = yield* signUp("ada@example.com");
+describe("application HTTP integration", () => {
+  it.layer(testLayer)("provider session provisioning", (it) => {
+    it.effect(
+      "resolves the session's application principal",
+      () =>
+        Effect.gen(function* () {
+          const request = yield* ApiTest.Service;
+          const cookie = yield* signUp("ada@example.com");
 
-        const response = yield* request("/api/me", { headers: { cookie } });
+          const response = yield* request("/api/me", { headers: { cookie } });
 
-        assert.strictEqual(response.status, 200);
-        const principal = yield* Schema.decodeUnknownEffect(Principal)(
-          yield* Effect.promise(() => response.json()),
-        );
-        assert.strictEqual(principal.email, "ada@example.com");
-      }),
-    );
-
-    it.effect("scopes workspaces to that principal", () =>
-      Effect.gen(function* () {
-        const request = yield* ApiTest.Service;
-        const cookie = yield* signUp("grace@example.com");
-
-        const created = yield* request("/api/workspaces", {
-          method: "POST",
-          body: { name: "Effect Forge" },
-          headers: { cookie },
-        });
-        assert.strictEqual(created.status, 201);
-
-        const listed = yield* request("/api/workspaces", { headers: { cookie } });
-        assert.strictEqual(listed.status, 200);
-        const workspaces = yield* Schema.decodeUnknownEffect(Schema.Array(Workspace))(
-          yield* Effect.promise(() => listed.json()),
-        );
-        assert.lengthOf(workspaces, 1);
-      }),
+          assert.strictEqual(response.status, 200);
+          const principal = yield* Schema.decodeUnknownEffect(Principal)(
+            yield* Effect.promise(() => response.json()),
+          );
+          assert.strictEqual(principal.email, "ada@example.com");
+        }),
+      15_000,
     );
   });
 
-  it.layer(testLayer)("no session", (it) => {
-    it.effect("serves public health without authentication", () =>
+  it.layer(testLayer)("workspace isolation", (it) => {
+    it.effect(
+      "shows a workspace only to its owning principal",
+      () =>
+        Effect.gen(function* () {
+          const request = yield* ApiTest.Service;
+          const ownerCookie = yield* signUp("grace@example.com");
+          const otherCookie = yield* signUp("ada@example.com");
+
+          const created = yield* request("/api/workspaces", {
+            method: "POST",
+            body: { name: "Effect Forge" },
+            headers: { cookie: ownerCookie },
+          });
+          assert.strictEqual(created.status, 201);
+
+          const ownerResponse = yield* request("/api/workspaces", {
+            headers: { cookie: ownerCookie },
+          });
+          assert.strictEqual(ownerResponse.status, 200);
+          const ownerWorkspaces = yield* Schema.decodeUnknownEffect(Schema.Array(Workspace))(
+            yield* Effect.promise(() => ownerResponse.json()),
+          );
+          assert.lengthOf(ownerWorkspaces, 1);
+
+          const otherResponse = yield* request("/api/workspaces", {
+            headers: { cookie: otherCookie },
+          });
+          assert.strictEqual(otherResponse.status, 200);
+          const otherWorkspaces = yield* Schema.decodeUnknownEffect(Schema.Array(Workspace))(
+            yield* Effect.promise(() => otherResponse.json()),
+          );
+          assert.lengthOf(otherWorkspaces, 0);
+        }),
+      15_000,
+    );
+  });
+
+  it.layer(testLayer)("anonymous route policy", (it) => {
+    it.effect("keeps public health accessible", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
         assert.strictEqual((yield* request("/api/health")).status, 200);
       }),
     );
 
-    it.effect("rejects an authenticated endpoint", () =>
+    it.effect("requires a session for every principal-owned route group", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
         assert.strictEqual((yield* request("/api/me")).status, 401);
+        assert.strictEqual((yield* request("/api/workspaces")).status, 401);
       }),
     );
   });
