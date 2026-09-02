@@ -6,7 +6,7 @@ import { RequestAuth } from "./request-auth.ts";
 import { ServerApi } from "./server-api.ts";
 
 /** Implements the workspace HTTP contract through `WorkspaceDirectory`. */
-export const layer = HttpApiBuilder.group(ServerApi.Api, "workspaces", (handlers) =>
+export const layer = HttpApiBuilder.group(ServerApi.Workspaces, "workspaces", (handlers) =>
   Effect.gen(function* () {
     const directory = yield* WorkspaceDirectory.Service;
 
