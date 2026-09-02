@@ -3,6 +3,7 @@ import { WorkspaceDirectory } from "@effect-forge/core/workspace-directory";
 import { Layer } from "effect";
 import { HttpServer } from "effect/unstable/http";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
+import { HealthHandlers } from "./health-handlers.ts";
 import { IdentityHandlers } from "./identity-handlers.ts";
 import { RequestAuth } from "./request-auth.ts";
 import { ServerApi } from "./server-api.ts";
@@ -12,6 +13,7 @@ const applicationServices = Layer.merge(IdentityDirectory.layer, WorkspaceDirect
 
 /** The dependency-open HTTP application graph. */
 export const layer = HttpApiBuilder.layer(ServerApi.Api).pipe(
+  Layer.provide(HealthHandlers.layer),
   Layer.provide(IdentityHandlers.layer),
   Layer.provide(WorkspaceHandlers.layer),
   Layer.provide(RequestAuth.layer),

@@ -1,147 +1,99 @@
 import { assert, describe, it } from "@effect/vitest";
 import { WorkspaceApi } from "@effect-forge/contracts/workspace-api";
-import { IdentityStore } from "@effect-forge/core/identity-store";
-import { ProviderAccount } from "@effect-forge/core/provider-account";
+import { WorkspaceDirectory } from "@effect-forge/core/workspace-directory";
 import { WorkspaceStore } from "@effect-forge/core/workspace-store";
-import { CryptoDeterministic } from "@effect-forge/core/test/crypto-deterministic";
-import { PersistencePglite } from "@effect-forge/database-postgres/test/persistence-pglite";
 import { Principal } from "@effect-forge/domain/identity";
-import { Workspace, WorkspaceName } from "@effect-forge/domain/workspace";
-import { Crypto, Effect, Layer, Option, Schema } from "effect";
-import { App } from "./app.ts";
+import { Workspace, WorkspaceId, WorkspaceName } from "@effect-forge/domain/workspace";
+import { Effect, Layer, Schema } from "effect";
+import { HttpServer } from "effect/unstable/http";
+import { HttpApiBuilder } from "effect/unstable/httpapi";
 import { ApiTest } from "../test/api-test.ts";
-import { RequestAuth } from "./request-auth.ts";
+import { authenticatedAs } from "../test/authenticated-as.ts";
+import { ServerApi } from "./server-api.ts";
+import { WorkspaceHandlers } from "./workspace-handlers.ts";
 
-const account = Schema.decodeSync(ProviderAccount)({
-  identity: { provider: "test", subject: "user-1" },
+const principal = Schema.decodeSync(Principal)({
+  userId: "550e8400-e29b-41d4-a716-446655440000",
   email: "ada@example.com",
   name: "Ada Lovelace",
 });
-const applicationRequirements = Layer.merge(
-  CryptoDeterministic.layer,
-  PersistencePglite.layer,
-);
-const signedIn = Layer.succeed(RequestAuth.Authenticator, {
-  identify: () => Effect.succeedSome(account),
+const workspace = Workspace.make({
+  id: WorkspaceId.make("123e4567-e89b-42d3-a456-426614174000"),
+  name: WorkspaceName.make("Effect Forge"),
 });
-const signedOut = Layer.succeed(RequestAuth.Authenticator, {
-  identify: () => Effect.succeed(Option.none()),
-});
-const serve = <E>(
-  authenticator: typeof signedIn,
-  requirements: Layer.Layer<
-    Crypto.Crypto | IdentityStore.Service | WorkspaceStore.Service,
-    E,
-    never
-  >,
-) =>
-  ApiTest.layer(App.layer.pipe(Layer.provide(Layer.merge(requirements, authenticator))));
 
-const testLayer = serve(signedIn, applicationRequirements);
-const anonymousLayer = serve(signedOut, applicationRequirements);
-
-const identityStore = Layer.succeed(IdentityStore.Service, {
-  resolveOrCreate: (providerAccount, userId) =>
-    Effect.succeed(
-      Principal.make({ userId, email: providerAccount.email, name: providerAccount.name }),
+const serve = (directory: Layer.Layer<WorkspaceDirectory.Service>) =>
+  ApiTest.layer(
+    HttpApiBuilder.layer(ServerApi.Workspaces).pipe(
+      Layer.provide(WorkspaceHandlers.layer),
+      Layer.provide(authenticatedAs(principal)),
+      Layer.provide(directory),
+      Layer.provide(HttpServer.layerServices),
     ),
-});
+  );
+
+const successLayer = serve(
+  Layer.succeed(WorkspaceDirectory.Service, {
+    create: () => Effect.succeed(workspace),
+    list: () => Effect.succeed([workspace]),
+  }),
+);
+const nameTakenLayer = serve(
+  Layer.succeed(WorkspaceDirectory.Service, {
+    create: (_principal, name) => Effect.fail(new WorkspaceStore.NameTaken({ name })),
+    list: () => Effect.die("unexpected workspace list"),
+  }),
+);
+const idFailureLayer = serve(
+  Layer.succeed(WorkspaceDirectory.Service, {
+    create: () => Effect.fail(new WorkspaceDirectory.IdGenerationError({ cause: "unavailable" })),
+    list: () => Effect.die("unexpected workspace list"),
+  }),
+);
 const persistenceFailure = new WorkspaceStore.PersistenceError({ cause: "unavailable" });
-const persistenceFailureStore = Layer.succeed(WorkspaceStore.Service, {
-  create: () => Effect.fail(persistenceFailure),
-  list: () => Effect.fail(persistenceFailure),
-});
 const persistenceFailureLayer = serve(
-  signedIn,
-  Layer.mergeAll(CryptoDeterministic.layer, identityStore, persistenceFailureStore),
+  Layer.succeed(WorkspaceDirectory.Service, {
+    create: () => Effect.fail(persistenceFailure),
+    list: () => Effect.fail(persistenceFailure),
+  }),
 );
 
 describe("workspace HTTP API", () => {
-  it.layer(anonymousLayer)("anonymous request", (it) => {
-    it.effect("returns 401", () =>
+  it.layer(successLayer)("successful operations", (it) => {
+    it.effect("returns 201 for creation", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
-        assert.strictEqual((yield* request("/workspaces")).status, 401);
-      }),
-    );
-  });
-
-  it.layer(testLayer)("creation", (it) => {
-    it.effect("returns 201 and retrieves the workspace", () =>
-      Effect.gen(function* () {
-        const request = yield* ApiTest.Service;
-        const createResponse = yield* request("/workspaces", {
+        const response = yield* request("/workspaces", {
           method: "POST",
-          body: { name: "Effect Forge" },
+          body: { name: workspace.name },
         });
-        assert.strictEqual(createResponse.status, 201);
-        const created = yield* Schema.decodeUnknownEffect(Workspace)(
-          yield* Effect.promise(() => createResponse.json()),
-        );
 
-        const listResponse = yield* request("/workspaces");
-        assert.strictEqual(listResponse.status, 200);
+        assert.strictEqual(response.status, 201);
         assert.deepEqual(
-          yield* Schema.decodeUnknownEffect(Schema.Array(Workspace))(
-            yield* Effect.promise(() => listResponse.json()),
+          yield* Schema.decodeUnknownEffect(Workspace)(
+            yield* Effect.promise(() => response.json()),
           ),
-          [created],
+          workspace,
         );
       }),
     );
-  });
 
-  it.layer(testLayer)("name conflict", (it) => {
-    it.effect("returns WorkspaceApi.NameTaken", () =>
-      Effect.gen(function* () {
-        const request = yield* ApiTest.Service;
-        const created = yield* request("/workspaces", {
-          method: "POST",
-          body: { name: "Effect Forge" },
-        });
-        assert.strictEqual(created.status, 201);
-
-        const response = yield* request("/workspaces", {
-          method: "POST",
-          body: { name: "Effect Forge" },
-        });
-
-        assert.strictEqual(response.status, 409);
-        const error = yield* Schema.decodeUnknownEffect(WorkspaceApi.NameTaken)(
-          yield* Effect.promise(() => response.json()),
-        );
-        assert.strictEqual(error.name, WorkspaceName.make("Effect Forge"));
-      }),
-    );
-  });
-
-  it.layer(persistenceFailureLayer)("creation persistence failure", (it) => {
-    it.effect("returns 500", () =>
-      Effect.gen(function* () {
-        const request = yield* ApiTest.Service;
-        const response = yield* request("/workspaces", {
-          method: "POST",
-          body: { name: "Effect Forge" },
-        });
-
-        assert.strictEqual(response.status, 500);
-      }),
-    );
-  });
-
-  it.layer(persistenceFailureLayer)("list persistence failure", (it) => {
-    it.effect("returns 500", () =>
+    it.effect("returns 200 for listing", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
         const response = yield* request("/workspaces");
 
-        assert.strictEqual(response.status, 500);
+        assert.strictEqual(response.status, 200);
+        assert.deepEqual(
+          yield* Schema.decodeUnknownEffect(Schema.Array(Workspace))(
+            yield* Effect.promise(() => response.json()),
+          ),
+          [workspace],
+        );
       }),
     );
-  });
 
-  it.layer(testLayer)("malformed name", (it) => {
-    it.effect("returns 400", () =>
+    it.effect("returns 400 for malformed input", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
         const response = yield* request("/workspaces", {
@@ -150,6 +102,61 @@ describe("workspace HTTP API", () => {
         });
 
         assert.strictEqual(response.status, 400);
+      }),
+    );
+  });
+
+  it.layer(nameTakenLayer)("name conflict", (it) => {
+    it.effect("returns WorkspaceApi.NameTaken", () =>
+      Effect.gen(function* () {
+        const request = yield* ApiTest.Service;
+        const response = yield* request("/workspaces", {
+          method: "POST",
+          body: { name: workspace.name },
+        });
+
+        assert.strictEqual(response.status, 409);
+        assert.deepEqual(
+          yield* Schema.decodeUnknownEffect(WorkspaceApi.NameTaken)(
+            yield* Effect.promise(() => response.json()),
+          ),
+          new WorkspaceApi.NameTaken({ name: workspace.name }),
+        );
+      }),
+    );
+  });
+
+  it.layer(idFailureLayer)("identifier generation failure", (it) => {
+    it.effect("returns 500", () =>
+      Effect.gen(function* () {
+        const request = yield* ApiTest.Service;
+        const response = yield* request("/workspaces", {
+          method: "POST",
+          body: { name: workspace.name },
+        });
+
+        assert.strictEqual(response.status, 500);
+      }),
+    );
+  });
+
+  it.layer(persistenceFailureLayer)("persistence failure", (it) => {
+    it.effect("returns 500 for creation", () =>
+      Effect.gen(function* () {
+        const request = yield* ApiTest.Service;
+        const response = yield* request("/workspaces", {
+          method: "POST",
+          body: { name: workspace.name },
+        });
+
+        assert.strictEqual(response.status, 500);
+      }),
+    );
+
+    it.effect("returns 500 for listing", () =>
+      Effect.gen(function* () {
+        const request = yield* ApiTest.Service;
+        assert.strictEqual((yield* request("/workspaces")).status, 500);
       }),
     );
   });

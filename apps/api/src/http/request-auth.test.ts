@@ -14,10 +14,7 @@ import { ApiTest } from "../test/api-test.ts";
 import { App } from "./app.ts";
 import { RequestAuth } from "./request-auth.ts";
 
-const applicationRequirements = Layer.merge(
-  CryptoDeterministic.layer,
-  PersistencePglite.layer,
-);
+const applicationRequirements = Layer.merge(CryptoDeterministic.layer, PersistencePglite.layer);
 
 /** The Worker's composition, over an in-memory provider instead of Hyperdrive. */
 const served = Layer.unwrap(
@@ -106,7 +103,14 @@ describe("request authentication", () => {
   });
 
   it.layer(testLayer)("no session", (it) => {
-    it.effect("returns 401", () =>
+    it.effect("serves public health without authentication", () =>
+      Effect.gen(function* () {
+        const request = yield* ApiTest.Service;
+        assert.strictEqual((yield* request("/health")).status, 200);
+      }),
+    );
+
+    it.effect("rejects an authenticated endpoint", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
         assert.strictEqual((yield* request("/me")).status, 401);

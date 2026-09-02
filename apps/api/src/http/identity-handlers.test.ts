@@ -1,61 +1,40 @@
 import { assert, describe, it } from "@effect/vitest";
-import { ProviderAccount } from "@effect-forge/core/provider-account";
-import { CryptoDeterministic } from "@effect-forge/core/test/crypto-deterministic";
-import { PersistencePglite } from "@effect-forge/database-postgres/test/persistence-pglite";
 import { Principal } from "@effect-forge/domain/identity";
-import { Effect, Layer, Option, Schema } from "effect";
+import { Effect, Layer, Schema } from "effect";
+import { HttpServer } from "effect/unstable/http";
+import { HttpApiBuilder } from "effect/unstable/httpapi";
 import { ApiTest } from "../test/api-test.ts";
-import { App } from "./app.ts";
-import { RequestAuth } from "./request-auth.ts";
+import { authenticatedAs } from "../test/authenticated-as.ts";
+import { IdentityHandlers } from "./identity-handlers.ts";
+import { ServerApi } from "./server-api.ts";
 
-const subject = "provider-subject-1";
-const account = Schema.decodeSync(ProviderAccount)({
-  identity: { provider: "test", subject },
+const principal = Schema.decodeSync(Principal)({
+  userId: "550e8400-e29b-41d4-a716-446655440000",
   email: "ada@example.com",
   name: "Ada Lovelace",
 });
-const applicationRequirements = Layer.merge(
-  CryptoDeterministic.layer,
-  PersistencePglite.layer,
+const testLayer = ApiTest.layer(
+  HttpApiBuilder.layer(ServerApi.Identity).pipe(
+    Layer.provide(IdentityHandlers.layer),
+    Layer.provide(authenticatedAs(principal)),
+    Layer.provide(HttpServer.layerServices),
+  ),
 );
-const signedIn = Layer.succeed(RequestAuth.Authenticator, {
-  identify: () => Effect.succeedSome(account),
-});
-const signedOut = Layer.succeed(RequestAuth.Authenticator, {
-  identify: () => Effect.succeed(Option.none()),
-});
-const serve = (authenticator: typeof signedIn) =>
-  ApiTest.layer(
-    App.layer.pipe(Layer.provide(Layer.merge(applicationRequirements, authenticator))),
-  );
-
-const testLayer = serve(signedIn);
-const anonymousLayer = serve(signedOut);
 
 describe("identity HTTP API", () => {
-  it.layer(anonymousLayer)("anonymous request", (it) => {
-    it.effect("returns 401", () =>
-      Effect.gen(function* () {
-        const request = yield* ApiTest.Service;
-        assert.strictEqual((yield* request("/me")).status, 401);
-      }),
-    );
-  });
-
-  it.layer(testLayer)("authenticated request", (it) => {
-    it.effect("returns 200 and the application principal", () =>
+  it.layer(testLayer)("authenticated principal", (it) => {
+    it.effect("returns 200 and the request principal", () =>
       Effect.gen(function* () {
         const request = yield* ApiTest.Service;
         const response = yield* request("/me");
 
         assert.strictEqual(response.status, 200);
-        const principal = yield* Schema.decodeUnknownEffect(Principal)(
-          yield* Effect.promise(() => response.json()),
+        assert.deepEqual(
+          yield* Schema.decodeUnknownEffect(Principal)(
+            yield* Effect.promise(() => response.json()),
+          ),
+          principal,
         );
-
-        assert.strictEqual(principal.email, "ada@example.com");
-        assert.strictEqual(principal.name, "Ada Lovelace");
-        assert.notStrictEqual(principal.userId, subject);
       }),
     );
   });
