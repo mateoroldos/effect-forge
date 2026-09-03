@@ -14,8 +14,9 @@
       "ignoreDependencies": ["@types/figlet"],
     },
     "apps/web": {
-      // Cloudflare provides this virtual runtime module; it is not an npm dependency.
-      "ignoreDependencies": ["cloudflare"],
+      // Alchemy loads the framework adapter dynamically at deploy time, and svelte-check
+      // loads TypeScript 7 through the `--tsgo` flag. Neither appears in an import.
+      "ignoreDependencies": ["@alchemy.run/frontend-frameworks", "@typescript/native"],
     },
     "packages/ui": {
       // svelte-check refuses to start unless a TypeScript 6 is resolvable, so it is

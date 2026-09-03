@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
 import { Schema } from "effect";
-import { ReturnPath } from "./destination.ts";
+import { describe, expect, it } from "vitest";
+import { ReturnPath } from "./return-path.ts";
 
 const isReturnPath = Schema.is(ReturnPath);
 

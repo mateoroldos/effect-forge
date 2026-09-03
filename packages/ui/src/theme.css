@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:opsz,wght@14..32,400;14..32,500&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap");
 @import "tailwindcss";
 
+@source "./svelte";
 @source "./ui";
 
 @custom-variant dark (&:is(.dark *));

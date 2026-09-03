@@ -1,9 +1,10 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "include": ["src", "vite.config.ts"],
+  "extends": ["../../tsconfig.base.json", "$app/tsconfig"],
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client", "@cloudflare/workers-types"]
-  }
+    // Vite emits, never tsc, so a `.ts` specifier needs no rewriting — and rewriting is
+    // what the repository default would refuse to do across the `#lib/*` subpath.
+    "rewriteRelativeImportExtensions": false,
+    "sourceMap": true
+  },
+  "include": ["src", "vite.config.ts"]
 }

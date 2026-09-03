@@ -4,31 +4,28 @@
   "private": true,
   "type": "module",
   "sideEffects": false,
+  "imports": {
+    "#lib/*": "./src/lib/*"
+  },
   "scripts": {
     "build": "vite build",
-    "check-types": "tsc --noEmit",
+    "check-types": "svelte-kit sync && svelte-check --tsgo --tsconfig ./tsconfig.json",
+    "prepare": "svelte-kit sync || echo ''",
     "test": "vitest run"
   },
   "dependencies": {
-    "@effect-forge/contracts": "workspace:*",
-    "@effect-forge/domain": "workspace:*",
     "@effect-forge/ui": "workspace:*",
-    "@effect/atom-react": "4.0.0-rc.112",
-    "@maple-dev/effect-sdk": "0.8.0",
-    "@tanstack/react-form": "1.33.5",
-    "@tanstack/react-router": "1.170.32",
-    "@tanstack/react-start": "1.168.49",
-    "better-auth": "catalog:",
-    "effect": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "catalog:",
+    "@alchemy.run/frontend-frameworks": "2.0.0-beta.76",
+    "@sveltejs/kit": "3.0.0-next.25",
+    "@sveltejs/vite-plugin-svelte": "7.3.0",
     "@tailwindcss/vite": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "6.1.0",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "svelte": "catalog:",
+    "svelte-check": "4.7.6",
+    "typescript": "6.0.3",
     "vite": "8.2.2",
     "vitest": "catalog:"
   }
