@@ -17,5 +17,11 @@
       // Cloudflare provides this virtual runtime module; it is not an npm dependency.
       "ignoreDependencies": ["cloudflare"],
     },
+    "packages/ui": {
+      // svelte-check refuses to start unless a TypeScript 6 is resolvable, so it is
+      // pinned as an API shim. `--tsgo` and `check-types` both run the repository's
+      // TypeScript 7 through this alias, which knip cannot see across the shell path.
+      "ignoreDependencies": ["@typescript/native"],
+    },
   },
 }
