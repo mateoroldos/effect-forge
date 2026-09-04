@@ -5,8 +5,8 @@
     "baseColor": "zinc"
   },
   "aliases": {
-    "components": "@effect-forge/ui/svelte",
-    "ui": "@effect-forge/ui/svelte",
+    "components": "@effect-forge/ui/ui",
+    "ui": "@effect-forge/ui/ui",
     "lib": "@effect-forge/ui",
     "utils": "@effect-forge/ui/cn",
     "hooks": "@effect-forge/ui/hooks"

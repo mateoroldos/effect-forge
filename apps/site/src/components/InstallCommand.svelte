@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button } from '@effect-forge/ui/svelte/button';
+	import { Button } from '@effect-forge/ui/ui/button';
 
 	let { command }: { command: string } = $props();
 

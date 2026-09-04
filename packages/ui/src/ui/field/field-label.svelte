@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Label } from "@effect-forge/ui/svelte/label/index.js";
+	import { Label } from "@effect-forge/ui/ui/label/index.js";
 	import { cn } from "@effect-forge/ui/cn.js";
 	import type { ComponentProps } from "svelte";
 

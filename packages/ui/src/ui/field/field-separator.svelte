@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Separator } from "@effect-forge/ui/svelte/separator/index.js";
+	import { Separator } from "@effect-forge/ui/ui/separator/index.js";
 	import { cn, type WithElementRef } from "@effect-forge/ui/cn.js";
 	import type { Snippet } from "svelte";
 	import type { HTMLAttributes } from "svelte/elements";

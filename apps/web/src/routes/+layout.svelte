@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Toaster } from '@effect-forge/ui/svelte/sonner';
+	import { Toaster } from '@effect-forge/ui/ui/sonner';
 	import { searchIndexable } from '#lib/environment.ts';
 	import '../app.css';
 
