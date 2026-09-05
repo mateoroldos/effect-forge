@@ -4,9 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./identity-directory": "./src/identity/identity-directory.ts",
-    "./identity-store": "./src/identity/identity-store.ts",
-    "./provider-account": "./src/identity/provider-account.ts",
+    "./application": "./src/application.ts",
     "./test/crypto-deterministic": "./src/test/crypto-deterministic.ts",
     "./workspace-directory": "./src/workspace/workspace-directory.ts",
     "./workspace-store": "./src/workspace/workspace-store.ts"

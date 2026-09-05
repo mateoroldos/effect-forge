@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
 import { check, index, pgTable, primaryKey, unique, uuid, varchar } from "drizzle-orm/pg-core";
-import { users } from "../identity/schema.ts";
 
 /** PostgreSQL representation of persisted workspaces. */
 export const workspaces = pgTable(
@@ -19,9 +18,7 @@ export const workspaceMembers = pgTable(
     workspaceId: uuid("workspace_id")
       .notNull()
       .references(() => workspaces.id, { onDelete: "cascade" }),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    userId: varchar("user_id", { length: 255 }).notNull(),
     role: varchar("role", { length: 20 }).notNull(),
   },
   (table) => [

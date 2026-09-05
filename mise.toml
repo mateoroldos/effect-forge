@@ -1,6 +1,5 @@
 [tools]
 bun = "1.4.0"
-"github:MapleTechLabs/maple" = "0.0.21"
 
 [env]
 ALCHEMY_PROFILE = "effect-forge"
@@ -8,5 +7,4 @@ STAGE = "dev_{{ env.USER }}_{{ config_root | basename }}"
 
 [tasks.setup]
 description = "Bootstrap a fresh checkout"
-run = ["mise install", "bun install", "test -e .env || cp .env.example .env"]
-
+run = ["mise install", "bun install"]

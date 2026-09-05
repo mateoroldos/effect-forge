@@ -14,15 +14,27 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "catalog:",
+    "@effect-forge/core": "workspace:*",
+    "@effect-forge/database-postgres": "workspace:*",
+    "@effect-forge/domain": "workspace:*",
     "@effect-forge/ui": "workspace:*",
+    "@effect/platform-node": "catalog:",
+    "@effect/sql-pg": "catalog:",
     "alchemy": "catalog:",
-    "effect": "catalog:"
+    "better-auth": "catalog:",
+    "drizzle-orm": "catalog:",
+    "effect": "catalog:",
+    "pg": "catalog:"
   },
   "devDependencies": {
     "@alchemy.run/frontend-frameworks": "2.0.0-beta.76",
+    "@effect/vitest": "catalog:",
+    "@electric-sql/pglite": "catalog:",
     "@sveltejs/kit": "3.0.0-next.25",
     "@sveltejs/vite-plugin-svelte": "7.3.0",
     "@tailwindcss/vite": "catalog:",
+    "@types/pg": "catalog:",
     "@typescript/native": "npm:typescript@7.0.2",
     "svelte": "catalog:",
     "svelte-check": "4.7.6",
