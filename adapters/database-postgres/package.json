@@ -5,6 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/persistence-postgres.ts",
+    "./auth-schema": "./src/auth/schema.ts",
+    "./test/pglite-database": "./src/test/pglite-database.ts",
     "./test/persistence-pglite": "./src/test/persistence-pglite.ts"
   },
   "scripts": {

@@ -7,9 +7,9 @@ import { Effect, Layer, Schema } from "effect";
 import { Database } from "../internal/database.ts";
 import { workspaceMembers, workspaces } from "./schema.ts";
 
-/** Provides PostgreSQL-backed principal-scoped workspace persistence. */
 const ownerRole: WorkspaceRole = "owner";
 
+/** Provides PostgreSQL-backed principal-scoped workspace persistence. */
 export const layer = Layer.effect(
   WorkspaceStore.Service,
   Effect.gen(function* () {

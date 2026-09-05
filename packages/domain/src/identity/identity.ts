@@ -1,24 +1,17 @@
 import { Schema } from "effect";
-import { EmailAddress } from "../email-address/email-address.ts";
 
-/** A stable application-owned user identifier. */
-export const UserId = Schema.String.pipe(Schema.check(Schema.isUUID(4)), Schema.brand("UserId"));
-
-/** A stable application-owned user identifier. */
-export type UserId = typeof UserId.Type;
-
-/** A non-empty display name of at most 100 characters. */
-export const UserName = Schema.String.pipe(
+/** Better Auth's canonical opaque user identifier. */
+export const UserId = Schema.String.pipe(
   Schema.check(Schema.isTrimmed()),
-  Schema.check(Schema.isMinLength(1), Schema.isMaxLength(100)),
-  Schema.brand("UserName"),
+  Schema.check(Schema.isMinLength(1), Schema.isMaxLength(255)),
+  Schema.brand("UserId"),
 );
 
-/** A user's display name. */
-export type UserName = typeof UserName.Type;
+/** Better Auth's canonical opaque user identifier. */
+export type UserId = typeof UserId.Type;
 
-/** The application identity associated with an authenticated request. */
-export const Principal = Schema.Struct({ userId: UserId, email: EmailAddress, name: UserName });
+/** The authenticated identity authorized to perform an application operation. */
+export const Principal = Schema.Struct({ userId: UserId });
 
-/** The application identity associated with an authenticated request. */
+/** The authenticated identity authorized to perform an application operation. */
 export interface Principal extends Schema.Schema.Type<typeof Principal> {}

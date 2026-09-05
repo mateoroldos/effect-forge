@@ -7,6 +7,8 @@
   "workspaces": {
     ".": {
       "entry": ["alchemy.run.ts", "alchemy.site.ts", "infra/*.ts", "stacks/*.ts", "scripts/*.ts"],
+      // The schema check invokes this pinned CLI through Bun.spawn.
+      "ignoreDependencies": ["auth"],
     },
     "apps/site": {
       // figlet's types are used only from .astro files, which knip cannot read.
@@ -14,7 +16,7 @@
     },
     "apps/web": {
       // SvelteKit discovers the explicit environment contract by convention.
-      "entry": ["src/env.ts"],
+      "entry": ["auth.config.ts", "src/env.ts", "src/lib/server/runtime.ts"],
       // svelte-check resolves this compiler through `--tsgo`; knip cannot see
       // dependencies selected by a command-line flag.
       "ignoreDependencies": ["@typescript/native"],

@@ -18,11 +18,13 @@ export default class WebWorker extends Cloudflare.Website.SvelteKit<WebWorker>()
     return {
       rootDir: webRoot,
       env: {
+        AUTH_ORIGIN: Cloudflare.Worker.URL,
         AUTH_SECRET: authSecret.text,
         DATABASE: database,
         SEARCH_INDEXABLE: String(stage === "prod"),
       },
       domain: stageHost?.hostname ?? null,
+      workersDev: stageHost === null,
       compatibility: {
         flags: ["nodejs_compat", "enable_request_signal"],
       },

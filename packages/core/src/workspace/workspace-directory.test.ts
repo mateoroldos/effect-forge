@@ -1,6 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { EmailAddress } from "@effect-forge/domain/email-address";
-import { Principal, UserId, UserName } from "@effect-forge/domain/identity";
+import { Principal, UserId } from "@effect-forge/domain/identity";
 import { WorkspaceName } from "@effect-forge/domain/workspace";
 import { Effect, Layer, PlatformError, Schema } from "effect";
 import { CryptoDeterministic } from "../test/crypto-deterministic.ts";
@@ -8,14 +7,10 @@ import { WorkspaceDirectory } from "./workspace-directory.ts";
 import { WorkspaceStoreMemory } from "./workspace-store-memory.ts";
 
 const principal = Principal.make({
-  userId: UserId.make("550e8400-e29b-41d4-a716-446655440000"),
-  email: EmailAddress.make("ada@example.com"),
-  name: UserName.make("Ada Lovelace"),
+  userId: UserId.make("better-auth-user-1"),
 });
 const other = Principal.make({
-  userId: UserId.make("7c9e6679-7425-40de-944b-e07fc1f90ae7"),
-  email: EmailAddress.make("grace@example.com"),
-  name: UserName.make("Grace Hopper"),
+  userId: UserId.make("better-auth-user-2"),
 });
 const workspaceName = Schema.decodeSync(WorkspaceName)("Effect Forge");
 
