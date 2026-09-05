@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 .repos/effect
+.svelte-check
 .turbo
 node_modules
 *.tsbuildinfo
