@@ -1,0 +1,295 @@
+diff --git a/dist/core/node/platform-proxy/PlatformProxy.d.mts b/dist/core/node/platform-proxy/PlatformProxy.d.mts
+index e78fbe54cdd37b5d694091e691c5d80aa46f17de..0ed6cb1f38820a8cf4f0cf4eaa29e48549252709 100644
+--- a/dist/core/node/platform-proxy/PlatformProxy.d.mts
++++ b/dist/core/node/platform-proxy/PlatformProxy.d.mts
+@@ -2,6 +2,7 @@ import { RuntimeError } from "../RuntimeError.shared.mjs";
+ import { BindingHooks, DurableObjectNamespace, Module } from "../RuntimeWorker.mjs";
+ import { BindingHook } from "../PluginContext.mjs";
+ import { Runtime } from "../Runtime.mjs";
++import { HyperdriveOrigin } from "../bindings/hyperdrive/HyperdriveOrigin.shared.mjs";
+ import { CacheQueryOptions, CacheRequestLike, CacheResponseLike, CfProperties, ConnectInfo, ConnectedPlatformProxy, ExecutionContext, PlatformProxyCache, PlatformProxyCacheStorage } from "./connect.mjs";
+ import * as Effect from "effect/Effect";
+ import * as Scope from "effect/Scope";
+@@ -22,6 +23,8 @@ interface PlatformProxyOptions<B extends BindingHooks = BindingHooks> {
+    * `DurableObjectNamespace.local`, `Service.local`, remote bindings, …).
+    */
+   readonly bindings: B;
++  /** Local origins keyed by the Hyperdrive identifiers used by bindings. */
++  readonly hyperdrives?: Record<string, HyperdriveOrigin>;
+   /**
+    * Extra modules hosted alongside the proxy worker. Required when binding
+    * Durable Objects: the first module must export every configured
+diff --git a/dist/core/node/platform-proxy/PlatformProxy.mjs b/dist/core/node/platform-proxy/PlatformProxy.mjs
+index bbb52b48eb2793ec4111ad437af6e21c81f2fa43..c93ff598e0c7f38ca7beca3ed38696cc760d091f 100644
+--- a/dist/core/node/platform-proxy/PlatformProxy.mjs
++++ b/dist/core/node/platform-proxy/PlatformProxy.mjs
+@@ -103,6 +103,7 @@ const open = Effect.fn("PlatformProxy.open")(function* (options) {
+ 		compatibilityDate: options.compatibilityDate ?? DEFAULT_COMPATIBILITY_DATE,
+ 		compatibilityFlags: options.compatibilityFlags ?? [],
+ 		bindings: [local(BINDING_PLATFORM_PROXY_TOKEN, token), ...options.bindings],
++		hyperdrives: options.hyperdrives,
+ 		modules,
+ 		durableObjectNamespaces: options.durableObjectNamespaces
+ 	});
+diff --git a/dist/core/node/platform-proxy/PlatformProxyProtocol.shared.d.mts b/dist/core/node/platform-proxy/PlatformProxyProtocol.shared.d.mts
+index 35aa7311a614ebce9510e6edbc744f0d0d3aabc9..a828f5e175717df06bb1b201e4eb8df8c2f2e749 100644
+--- a/dist/core/node/platform-proxy/PlatformProxyProtocol.shared.d.mts
++++ b/dist/core/node/platform-proxy/PlatformProxyProtocol.shared.d.mts
+@@ -112,6 +112,15 @@ interface CallRequest {
+ interface EnvDescriptor {
+   readonly bindings: Array<EnvBindingDescriptor>;
+ }
++interface HyperdriveEnvValue {
++  readonly connectionString: string;
++  readonly database: string;
++  readonly user: string;
++  readonly password: string;
++  readonly host: string;
++  readonly port: number;
++  readonly ip: string;
++}
+ type EnvBindingDescriptor = {
+   readonly name: string;
+   readonly kind: "value";
+@@ -120,6 +129,10 @@ type EnvBindingDescriptor = {
+   readonly name: string;
+   readonly kind: "stub";
+   readonly className?: string;
++} | {
++  readonly name: string;
++  readonly kind: "hyperdrive";
++  readonly value: HyperdriveEnvValue;
+ };
+ declare class UnsupportedValueError extends Error {
+   readonly name = "UnsupportedValueError";
+diff --git a/dist/core/node/platform-proxy/connect.mjs b/dist/core/node/platform-proxy/connect.mjs
+index d42756e498a49f41effe556075a3b32c86cc9b97..f7a15de685eb47f10e65792511fcbd68fb2874bc 100644
+--- a/dist/core/node/platform-proxy/connect.mjs
++++ b/dist/core/node/platform-proxy/connect.mjs
+@@ -348,7 +348,16 @@ const fetchEnvDescriptor = async (client) => {
+ };
+ const buildEnv = (client, descriptor) => {
+ 	const env = {};
+-	for (const binding of descriptor.bindings) env[binding.name] = binding.kind === "value" ? decodeValue(binding.value, decodeNodeValue) : makeStub(client, binding.name, []);
++	for (const binding of descriptor.bindings) {
++		if (binding.kind === "value") env[binding.name] = decodeValue(binding.value, decodeNodeValue);
++		else if (binding.kind === "hyperdrive") env[binding.name] = {
++			...binding.value,
++			connect: () => {
++				throw new Error("platform-proxy: Hyperdrive connect() is not supported over the platform proxy.");
++			}
++		};
++		else env[binding.name] = makeStub(client, binding.name, []);
++	}
+ 	return env;
+ };
+ /**
+diff --git a/dist/core/workers/platform-proxy/PlatformProxy.worker.mjs b/dist/core/workers/platform-proxy/PlatformProxy.worker.mjs
+index 40f3707c627bd9f0496cddbe7a56b06d3c086d03..a5dce56ed24a6a0dc6fa8d06cdb67390ad6f76d0 100644
+--- a/dist/core/workers/platform-proxy/PlatformProxy.worker.mjs
++++ b/dist/core/workers/platform-proxy/PlatformProxy.worker.mjs
+@@ -1,4 +1,4 @@
+ export const main = "platform-proxy/PlatformProxy.worker.mjs";
+ export const modules = {
+-  "platform-proxy/PlatformProxy.worker.mjs": "const PLATFORM_PROXY_PREFIX=`/cdn-cgi/platform-proxy`,PATH_ENV=`${PLATFORM_PROXY_PREFIX}/env`,PATH_CALL=`${PLATFORM_PROXY_PREFIX}/call`,PATH_FETCH=`${PLATFORM_PROXY_PREFIX}/fetch`,PATH_CACHE_MATCH=`${PLATFORM_PROXY_PREFIX}/cache/match`,PATH_CACHE_PUT=`${PLATFORM_PROXY_PREFIX}/cache/put`,PATH_CACHE_DELETE=`${PLATFORM_PROXY_PREFIX}/cache/delete`,HEADER_TOKEN=`x-platform-proxy-token`,HEADER_BINDING=`x-platform-proxy-binding`,HEADER_CHAIN=`x-platform-proxy-chain`,HEADER_URL=`x-platform-proxy-url`,HEADER_RESULT=`x-platform-proxy-result`,HEADER_BYTES_KIND=`x-platform-proxy-bytes-kind`,HEADER_CACHE_HEADERS=`x-platform-proxy-cache-headers`;var UnsupportedValueError=class extends Error{name=`UnsupportedValueError`};const bytesToBase64=bytes=>{let binary=``,chunkSize=8192;for(let index=0;index<bytes.length;index+=chunkSize)binary+=String.fromCharCode(...bytes.subarray(index,index+chunkSize));return btoa(binary)},base64ToBytes=base64=>{let binary=atob(base64),bytes=new Uint8Array(binary.length);for(let index=0;index<binary.length;index++)bytes[index]=binary.charCodeAt(index);return bytes},describeValue=value=>{if(typeof value!=`object`||!value)return typeof value;let name=value.constructor?.name;return name&&name!==`Object`?name:`object`},encodeValue=(value,encodeUnknown)=>{let custom=encodeUnknown?.(value);if(custom!==void 0)return custom;if(value===void 0)return{$:`undefined`};if(value===null)return{$:`null`};switch(typeof value){case`boolean`:return{$:`boolean`,value};case`number`:return Number.isNaN(value)?{$:`number`,value:`NaN`}:value===1/0?{$:`number`,value:`Infinity`}:value===-1/0?{$:`number`,value:`-Infinity`}:{$:`number`,value};case`bigint`:return{$:`bigint`,value:value.toString()};case`string`:return{$:`string`,value}}if(value instanceof Date)return{$:`date`,value:value.getTime()};if(value instanceof ArrayBuffer)return{$:`bytes`,kind:`arraybuffer`,base64:bytesToBase64(new Uint8Array(value))};if(ArrayBuffer.isView(value)){let bytes=new Uint8Array(value.buffer,value.byteOffset,value.byteLength);return{$:`bytes`,kind:value instanceof Uint8Array?`uint8array`:value.constructor.name,base64:bytesToBase64(bytes)}}if(value instanceof Error)return{$:`error`,name:value.name,message:value.message,stack:value.stack};if(Array.isArray(value))return{$:`array`,value:value.map(entry=>encodeValue(entry,encodeUnknown))};if(typeof value==`object`){let prototype=Object.getPrototypeOf(value);if(prototype===Object.prototype||prototype===null){let encoded={};for(let[key,entry]of Object.entries(value))encoded[key]=encodeValue(entry,encodeUnknown);return{$:`object`,value:encoded}}}throw new UnsupportedValueError(`platform-proxy: cannot serialize a value of type \"${describeValue(value)}\" across the proxy boundary. Only JSON-compatible values, bytes, dates, errors, and DurableObjectIds are supported. If you awaited an intermediate stub (e.g. a Durable Object stub), call a method on it instead of awaiting it.`)},decodeValue=(encoded,decodeUnknown)=>{let custom=decodeUnknown?.(encoded);if(custom!==void 0)return custom.value;switch(encoded.$){case`undefined`:return;case`null`:return null;case`boolean`:case`string`:return encoded.value;case`number`:return encoded.value===`NaN`?NaN:encoded.value===`Infinity`?1/0:encoded.value===`-Infinity`?-1/0:encoded.value;case`bigint`:return BigInt(encoded.value);case`date`:return new Date(encoded.value);case`bytes`:{let bytes=base64ToBytes(encoded.base64);return encoded.kind===`arraybuffer`?bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength):bytes}case`array`:return encoded.value.map(entry=>decodeValue(entry,decodeUnknown));case`object`:{let decoded={};for(let[key,entry]of Object.entries(encoded.value))decoded[key]=decodeValue(entry,decodeUnknown);return decoded}case`error`:{let error=Error(encoded.message);return error.name=encoded.name,encoded.stack!==void 0&&(error.stack=encoded.stack),error}case`durable-object-id`:case`chain`:case`r2-object`:throw new UnsupportedValueError(`platform-proxy: unexpected \"${encoded.$}\" value in this context.`)}};var ProxyRequestError=class extends Error{status;constructor(message,status=400){super(message),this.status=status}};const isTimingSafeEqual=(a,b)=>{if(a.length!==b.length)return!1;let encoder=new TextEncoder;return crypto.subtle.timingSafeEqual(encoder.encode(a),encoder.encode(b))},assertAuthorized=(request,env)=>{let token=request.headers.get(HEADER_TOKEN),expected=env.__PLATFORM_PROXY_TOKEN__;if(typeof expected!=`string`||!token||!isTimingSafeEqual(token,expected))throw new ProxyRequestError(`platform-proxy: authorization failed`,401)},isPlainValue=value=>{switch(typeof value){case`string`:case`number`:case`boolean`:return!0;case`object`:{if(value===null||value instanceof ArrayBuffer||ArrayBuffer.isView(value))return!0;if(Array.isArray(value))return value.every(isPlainValue);let prototype=Object.getPrototypeOf(value);return prototype===Object.prototype||prototype===null?Object.values(value).every(isPlainValue):!1}default:return!1}},describeEnv=env=>{let bindings=[];for(let[name,value]of Object.entries(env))if(name!==`__PLATFORM_PROXY_TOKEN__`){if(isPlainValue(value))bindings.push({name,kind:`value`,value:encodeValue(value)});else{let className=value?.constructor?.name;bindings.push({name,kind:`stub`,...className===void 0?{}:{className}})}}return{bindings}},encodeWorkerValue=value=>{if(typeof value==`object`&&value&&value.constructor?.name===`DurableObjectId`){let id=value;return{$:`durable-object-id`,id:id.toString(),...id.name?{name:id.name}:{}}}if(isR2ObjectLike(value))return encodeR2Object(value)},isR2ObjectLike=value=>typeof value==`object`&&!!value&&typeof value.key==`string`&&typeof value.etag==`string`&&typeof value.httpEtag==`string`&&typeof value.writeHttpMetadata==`function`,isR2ObjectsLike=value=>typeof value==`object`&&!!value&&Array.isArray(value.objects)&&typeof value.truncated==`boolean`&&Array.isArray(value.delimitedPrefixes),encodeR2Object=(value,body)=>{let fields={},plain={key:value.key,version:value.version,size:value.size,etag:value.etag,httpEtag:value.httpEtag,uploaded:value.uploaded,httpMetadata:value.httpMetadata,customMetadata:value.customMetadata,storageClass:value.storageClass,range:value.range,checksums:value.checksums?.toJSON?.()};for(let[key,entry]of Object.entries(plain))entry!==void 0&&(fields[key]=encodeValue(entry,encodeWorkerValue));return{$:`r2-object`,fields,...body===void 0?{}:{body}}},decodeArg=async(env,binding,arg)=>{if(arg.$===`chain`)return evaluateChain(env,binding,arg.chain);if(arg.$===`durable-object-id`){let namespace=env[binding];if(typeof namespace?.idFromString!=`function`)throw new ProxyRequestError(`platform-proxy: binding \"${binding}\" cannot rehydrate a DurableObjectId (no idFromString).`);return namespace.idFromString(arg.id)}return decodeValue(arg)},evaluateChain=async(env,binding,chain)=>{let target=env[binding];if(target===void 0)throw new ProxyRequestError(`platform-proxy: binding \"${binding}\" not found`,404);let path=binding;for(let segment of chain){let args=await Promise.all(segment.args.map(arg=>decodeArg(env,binding,arg))),method=target?.[segment.method];if(typeof method!=`function`){let targetObject=target,available=targetObject===null?[]:[...Object.getOwnPropertyNames(targetObject),...Object.getOwnPropertyNames(Object.getPrototypeOf(targetObject)??{})];throw new ProxyRequestError(`platform-proxy: \"${segment.method}\" is not a method on \\`${path}\\` (${targetObject?.constructor?.name??typeof target}; available: ${available.join(`, `)})`)}target=await Reflect.apply(method,target,args),path+=`.${segment.method}(…)`}return target},resultHeaders=(kind,extra)=>({[HEADER_RESULT]:kind,...extra}),encodeResult=async result=>{if(result instanceof ReadableStream)return new Response(result,{headers:resultHeaders(`stream`)});if(isR2ObjectLike(result)&&result.body!==void 0&&result.arrayBuffer!==void 0){let bytes=new Uint8Array(await result.arrayBuffer());return Response.json({value:encodeR2Object(result,{base64:bytesToBase64(bytes)})},{headers:resultHeaders(`json`)})}if(isR2ObjectsLike(result)){let encoded={objects:encodeValue(result.objects,encodeWorkerValue),truncated:encodeValue(result.truncated),delimitedPrefixes:encodeValue(result.delimitedPrefixes)};return result.cursor!==void 0&&(encoded.cursor=encodeValue(result.cursor)),Response.json({value:{$:`object`,value:encoded}},{headers:resultHeaders(`json`)})}if(result instanceof ArrayBuffer)return new Response(result,{headers:resultHeaders(`bytes`,{[HEADER_BYTES_KIND]:`arraybuffer`})});if(ArrayBuffer.isView(result)){let bytes=new Uint8Array(result.buffer,result.byteOffset,result.byteLength),kind=result instanceof Uint8Array?`uint8array`:result.constructor.name;return new Response(bytes,{headers:resultHeaders(`bytes`,{[HEADER_BYTES_KIND]:kind})})}return Response.json({value:encodeValue(result,encodeWorkerValue)},{headers:resultHeaders(`json`)})},handleCall=async(request,env)=>{let{binding,chain}=await request.json();if(typeof binding!=`string`||!Array.isArray(chain))throw new ProxyRequestError(`platform-proxy: malformed /call request body`);let result=await evaluateChain(env,binding,chain);return await encodeResult(result)},handleProxyFetch=async(request,env)=>{let binding=request.headers.get(HEADER_BINDING),targetUrl=request.headers.get(HEADER_URL);if(!binding||!targetUrl)throw new ProxyRequestError(`platform-proxy: missing binding or target url on /fetch request`);let chainHeader=request.headers.get(HEADER_CHAIN),chain=chainHeader?JSON.parse(decodeURIComponent(chainHeader)):[],target=await evaluateChain(env,binding,chain);if(typeof target?.fetch!=`function`)throw new ProxyRequestError(`platform-proxy: the resolved target on binding \"${binding}\" has no fetch() method`);let headers=new Headers(request.headers);for(let header of[HEADER_TOKEN,HEADER_BINDING,HEADER_CHAIN,HEADER_URL])headers.delete(header);let forwarded=new Request(targetUrl,{method:request.method,headers,body:request.method===`GET`||request.method===`HEAD`?void 0:request.body,redirect:`manual`});return await target.fetch(forwarded)},cacheStore=new Map,cacheKey=rawUrl=>{let url=new URL(rawUrl);return url.hash=``,url.toString()},getCacheContext=request=>{let name=request.headers.get(`x-platform-proxy-cache-name`),url=request.headers.get(`x-platform-proxy-cache-url`);if(name===null||url===null)throw new ProxyRequestError(`platform-proxy: missing cache name or url`);let method=request.headers.get(`x-platform-proxy-cache-method`)??`GET`,ignoreMethod=request.headers.get(`x-platform-proxy-cache-ignore-method`)===`true`;return{name,key:cacheKey(url),method:ignoreMethod?`GET`:method}},handleCacheMatch=request=>{let{name,key,method}=getCacheContext(request);if(method!==`GET`)return new Response(null,{status:204});let entry=cacheStore.get(name)?.get(key);return entry===void 0?new Response(null,{status:204}):new Response(entry.body,{status:200,headers:{\"x-platform-proxy-cache-status\":entry.status.toString(),[HEADER_CACHE_HEADERS]:encodeURIComponent(JSON.stringify(entry.headers))}})},handleCachePut=async request=>{let{name,key,method}=getCacheContext(request),status=parseInt(request.headers.get(`x-platform-proxy-cache-status`)??`NaN`),rawHeaders=request.headers.get(HEADER_CACHE_HEADERS);if(Number.isNaN(status)||rawHeaders===null)throw new ProxyRequestError(`platform-proxy: malformed cache put request`);if(method!==`GET`)throw new ProxyRequestError(`Cannot cache response to non-GET request.`);if(status===206)throw new ProxyRequestError(`Cannot cache response to a range request (206 Partial Content).`);let headers=JSON.parse(decodeURIComponent(rawHeaders)),vary=headers.find(([header])=>header.toLowerCase()===`vary`);if(vary&&vary[1].includes(`*`))throw new ProxyRequestError(`Cannot cache response with 'Vary: *' header.`);let body=new Uint8Array(await request.arrayBuffer()),entries=cacheStore.get(name);return entries===void 0&&(entries=new Map,cacheStore.set(name,entries)),entries.set(key,{status,headers,body}),new Response(null,{status:204})},handleCacheDelete=request=>{let{name,key,method}=getCacheContext(request),deleted=method===`GET`&&(cacheStore.get(name)?.delete(key)??!1);return Response.json(deleted)};var PlatformProxy_worker_default={async fetch(request,env){try{assertAuthorized(request,env);let url=new URL(request.url);switch(url.pathname){case PATH_ENV:return Response.json(describeEnv(env));case PATH_CALL:return await handleCall(request,env);case PATH_FETCH:return await handleProxyFetch(request,env);case PATH_CACHE_MATCH:return handleCacheMatch(request);case PATH_CACHE_PUT:return await handleCachePut(request);case PATH_CACHE_DELETE:return handleCacheDelete(request);default:return Response.json({error:`platform-proxy: unknown route ${url.pathname}`},{status:404})}}catch(error){let status=error instanceof ProxyRequestError?error.status:500,encoded=encodeValue(error instanceof Error?error:Error(String(error)),encodeWorkerValue);return Response.json({error:encoded},{status,headers:{[HEADER_RESULT]:`error`}})}}};export{PlatformProxy_worker_default as default};",
++  "platform-proxy/PlatformProxy.worker.mjs": "const e=`/cdn-cgi/platform-proxy`,t=`${e}/env`,n=`${e}/call`,r=`${e}/fetch`,i=`${e}/cache/match`,a=`${e}/cache/put`,o=`${e}/cache/delete`,s=`x-platform-proxy-token`,c=`x-platform-proxy-binding`,l=`x-platform-proxy-chain`,u=`x-platform-proxy-url`,d=`x-platform-proxy-result`,f=`x-platform-proxy-bytes-kind`,p=`x-platform-proxy-cache-headers`;var m=class extends Error{name=`UnsupportedValueError`};const h=e=>{let t=``,n=8192;for(let r=0;r<e.length;r+=n)t+=String.fromCharCode(...e.subarray(r,r+n));return btoa(t)},g=e=>{let t=atob(e),n=new Uint8Array(t.length);for(let e=0;e<t.length;e++)n[e]=t.charCodeAt(e);return n},_=e=>{if(typeof e!=`object`||!e)return typeof e;let t=e.constructor?.name;return t&&t!==`Object`?t:`object`},v=(e,t)=>{let n=t?.(e);if(n!==void 0)return n;if(e===void 0)return{$:`undefined`};if(e===null)return{$:`null`};switch(typeof e){case`boolean`:return{$:`boolean`,value:e};case`number`:return Number.isNaN(e)?{$:`number`,value:`NaN`}:e===1/0?{$:`number`,value:`Infinity`}:e===-1/0?{$:`number`,value:`-Infinity`}:{$:`number`,value:e};case`bigint`:return{$:`bigint`,value:e.toString()};case`string`:return{$:`string`,value:e}}if(e instanceof Date)return{$:`date`,value:e.getTime()};if(e instanceof ArrayBuffer)return{$:`bytes`,kind:`arraybuffer`,base64:h(new Uint8Array(e))};if(ArrayBuffer.isView(e)){let t=new Uint8Array(e.buffer,e.byteOffset,e.byteLength);return{$:`bytes`,kind:e instanceof Uint8Array?`uint8array`:e.constructor.name,base64:h(t)}}if(e instanceof Error)return{$:`error`,name:e.name,message:e.message,stack:e.stack};if(Array.isArray(e))return{$:`array`,value:e.map(e=>v(e,t))};if(typeof e==`object`){let n=Object.getPrototypeOf(e);if(n===Object.prototype||n===null){let n={};for(let[r,i]of Object.entries(e))n[r]=v(i,t);return{$:`object`,value:n}}}throw new m(`platform-proxy: cannot serialize a value of type \"${_(e)}\" across the proxy boundary. Only JSON-compatible values, bytes, dates, errors, and DurableObjectIds are supported. If you awaited an intermediate stub (e.g. a Durable Object stub), call a method on it instead of awaiting it.`)},y=(e,t)=>{let n=t?.(e);if(n!==void 0)return n.value;switch(e.$){case`undefined`:return;case`null`:return null;case`boolean`:case`string`:return e.value;case`number`:return e.value===`NaN`?NaN:e.value===`Infinity`?1/0:e.value===`-Infinity`?-1/0:e.value;case`bigint`:return BigInt(e.value);case`date`:return new Date(e.value);case`bytes`:{let t=g(e.base64);return e.kind===`arraybuffer`?t.buffer.slice(t.byteOffset,t.byteOffset+t.byteLength):t}case`array`:return e.value.map(e=>y(e,t));case`object`:{let n={};for(let[r,i]of Object.entries(e.value))n[r]=y(i,t);return n}case`error`:{let t=Error(e.message);return t.name=e.name,e.stack!==void 0&&(t.stack=e.stack),t}case`durable-object-id`:case`chain`:case`r2-object`:throw new m(`platform-proxy: unexpected \"${e.$}\" value in this context.`)}};var b=class extends Error{status;constructor(e,t=400){super(e),this.status=t}};const x=(e,t)=>{if(e.length!==t.length)return!1;let n=new TextEncoder;return crypto.subtle.timingSafeEqual(n.encode(e),n.encode(t))},S=(e,t)=>{let n=e.headers.get(s),r=t.__PLATFORM_PROXY_TOKEN__;if(typeof r!=`string`||!n||!x(n,r))throw new b(`platform-proxy: authorization failed`,401)},C=e=>{switch(typeof e){case`string`:case`number`:case`boolean`:return!0;case`object`:{if(e===null||e instanceof ArrayBuffer||ArrayBuffer.isView(e))return!0;if(Array.isArray(e))return e.every(C);let t=Object.getPrototypeOf(e);return t===Object.prototype||t===null?Object.values(e).every(C):!1}default:return!1}},w=e=>{if(typeof e!=`object`||!e)return;let t=e;if(typeof t.connect==`function`&&typeof t.connectionString==`string`&&typeof t.database==`string`&&typeof t.user==`string`&&typeof t.password==`string`&&typeof t.host==`string`&&typeof t.port==`number`&&typeof t.ip==`string`)return{connectionString:t.connectionString,database:t.database,user:t.user,password:t.password,host:t.host,port:t.port,ip:t.ip}},T=e=>{let t=[];for(let[n,r]of Object.entries(e)){if(n===`__PLATFORM_PROXY_TOKEN__`)continue;let e=w(r);if(e!==void 0)t.push({name:n,kind:`hyperdrive`,value:e});else if(C(r))t.push({name:n,kind:`value`,value:v(r)});else{let e=r?.constructor?.name;t.push({name:n,kind:`stub`,...e===void 0?{}:{className:e}})}}return{bindings:t}},E=e=>{if(typeof e==`object`&&e&&e.constructor?.name===`DurableObjectId`){let t=e;return{$:`durable-object-id`,id:t.toString(),...t.name?{name:t.name}:{}}}if(D(e))return k(e)},D=e=>typeof e==`object`&&!!e&&typeof e.key==`string`&&typeof e.etag==`string`&&typeof e.httpEtag==`string`&&typeof e.writeHttpMetadata==`function`,O=e=>typeof e==`object`&&!!e&&Array.isArray(e.objects)&&typeof e.truncated==`boolean`&&Array.isArray(e.delimitedPrefixes),k=(e,t)=>{let n={},r={key:e.key,version:e.version,size:e.size,etag:e.etag,httpEtag:e.httpEtag,uploaded:e.uploaded,httpMetadata:e.httpMetadata,customMetadata:e.customMetadata,storageClass:e.storageClass,range:e.range,checksums:e.checksums?.toJSON?.()};for(let[e,t]of Object.entries(r))t!==void 0&&(n[e]=v(t,E));return{$:`r2-object`,fields:n,...t===void 0?{}:{body:t}}},A=async(e,t,n)=>{if(n.$===`chain`)return j(e,t,n.chain);if(n.$===`durable-object-id`){let r=e[t];if(typeof r?.idFromString!=`function`)throw new b(`platform-proxy: binding \"${t}\" cannot rehydrate a DurableObjectId (no idFromString).`);return r.idFromString(n.id)}return y(n)},j=async(e,t,n)=>{let r=e[t];if(r===void 0)throw new b(`platform-proxy: binding \"${t}\" not found`,404);let i=t;for(let a of n){let n=await Promise.all(a.args.map(n=>A(e,t,n))),o=r?.[a.method];if(typeof o!=`function`){let e=r,t=e===null?[]:[...Object.getOwnPropertyNames(e),...Object.getOwnPropertyNames(Object.getPrototypeOf(e)??{})];throw new b(`platform-proxy: \"${a.method}\" is not a method on \\`${i}\\` (${e?.constructor?.name??typeof r}; available: ${t.join(`, `)})`)}r=await Reflect.apply(o,r,n),i+=`.${a.method}(…)`}return r},M=(e,t)=>({[d]:e,...t}),N=async e=>{if(e instanceof ReadableStream)return new Response(e,{headers:M(`stream`)});if(D(e)&&e.body!==void 0&&e.arrayBuffer!==void 0){let t=new Uint8Array(await e.arrayBuffer());return Response.json({value:k(e,{base64:h(t)})},{headers:M(`json`)})}if(O(e)){let t={objects:v(e.objects,E),truncated:v(e.truncated),delimitedPrefixes:v(e.delimitedPrefixes)};return e.cursor!==void 0&&(t.cursor=v(e.cursor)),Response.json({value:{$:`object`,value:t}},{headers:M(`json`)})}if(e instanceof ArrayBuffer)return new Response(e,{headers:M(`bytes`,{[f]:`arraybuffer`})});if(ArrayBuffer.isView(e)){let t=new Uint8Array(e.buffer,e.byteOffset,e.byteLength),n=e instanceof Uint8Array?`uint8array`:e.constructor.name;return new Response(t,{headers:M(`bytes`,{[f]:n})})}return Response.json({value:v(e,E)},{headers:M(`json`)})},P=async(e,t)=>{let{binding:n,chain:r}=await e.json();if(typeof n!=`string`||!Array.isArray(r))throw new b(`platform-proxy: malformed /call request body`);let i=await j(t,n,r);return await N(i)},F=async(e,t)=>{let n=e.headers.get(c),r=e.headers.get(u);if(!n||!r)throw new b(`platform-proxy: missing binding or target url on /fetch request`);let i=e.headers.get(l),a=i?JSON.parse(decodeURIComponent(i)):[],o=await j(t,n,a);if(typeof o?.fetch!=`function`)throw new b(`platform-proxy: the resolved target on binding \"${n}\" has no fetch() method`);let d=new Headers(e.headers);for(let e of[s,c,l,u])d.delete(e);let f=new Request(r,{method:e.method,headers:d,body:e.method===`GET`||e.method===`HEAD`?void 0:e.body,redirect:`manual`});return await o.fetch(f)},I=new Map,L=e=>{let t=new URL(e);return t.hash=``,t.toString()},R=e=>{let t=e.headers.get(`x-platform-proxy-cache-name`),n=e.headers.get(`x-platform-proxy-cache-url`);if(t===null||n===null)throw new b(`platform-proxy: missing cache name or url`);let r=e.headers.get(`x-platform-proxy-cache-method`)??`GET`,i=e.headers.get(`x-platform-proxy-cache-ignore-method`)===`true`;return{name:t,key:L(n),method:i?`GET`:r}},z=e=>{let{name:t,key:n,method:r}=R(e);if(r!==`GET`)return new Response(null,{status:204});let i=I.get(t)?.get(n);return i===void 0?new Response(null,{status:204}):new Response(i.body,{status:200,headers:{\"x-platform-proxy-cache-status\":i.status.toString(),[p]:encodeURIComponent(JSON.stringify(i.headers))}})},B=async e=>{let{name:t,key:n,method:r}=R(e),i=parseInt(e.headers.get(`x-platform-proxy-cache-status`)??`NaN`),a=e.headers.get(p);if(Number.isNaN(i)||a===null)throw new b(`platform-proxy: malformed cache put request`);if(r!==`GET`)throw new b(`Cannot cache response to non-GET request.`);if(i===206)throw new b(`Cannot cache response to a range request (206 Partial Content).`);let o=JSON.parse(decodeURIComponent(a)),s=o.find(([e])=>e.toLowerCase()===`vary`);if(s&&s[1].includes(`*`))throw new b(`Cannot cache response with 'Vary: *' header.`);let c=new Uint8Array(await e.arrayBuffer()),l=I.get(t);return l===void 0&&(l=new Map,I.set(t,l)),l.set(n,{status:i,headers:o,body:c}),new Response(null,{status:204})},V=e=>{let{name:t,key:n,method:r}=R(e),i=r===`GET`&&(I.get(t)?.delete(n)??!1);return Response.json(i)};var H={async fetch(e,s){try{S(e,s);let c=new URL(e.url);switch(c.pathname){case t:return Response.json(T(s));case n:return await P(e,s);case r:return await F(e,s);case i:return z(e);case a:return await B(e);case o:return V(e);default:return Response.json({error:`platform-proxy: unknown route ${c.pathname}`},{status:404})}}catch(e){let t=e instanceof b?e.status:500,n=v(e instanceof Error?e:Error(String(e)),E);return Response.json({error:n},{status:t,headers:{[d]:`error`}})}}};export{H as default};",
+ };
+diff --git a/src/core/platform-proxy/PlatformProxy.ts b/src/core/platform-proxy/PlatformProxy.ts
+index 20df06bd89af257339b8a5321ea548a35901028d..487f53fb15bf6732f97777d9010415f534e26f52 100644
+--- a/src/core/platform-proxy/PlatformProxy.ts
++++ b/src/core/platform-proxy/PlatformProxy.ts
+@@ -52,6 +52,7 @@ const ProxyWorker = {
+     ),
+ };
+ import * as Text from "../bindings/Text.ts";
++import type { HyperdriveOrigin } from "../bindings/hyperdrive/HyperdriveOrigin.shared.ts";
+ import type { BindingHook } from "../PluginContext.ts";
+ import * as Runtime from "../Runtime.ts";
+ import {
+@@ -100,6 +101,8 @@ export interface PlatformProxyOptions<B extends BindingHooks = BindingHooks> {
+    * `DurableObjectNamespace.local`, `Service.local`, remote bindings, …).
+    */
+   readonly bindings: B;
++  /** Local origins keyed by the Hyperdrive identifiers used by bindings. */
++  readonly hyperdrives?: Record<string, HyperdriveOrigin>;
+   /**
+    * Extra modules hosted alongside the proxy worker. Required when binding
+    * Durable Objects: the first module must export every configured
+@@ -203,6 +206,7 @@ export const open = Effect.fn("PlatformProxy.open")(function* <
+       Text.local(BINDING_PLATFORM_PROXY_TOKEN, token),
+       ...options.bindings,
+     ] as unknown as B,
++    hyperdrives: options.hyperdrives,
+     modules,
+     durableObjectNamespaces: options.durableObjectNamespaces,
+   });
+diff --git a/src/core/platform-proxy/PlatformProxy.worker.ts b/src/core/platform-proxy/PlatformProxy.worker.ts
+index 36cc377a348299b461e8eb06abcd6e0092a24515..9648b3f4e5f209e8f9297b7078080a47f07b255e 100644
+--- a/src/core/platform-proxy/PlatformProxy.worker.ts
++++ b/src/core/platform-proxy/PlatformProxy.worker.ts
+@@ -97,11 +97,42 @@ const isPlainValue = (value: unknown): boolean => {
+   }
+ };
+ 
++const hyperdriveValue = (
++  value: unknown,
++): import("./PlatformProxyProtocol.shared.ts").HyperdriveEnvValue | undefined => {
++  if (typeof value !== "object" || value === null) return undefined;
++  const candidate = value as Record<string, unknown>;
++  if (
++    typeof candidate.connect !== "function" ||
++    typeof candidate.connectionString !== "string" ||
++    typeof candidate.database !== "string" ||
++    typeof candidate.user !== "string" ||
++    typeof candidate.password !== "string" ||
++    typeof candidate.host !== "string" ||
++    typeof candidate.port !== "number" ||
++    typeof candidate.ip !== "string"
++  ) {
++    return undefined;
++  }
++  return {
++    connectionString: candidate.connectionString,
++    database: candidate.database,
++    user: candidate.user,
++    password: candidate.password,
++    host: candidate.host,
++    port: candidate.port,
++    ip: candidate.ip,
++  };
++};
++
+ const describeEnv = (env: Env): { bindings: Array<EnvBindingDescriptor> } => {
+   const bindings: Array<EnvBindingDescriptor> = [];
+   for (const [name, value] of Object.entries(env)) {
+     if (name === BINDING_PLATFORM_PROXY_TOKEN) continue;
+-    if (isPlainValue(value)) {
++    const hyperdrive = hyperdriveValue(value);
++    if (hyperdrive !== undefined) {
++      bindings.push({ name, kind: "hyperdrive", value: hyperdrive });
++    } else if (isPlainValue(value)) {
+       bindings.push({ name, kind: "value", value: encodeValue(value) });
+     } else {
+       const className = (value as { constructor?: { name?: string } } | null)
+diff --git a/src/core/platform-proxy/PlatformProxyProtocol.shared.ts b/src/core/platform-proxy/PlatformProxyProtocol.shared.ts
+index b6b53466e881bdec6f090d374f9c7a485798e1fa..d7fb8f3cde0a38bc9a9c998fb159b3bd881957a0 100644
+--- a/src/core/platform-proxy/PlatformProxyProtocol.shared.ts
++++ b/src/core/platform-proxy/PlatformProxyProtocol.shared.ts
+@@ -104,6 +104,16 @@ export interface EnvDescriptor {
+   readonly bindings: Array<EnvBindingDescriptor>;
+ }
+ 
++export interface HyperdriveEnvValue {
++  readonly connectionString: string;
++  readonly database: string;
++  readonly user: string;
++  readonly password: string;
++  readonly host: string;
++  readonly port: number;
++  readonly ip: string;
++}
++
+ export type EnvBindingDescriptor =
+   | {
+       readonly name: string;
+@@ -114,6 +124,11 @@ export type EnvBindingDescriptor =
+       readonly name: string;
+       readonly kind: "stub";
+       readonly className?: string;
++    }
++  | {
++      readonly name: string;
++      readonly kind: "hyperdrive";
++      readonly value: HyperdriveEnvValue;
+     };
+ 
+ export class UnsupportedValueError extends Error {
+diff --git a/src/core/platform-proxy/connect.ts b/src/core/platform-proxy/connect.ts
+index cb988780175e7249ec70e39bb2dea6301903dd6b..4f82922efdefe95d83aaa9516df76f81583ba31d 100644
+--- a/src/core/platform-proxy/connect.ts
++++ b/src/core/platform-proxy/connect.ts
+@@ -649,10 +649,20 @@ const buildEnv = (
+ ): Record<string, unknown> => {
+   const env: Record<string, unknown> = {};
+   for (const binding of descriptor.bindings) {
+-    env[binding.name] =
+-      binding.kind === "value"
+-        ? decodeValue(binding.value, decodeNodeValue)
+-        : makeStub(client, binding.name, []);
++    if (binding.kind === "value") {
++      env[binding.name] = decodeValue(binding.value, decodeNodeValue);
++    } else if (binding.kind === "hyperdrive") {
++      env[binding.name] = {
++        ...binding.value,
++        connect: () => {
++          throw new Error(
++            "platform-proxy: Hyperdrive connect() is not supported over the platform proxy.",
++          );
++        },
++      };
++    } else {
++      env[binding.name] = makeStub(client, binding.name, []);
++    }
+   }
+   return env;
+ };
+diff --git a/src/core/test/platform-proxy/PlatformProxy.test.ts b/src/core/test/platform-proxy/PlatformProxy.test.ts
+index e92b72dc170dfb6711da8723be3d771c671ec409..cc4673649aae7b31d302ef9a81bdaedad082967f 100644
+--- a/src/core/test/platform-proxy/PlatformProxy.test.ts
++++ b/src/core/test/platform-proxy/PlatformProxy.test.ts
+@@ -2,6 +2,7 @@ import { expect, layer } from "@effect/vitest";
+ import * as Effect from "effect/Effect";
+ import * as DurableObjectNamespace from "../../bindings/DurableObjectNamespace.ts";
+ import * as Json from "../../bindings/Json.ts";
++import * as Hyperdrive from "../../bindings/hyperdrive/Hyperdrive.ts";
+ import * as KvNamespace from "../../bindings/kv-namespace/index.ts";
+ import * as R2Bucket from "../../bindings/r2-bucket/index.ts";
+ import * as Text from "../../bindings/Text.ts";
+@@ -32,11 +33,22 @@ const openTestProxy = open({
+   bindings: [
+     Text.local("TEXT", "text-value"),
+     Json.local("CONFIG", { nested: { flag: true }, values: [1, 2, 3] }),
++    Hyperdrive.local("DATABASE", "db"),
+     KvNamespace.local({ binding: "KV" }),
+     R2Bucket.local({ binding: "R2", id: "platform-proxy-test" }),
+     DurableObjectNamespace.local({ binding: "DO", className: "Counter" }),
+   ],
+   modules: [{ name: "user.mjs", type: "ESModule", content: DO_SCRIPT }],
++  hyperdrives: {
++    db: {
++      scheme: "postgresql",
++      host: "database.test",
++      port: 5432,
++      user: "app",
++      password: "secret",
++      database: "app",
++    },
++  },
+   durableObjectNamespaces: [{ className: "Counter", sql: false }],
+ });
+ 
+@@ -59,6 +71,24 @@ layer(localRuntimeLayer, { excludeTestServices: true })(
+       { timeout: 30_000 },
+     );
+ 
++    it.effect(
++      "materialises Hyperdrive connection properties eagerly on env",
++      () =>
++        Effect.gen(function* () {
++          const proxy = yield* openTestProxy;
++          const database = (proxy.env as Record<string, any>).DATABASE;
++          expect(database.connectionString).toBe(
++            "postgresql://app:secret@database.test:5432/app",
++          );
++          expect(database.host).toBe("database.test");
++          expect(database.port).toBe(5432);
++          expect(() => database.connect()).toThrow(
++            "Hyperdrive connect() is not supported",
++          );
++        }),
++      { timeout: 30_000 },
++    );
++
+     it.effect(
+       "proxies KV get/put/delete/list from plain Node code",
+       () =>

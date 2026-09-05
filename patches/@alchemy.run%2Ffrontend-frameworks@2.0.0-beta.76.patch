@@ -1,0 +1,187 @@
+diff --git a/dist/_chunks/SvelteKit-Dmmwl3z4.js b/dist/_chunks/SvelteKit-Dmmwl3z4.js
+index 1e15c41ac4f54cd1d2937c320cb4d1a778aa1e9a..2a5267618720f7affcd15ada1f60b678fd471ec6 100644
+--- a/dist/_chunks/SvelteKit-Dmmwl3z4.js
++++ b/dist/_chunks/SvelteKit-Dmmwl3z4.js
+@@ -331,6 +331,7 @@ const make = Effect.fnUntraced(function* (options) {
+ 			dev: {
+ 				env: options?.dev?.env,
+ 				bindings: options?.dev?.bindings,
++				hyperdrives: options?.dev?.hyperdrives,
+ 				services: options?.dev?.services
+ 			}
+ 		});
+diff --git a/dist/_chunks/cloudflare-C-ipEOR6.js b/dist/_chunks/cloudflare-C-ipEOR6.js
+index fccb9ac0948e429e94a2c1d92e97859d06c49486..b39101ab332bd80647252330eb7ab654c4e7f6d8 100644
+--- a/dist/_chunks/cloudflare-C-ipEOR6.js
++++ b/dist/_chunks/cloudflare-C-ipEOR6.js
+@@ -335,6 +335,7 @@ const openPlatformProxy = async (options) => {
+ 		...options.compatibilityDate !== void 0 ? { compatibilityDate: options.compatibilityDate } : void 0,
+ 		...options.compatibilityFlags !== void 0 ? { compatibilityFlags: [...options.compatibilityFlags] } : void 0,
+ 		bindings: options.bindings,
++		hyperdrives: options.hyperdrives,
+ 		...options.services !== void 0 ? { services: options.services } : void 0
+ 	});
+ };
+@@ -378,6 +379,7 @@ const makeDevPlatformEmulator = (options = {}) => {
+ 		compatibilityDate: options.compatibilityDate,
+ 		compatibilityFlags: options.compatibilityFlags,
+ 		bindings: options.bindings ?? [],
++		hyperdrives: options.hyperdrives,
+ 		services: options.services
+ 	});
+ 	return {
+@@ -486,6 +488,7 @@ const makeCloudflareTarget = (config = {}) => makeDeployTarget({
+ 		...context.dev !== void 0 ? { platform: {
+ 			env: context.dev.env,
+ 			bindings: context.dev.bindings,
++			hyperdrives: context.dev.hyperdrives,
+ 			services: context.dev.services,
+ 			compatibilityDate: config.compatibilityDate,
+ 			compatibilityFlags: config.compatibilityFlags
+diff --git a/dist/sveltekit/source.js b/dist/sveltekit/source.js
+index f4bc556c5027fbd9e3c468b30468c2ae0227eeb1..6e9891b958972cc3a2b04d8392d17d5dd68927fa 100644
+--- a/dist/sveltekit/source.js
++++ b/dist/sveltekit/source.js
+@@ -310,6 +310,7 @@ const makeSvelteKitSource = (options) => {
+ 			const server = yield* (yield* make(frameworkOptions(ctx, {
+ 				env: resolveDevEnvOverrides(ctx.env),
+ 				bindings: ctx.worker.bindings,
++				hyperdrives: ctx.worker.hyperdrives,
+ 				services: ctx.runtimeContext
+ 			}))).dev({
+ 				root: rootDir,
+diff --git a/src/sveltekit/Adapter.ts b/src/sveltekit/Adapter.ts
+index 57d91760b2dcb469028197ee9a92c647a15ecd18..aed417503afb84066ef01dd2b780950a1441d46a 100644
+--- a/src/sveltekit/Adapter.ts
++++ b/src/sveltekit/Adapter.ts
+@@ -28,7 +28,10 @@
+  * `node:fs` directly like upstream — it is framework-callback code, not an
+  * Effect service.
+  */
+-import type { BindingHooks } from "@alchemy.run/cloudflare-runtime/core";
++import type {
++  BindingHooks,
++  HyperdriveOrigin,
++} from "@alchemy.run/cloudflare-runtime/core";
+ import type { Adapter, Builder, Emulator } from "@sveltejs/kit";
+ import * as NodeFs from "node:fs";
+ import * as NodePath from "node:path";
+@@ -392,6 +395,8 @@ export interface CloudflareDevPlatformOptions {
+    * the values must be `cloudflare-runtime` `BindingHooks`.
+    */
+   readonly bindings?: ReadonlyArray<unknown> | undefined;
++  /** Hyperdrive origins keyed by local Hyperdrive identifier. */
++  readonly hyperdrives?: Record<string, unknown> | undefined;
+   /**
+    * Pre-built `Context<RuntimeServices>` to host the proxy in (opaque —
+    * travels through the target-agnostic framework half). Enables
+@@ -426,6 +431,7 @@ export interface OpenDevPlatformProxyOptions {
+   readonly compatibilityDate?: string | undefined;
+   readonly compatibilityFlags?: ReadonlyArray<string> | undefined;
+   readonly bindings: ReadonlyArray<unknown>;
++  readonly hyperdrives?: Record<string, unknown> | undefined;
+   /** See {@link CloudflareDevPlatformOptions.services}. */
+   readonly services?: unknown;
+ }
+@@ -458,6 +464,11 @@ const openPlatformProxy: OpenDevPlatformProxy = async (options) => {
+       ? { compatibilityFlags: [...options.compatibilityFlags] }
+       : undefined),
+     bindings: options.bindings as BindingHooks,
++    ...(options.hyperdrives !== undefined
++      ? {
++          hyperdrives: options.hyperdrives as Record<string, HyperdriveOrigin>,
++        }
++      : undefined),
+     ...(options.services !== undefined
+       ? {
+           services: options.services as Parameters<
+@@ -520,6 +531,7 @@ export const makeDevPlatformEmulator = (
+       compatibilityDate: options.compatibilityDate,
+       compatibilityFlags: options.compatibilityFlags,
+       bindings: options.bindings ?? [],
++      hyperdrives: options.hyperdrives,
+       services: options.services,
+     }));
+   return {
+diff --git a/src/sveltekit/SvelteKit.ts b/src/sveltekit/SvelteKit.ts
+index 4583eb54f860a6f59f8489cdf06deb8de45751ee..1eedf2bf8c1a9d29ba9f34ac2aca908f67ea570f 100644
+--- a/src/sveltekit/SvelteKit.ts
++++ b/src/sveltekit/SvelteKit.ts
+@@ -106,6 +106,8 @@ export interface SvelteKitAdapterContext {
+          * `platform.env`).
+          */
+         readonly bindings?: ReadonlyArray<unknown> | undefined;
++        /** Hyperdrive origins required by the Cloudflare local runtime. */
++        readonly hyperdrives?: Record<string, unknown> | undefined;
+         /**
+          * A pre-built runtime-services context the dev platform hosts its
+          * proxy in (opaque to the framework half; the Cloudflare target
+@@ -231,6 +233,8 @@ export interface SvelteKitOptions {
+          * a workerd-backed platform proxy.
+          */
+         readonly bindings?: ReadonlyArray<unknown> | undefined;
++        /** Hyperdrive origins required by the Cloudflare local runtime. */
++        readonly hyperdrives?: Record<string, unknown> | undefined;
+         /**
+          * A pre-built runtime-services context the dev platform hosts its
+          * proxy in (opaque to the framework half; the Cloudflare target
+@@ -585,6 +589,7 @@ export const make: (
+         dev: {
+           env: options?.dev?.env,
+           bindings: options?.dev?.bindings,
++          hyperdrives: options?.dev?.hyperdrives,
+           services: options?.dev?.services,
+         },
+       });
+diff --git a/src/sveltekit/cloudflare.ts b/src/sveltekit/cloudflare.ts
+index 99e85fac277435a036ee190d6c249755edcd2858..784642abb53b2b6e5d771fd543ccefda2308499b 100644
+--- a/src/sveltekit/cloudflare.ts
++++ b/src/sveltekit/cloudflare.ts
+@@ -84,6 +84,7 @@ export const makeCloudflareTarget = (
+               platform: {
+                 env: context.dev.env,
+                 bindings: context.dev.bindings,
++                hyperdrives: context.dev.hyperdrives,
+                 services: context.dev.services,
+                 compatibilityDate: config.compatibilityDate,
+                 compatibilityFlags: config.compatibilityFlags,
+diff --git a/src/sveltekit/source.ts b/src/sveltekit/source.ts
+index 305210064613149ec3ba0897ffdada5210a334cb..d6f24c2bb378fb88a0638b23f861732bd400f809 100644
+--- a/src/sveltekit/source.ts
++++ b/src/sveltekit/source.ts
+@@ -118,6 +118,7 @@ export interface SourceDevContext extends SourceContext {
+   readonly worker: {
+     readonly name: string;
+     readonly bindings: ReadonlyArray<unknown>;
++    readonly hyperdrives: Record<string, unknown>;
+   };
+   /**
+    * The host's pre-built `Context<RuntimeServices>` (opaque here). Handed
+@@ -677,6 +678,7 @@ export const makeSvelteKitSource = (
+         frameworkOptions(ctx, {
+           env: resolveDevEnvOverrides(ctx.env),
+           bindings: ctx.worker.bindings,
++          hyperdrives: ctx.worker.hyperdrives,
+           // The host's runtime stack (includes remote-bindings support) —
+           // the dev platform proxy is hosted in it instead of the
+           // credential-free internal layer, so `Alchemy.remote()` bindings
+diff --git a/src/sveltekit/test/Adapter.test.ts b/src/sveltekit/test/Adapter.test.ts
+index 93ba9befb6ab3f08208e05ff30eebef5101ded07..5cb3396347e71e81c818f3e9e93f014e91177810 100644
+--- a/src/sveltekit/test/Adapter.test.ts
++++ b/src/sveltekit/test/Adapter.test.ts
+@@ -225,6 +225,7 @@ describe("makeDevPlatformEmulator", () => {
+     const fake = makeFakeProxy({ FROM_PROXY: "proxied" });
+     const emulator = makeDevPlatformEmulator({
+       bindings: ["binding-hook"],
++      hyperdrives: { "dev:database": { host: "database.test" } },
+       compatibilityDate: "2026-03-10",
+       compatibilityFlags: ["nodejs_compat"],
+       openProxy: fake.openProxy,
+@@ -241,6 +242,7 @@ describe("makeDevPlatformEmulator", () => {
+       compatibilityDate: "2026-03-10",
+       compatibilityFlags: ["nodejs_compat"],
+       bindings: ["binding-hook"],
++      hyperdrives: { "dev:database": { host: "database.test" } },
+     });
+     expect(platform.env["FROM_PROXY"]).toBe("proxied");
+     expect(platform.cf["colo"]).toBe("TST");

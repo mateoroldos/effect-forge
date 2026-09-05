@@ -1,20 +1,12 @@
 const allowedDependencies = {
-  "@effect-forge/auth-better": new Set(["@effect-forge/core", "@effect-forge/domain"]),
-  "@effect-forge/api": new Set([
-    "@effect-forge/auth-better",
-    "@effect-forge/contracts",
-    "@effect-forge/core",
-    "@effect-forge/database-postgres",
-    "@effect-forge/domain",
-  ]),
-  "@effect-forge/contracts": new Set(["@effect-forge/domain"]),
   "@effect-forge/core": new Set(["@effect-forge/domain"]),
   "@effect-forge/database-postgres": new Set(["@effect-forge/core", "@effect-forge/domain"]),
   "@effect-forge/ui": new Set<string>(),
   "@effect-forge/domain": new Set<string>(),
   "@effect-forge/site": new Set(["@effect-forge/ui"]),
   "@effect-forge/web": new Set([
-    "@effect-forge/contracts",
+    "@effect-forge/core",
+    "@effect-forge/database-postgres",
     "@effect-forge/ui",
     "@effect-forge/domain",
   ]),
