@@ -11,7 +11,7 @@ export const AgentId = Schema.String.pipe(Schema.check(Schema.isUUID(4)), Schema
 export type AgentId = typeof AgentId.Type;
 ```
 
-Parse unknown input in HTTP handlers and raw provider data in adapters. Pass domain values inward.
+Parse unknown input at framework boundaries and raw provider data in adapters. Pass domain values inward.
 
 Default records to `Schema.Struct(...)` plus a same-name interface:
 
@@ -24,18 +24,20 @@ export const Agent = Schema.Struct({
 export interface Agent extends Schema.Schema.Type<typeof Agent> {}
 ```
 
-Default records to `Schema.Struct`; use class semantics only when the domain requires them. Follow Effect Kit for construction and the installed Effect version's schema APIs.
+Use class semantics only when the domain requires them.
+
+Pure authorization and entitlement decisions belong here. Keep provider roles, subscription objects, and SDK types in adapters.
 
 ## Application modules
 
 ```text
-packages/core/src/agent-directory/
+packages/core/src/agent/
 ├─ agent-directory.ts
 ├─ agent-store.ts
 └─ agent-directory.test.ts
 ```
 
-Create a subdirectory only when several cohesive files need one shared boundary.
+Create a subdirectory only when several cohesive files need one boundary.
 
 Use file-local role names and one canonical self-exported ES module namespace:
 
@@ -51,7 +53,7 @@ export class Service extends Context.Service<Service, Interface>()(
 export * as AgentDirectory from "./agent-directory.ts";
 ```
 
-Consumers use a named import without defining their own alias:
+Consumers use the exported namespace directly:
 
 ```ts
 import { AgentDirectory } from "./agent-directory.ts";
@@ -59,11 +61,13 @@ import { AgentDirectory } from "./agent-directory.ts";
 const directory = yield * AgentDirectory.Service;
 ```
 
-Yield stable dependencies while constructing a service. Pass request values such as an authenticated principal as method input. Keep method requirement channels empty unless a dependency is genuinely operation-scoped.
+Yield stable dependencies while constructing a service. Pass request values such as the principal as method input. Keep method requirement channels empty unless a dependency is genuinely operation-scoped.
+
+Core owns application workflows and enforcement. It does not own framework handlers, SQL, provider protocols, or SDK objects.
 
 ## Ports and adapters
 
-The application service owns the smallest domain-shaped capability it needs. A port does not expose SQL, HTTP, SDK clients, or provider error types.
+An application service owns the smallest domain-shaped capability it needs:
 
 ```text
 AgentDirectory
@@ -72,7 +76,9 @@ AgentDirectory
     └─ AgentStoreMemory
 ```
 
-Adapters decode external values and translate technology failures into port failures. Production adapters live outside `core`; substitute adapters implement the same port.
+Adapters decode external values and translate technology failures into port failures. A port does not expose SQL, HTTP, SDK clients, or provider errors. Production adapters live outside core; substitute adapters implement the same port.
+
+Do not create a port in anticipation of a provider. Add it when an application workflow needs the capability.
 
 ## Errors
 
@@ -85,14 +91,15 @@ export class PersistenceError extends Schema.TaggedError<PersistenceError>()(
 ) {}
 ```
 
-A port owns stable errors that its adapters produce. An application service owns workflow errors and may propagate port errors when it adds no new meaning. Keep technology errors behind adapters and retain underlying causes for diagnostics.
+A port owns stable errors that its adapters produce. An application service owns workflow errors and may propagate port errors when it adds no meaning. Adapters retain technology failures as diagnostic causes without exposing them in public messages.
 
-HTTP handlers project application failures into public API errors. Defects and interruptions remain defects and interruptions.
+Framework handlers project application failures into their public protocol. Defects and interruptions remain defects and interruptions.
 
 ## Layers
 
 - Export a Layer with dependencies open when callers or tests must select them.
-- Export a production-ready Layer only when the package owns all nested implementations.
+- Export a production-ready Layer only when the package owns every nested implementation.
 - Reuse Layer values so memoization preserves one resource instance.
 - Use scoped Layers for resources with cleanup.
-- Provide production Layers only in deployable composition roots.
+- Provide production adapters only in deployable composition roots.
+- Build separate aggregate Layers for `apps/web` and `apps/api`; both may provide the same core services.

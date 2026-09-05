@@ -26,9 +26,8 @@ AGENTS.md                conventions every agent reads
 skills/effect-forge/     playbooks, loaded per task
 
 apps/
-├─ web                   TanStack Start application
-├─ api                   Effect HTTP API
-│  └─ src/infrastructure database and telemetry composition
+├─ web                   SvelteKit application and server composition
+├─ api                   public Effect HTTP API and server composition
 └─ site                  the project's landing page
 
 packages/
@@ -38,11 +37,13 @@ packages/
 └─ ui                    shared visual vocabulary
 
 adapters/
-├─ auth-better           Better Auth inbound adapter
+├─ auth-better           Better Auth and provider translation
 └─ database-postgres     PostgreSQL port implementations
 
 alchemy.run.ts           infrastructure as code
 ```
+
+The web and API are peer composition roots over the same application services. SvelteKit remote functions call those services directly; the public API exists for independent clients. Better Auth owns identity and organization governance behind same-origin web routes.
 
 ## Development
 

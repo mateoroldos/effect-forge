@@ -5,7 +5,7 @@ Read [`skills/effect-forge/SKILL.md`](skills/effect-forge/SKILL.md) before chang
 ## Boundaries
 
 ```text
-web → contracts, domain, ui, telemetry adapters
+web → core, domain, ui, database, auth, and telemetry adapters
 api → core, contracts, database, auth, and telemetry adapters
 database-postgres → core, domain
 auth-better → core, domain
@@ -28,12 +28,13 @@ ui → nothing
 
 ## Web
 
-- TanStack Router owns routes, search parameters, loaders, and navigation.
-- Effect Atom owns remote state, query lifetimes, invalidation, optimistic mutations, and streams. Do not add TanStack Query.
-- TanStack Form owns unsaved form state and uses Effect schemas through Standard Schema. Decode transformed values again on submission.
-- React state is limited to component-local presentation state.
-- Create an `AtomRegistry` per SSR request and hydrate a browser registry. Never share authenticated atom state between requests.
-- Do not proxy normal application calls through TanStack Start server functions. The browser calls the Effect API directly; server functions are reserved for SSR or server-owned credentials.
+- SvelteKit owns routes, navigation, SSR, and the deployment entry.
+- Remote functions own application calls from the browser. A `query` is the cache; a `form` is the mutation. Do not add a client-side state library.
+- Remote handlers invoke core capabilities directly. The web app does not call the public API as an implementation detail.
+- Better Auth is the deliberate exception: its Svelte client calls the same-origin `/api/auth/*` routes directly so the provider owns its browser protocol and cookies.
+- Effect Schema validates remote form input through Standard Schema. Remote handlers map expected failures to SvelteKit `error` or `invalid` results.
+- Svelte runes are limited to component-local presentation state.
+- Server layouts resolve principals required by their pages; remote handlers and endpoints own authorization for their operations.
 
 ## Effect
 
@@ -46,6 +47,6 @@ ui → nothing
 
 ## Tests
 
-Test through public interfaces using substitute Layers, PGlite, real HTTP boundaries, and an isolated Atom registry. Do not mock modules or use arbitrary sleeps.
+Test through public interfaces using substitute Layers, PGlite, and real HTTP or SvelteKit boundaries. Do not mock modules or use arbitrary sleeps.
 
 A change is complete only after type checks, tests, formatting, architecture checks, and dead-code checks pass.

@@ -2,69 +2,58 @@
 
 ## Ownership
 
-| Tool            | Responsibility                                                            |
-| --------------- | ------------------------------------------------------------------------- |
-| TanStack Start  | SSR, streaming, web runtime, deployment entry                             |
-| TanStack Router | routes, search parameters, navigation, loaders                            |
-| Effect Atom     | remote state, Effects, caching, invalidation, optimistic updates, streams |
-| TanStack Form   | form drafts, field interaction, client validation                         |
-| Effect Schema   | canonical input validation                                                |
-| React state     | component-local presentation state                                        |
+| Tool               | Responsibility                                     |
+| ------------------ | -------------------------------------------------- |
+| SvelteKit          | routes, navigation, SSR, and deployment entry      |
+| Remote `query`     | cached application reads                           |
+| Remote `form`      | validated application mutations                    |
+| Better Auth Svelte | native authentication protocol and session cookies |
+| Effect Schema      | canonical boundary validation                      |
+| Svelte runes       | component-local presentation state                 |
 
-Do not add TanStack Query alongside Effect Atom.
+Do not add a client-side state or query library. A remote `query` is the cache; refresh it after a successful mutation.
 
-## API client
+## Remote functions
 
-Use the official React binding and construct one typed client service:
-
-```ts
-export class AppApiClient extends AtomHttpApi.Service<AppApiClient>()(
-  "@effect-forge/web/AppApiClient",
-  {
-    api: AppApi,
-    httpClient: FetchHttpClient.layer,
-    baseUrl,
-  },
-) {}
-```
-
-Queries return atoms of `AsyncResult`. Mutations return writable result functions. Use reactivity keys to refresh dependent queries after successful mutations and an idle TTL only when data should survive unmount.
-
-Use `AtomRpc.Service` instead when an operation belongs to the private RPC tier.
-
-## SSR and hydration
+Keep each remote function with its feature. It owns the browser-to-server application boundary:
 
 ```text
-request
-  → new AtomRegistry
-  → route loader fetches required data
-  → seed serializable atoms
-  → render and serialize hydration state
-  → browser registry hydrates once
+component
+  → query or form
+  → validate untrusted input
+  → resolve request principal
+  → run core capability
+  → project expected failure
 ```
 
-Never reuse an authenticated registry across server requests. Keep browser-only atoms away from SSR or provide an explicit server value.
+Remote handlers call core capabilities directly through the web runtime. They do not call the public API.
 
-## Optimistic mutation
-
-Effect Atom provides `Atom.optimistic` and `Atom.optimisticFn`.
-
-```text
-form submits input
-  → reducer applies provisional value
-  → typed mutation runs
-     ├─ success → invalidate and refresh authoritative query
-     └─ failure → roll back to the latest source value
-```
-
-Use stable temporary identities so list rendering and reconciliation do not duplicate an item. Keep conflict or version policy on the server; optimistic UI is presentation, not authority.
+Use `query` for reads and `form` for progressively enhanced mutations. Use `command` only when a mutation cannot be represented as a form. Do not put business policy in the handler.
 
 ## Forms
 
-Pass the owned RPC or `HttpApi` input schema to TanStack Form through Standard Schema. TanStack Form validates schema input but does not return transformed schema output from `onSubmit`; decode again before invoking the mutation.
+Pass an Effect Schema to a remote `form` through Standard Schema. The remote boundary validates untrusted input before application code runs.
 
-Map typed application failures to form or field errors at the feature boundary. Transport failures remain page-level or toast-level failures unless a field can truthfully correct them.
+Map failures where they become meaningful:
 
-## Server functions
+- Field-correctable failures → `invalid` with field issues.
+- Expected page-level failures → SvelteKit `error` or a safe form message.
+- Defects and interruptions → remain defects and interruptions.
 
-TanStack Start server functions are same-origin RPC endpoints. Do not place application policy or database access in them and do not use them as a mandatory BFF. They may bootstrap SSR data or perform work that requires credentials owned by the web server.
+Keep provider diagnostics, credentials, and private identifiers out of browser-facing messages.
+
+Use component-local runes for pending presentation or UI state not already owned by the remote form. Do not mirror server data in a client store.
+
+## Authentication
+
+Better Auth is the exception to remote functions. Its Svelte client calls same-origin `/api/auth/*` routes directly so Better Auth owns request shape, cookies, and browser behavior.
+
+A server layout may resolve the principal required by its pages and redirect anonymous users. Every remote function and endpoint still owns authorization for its operation.
+
+Client-side role or permission checks may hide or disable controls, but they are never authoritative.
+
+## SSR
+
+Resolve only data required to render the route. Keep authenticated state scoped to the SvelteKit request. Never retain principals, cookies, or request-scoped services in a shared mutable singleton.
+
+The browser sees one public origin. Worker names, service bindings, provider credentials, and deployment origins remain server-side.
