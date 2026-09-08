@@ -19,7 +19,7 @@ apps/
 
 packages/
 ├─ domain/                     pure values, schemas, and decisions
-├─ core/                       application services and owned ports
+├─ core/                       application services, owned ports, and canonical graph
 ├─ contracts/                  public HttpApi contracts
 └─ ui/                         shared Svelte visual vocabulary
 
@@ -88,7 +88,9 @@ The web and API are peer composition roots. The web app does not call the API as
 
 ## Composition
 
-`apps/web` composes SvelteKit, core services, adapters, and server telemetry. `apps/api` composes public contracts, handlers, the same core services, adapters, and server telemetry.
+`packages/core` exports one dependency-open `Application.layer` for request-callable application services. Its unresolved requirements are the capabilities each composition root must provide.
+
+`apps/web` composes SvelteKit, `Application.layer`, adapters, and server telemetry. `apps/api` keeps its HttpApi graph dependency-open and provides `Application.layer`, adapters, and server telemetry from its Worker. Tests provide the same application graph with substitute capabilities.
 
 The root `alchemy.run.ts` composes their infrastructure. Each application provisions only the resources it consumes.
 

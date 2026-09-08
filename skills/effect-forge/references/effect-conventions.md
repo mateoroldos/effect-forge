@@ -102,4 +102,7 @@ Framework handlers project application failures into their public protocol. Defe
 - Reuse Layer values so memoization preserves one resource instance.
 - Use scoped Layers for resources with cleanup.
 - Provide production adapters only in deployable composition roots.
-- Build separate aggregate Layers for `apps/web` and `apps/api`; both may provide the same core services.
+- Register request-callable core services once in the dependency-open `Application.layer`.
+- Derive its exposed services with `Layer.Success<typeof layer>` and its unresolved requirements with `Layer.Services<typeof layer>`.
+- Keep inbound protocol graphs dependency-open; web, API, and tests provide `Application.layer` with their selected adapters.
+- Keep queue consumers, schedulers, migration runners, and forever-running fibers outside the request-callable application graph.
