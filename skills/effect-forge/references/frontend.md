@@ -13,6 +13,22 @@
 
 Do not add a client-side state or query library. A remote `query` is the cache; refresh it after a successful mutation.
 
+## Environment and bindings
+
+Alchemy's Worker `env` declaration contains both scalar configuration and native Cloudflare resources. Consume each through the interface that preserves its meaning:
+
+| Value                                                        | Declaration                                                 | Consumption                        |
+| ------------------------------------------------------------ | ----------------------------------------------------------- | ---------------------------------- |
+| Public scalar                                                | Alchemy `env` and `apps/web/src/env.ts` with `public: true` | `$app/env/public`                  |
+| Private scalar or secret                                     | Alchemy `env` and a private `apps/web/src/env.ts` entry     | `$app/env/private`                 |
+| Worker, Hyperdrive, D1, KV, R2, or other Cloudflare resource | Alchemy resource binding                                    | `event.platform.env`               |
+| Deployment input                                             | CI or local shell                                           | Effect `Config` in deployment code |
+| Vite framework metadata                                      | Vite                                                        | `import.meta.env`                  |
+
+Define and parse scalar application configuration once with SvelteKit's `defineEnvVars`. Variables are dynamic by default; use `static: true` only when build-time replacement is required and verified. Public variables are an explicit browser-disclosure decision. Never expose secrets through public variables or model resource bindings as scalar environment variables.
+
+Use `import.meta.env` for Vite-owned metadata such as `MODE`, `DEV`, `PROD`, and `SSR`, not application configuration. When browser code needs a value derived from a resource or other server-only state, project only that value through a server load or remote function rather than exposing the binding.
+
 ## Remote functions
 
 Keep each remote function with its feature. It owns the browser-to-server application boundary:

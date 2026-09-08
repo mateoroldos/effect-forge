@@ -29,6 +29,7 @@ ui → nothing
 ## Web
 
 - SvelteKit owns routes, navigation, SSR, and the deployment entry.
+- Define scalar web configuration in `apps/web/src/env.ts`; consume public and private values through `$app/env`, and access native Cloudflare resources through `event.platform.env`.
 - Remote functions own application calls from the browser. A `query` is the cache; a `form` is the mutation. Do not add a client-side state library.
 - Remote handlers invoke core capabilities directly. The web app does not call the public API as an implementation detail.
 - Better Auth is the deliberate exception: its Svelte client calls the same-origin `/api/auth/*` routes directly so the provider owns its browser protocol and cookies.

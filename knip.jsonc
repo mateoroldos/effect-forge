@@ -14,6 +14,8 @@
       "ignoreDependencies": ["@types/figlet"],
     },
     "apps/web": {
+      // SvelteKit discovers the explicit environment contract by convention.
+      "entry": ["src/env.ts"],
       // Alchemy loads the framework adapter dynamically at deploy time, and svelte-check
       // loads TypeScript 7 through the `--tsgo` flag. Neither appears in an import.
       "ignoreDependencies": ["@alchemy.run/frontend-frameworks", "@typescript/native"],

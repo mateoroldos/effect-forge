@@ -27,8 +27,7 @@ export class WebWorker extends Cloudflare.Website.SvelteKit<WebWorker>()(
       },
       env: {
         API: api,
-        VITE_API_URL: stageHost?.origin ?? api.url.as<string>(),
-        VITE_SEARCH_INDEXABLE: String(stage === "prod"),
+        SEARCH_INDEXABLE: String(stage === "prod"),
         ...browserTelemetryEnv,
       },
       domain: stageHost?.hostname ?? null,
