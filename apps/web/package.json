@@ -10,7 +10,7 @@
   "scripts": {
     "build": "vite build",
     "check-types": "svelte-kit sync && svelte-check --tsgo --tsconfig ./tsconfig.json",
-    "prepare": "svelte-kit sync || echo ''",
+    "prepare": "svelte-kit sync",
     "test": "vitest run"
   },
   "dependencies": {
