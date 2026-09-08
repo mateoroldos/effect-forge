@@ -1,8 +1,8 @@
-import react from "@astrojs/react";
+import svelte from "@astrojs/svelte";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 
 export default defineConfig({
-  integrations: [react()],
+  integrations: [svelte()],
   vite: { plugins: [tailwindcss()] },
 });

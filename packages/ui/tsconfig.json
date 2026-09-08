@@ -1,11 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src"],
+  "include": ["src/cn", "src/ui"],
   "compilerOptions": {
-    "jsx": "react-jsx",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "paths": {
       "@effect-forge/ui/*": ["./src/*"]
-    }
+    },
+    "types": ["bun"]
   }
 }

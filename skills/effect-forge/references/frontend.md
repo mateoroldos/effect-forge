@@ -2,69 +2,74 @@
 
 ## Ownership
 
-| Tool            | Responsibility                                                            |
-| --------------- | ------------------------------------------------------------------------- |
-| TanStack Start  | SSR, streaming, web runtime, deployment entry                             |
-| TanStack Router | routes, search parameters, navigation, loaders                            |
-| Effect Atom     | remote state, Effects, caching, invalidation, optimistic updates, streams |
-| TanStack Form   | form drafts, field interaction, client validation                         |
-| Effect Schema   | canonical input validation                                                |
-| React state     | component-local presentation state                                        |
+| Tool               | Responsibility                                     |
+| ------------------ | -------------------------------------------------- |
+| SvelteKit          | routes, navigation, SSR, and deployment entry      |
+| Remote `query`     | cached application reads                           |
+| Remote `form`      | validated application mutations                    |
+| Better Auth Svelte | native authentication protocol and session cookies |
+| Effect Schema      | canonical boundary validation                      |
+| Svelte runes       | component-local presentation state                 |
 
-Do not add TanStack Query alongside Effect Atom.
+Do not add a client-side state or query library. A remote `query` is the cache; refresh it after a successful mutation.
 
-## API client
+## Environment and bindings
 
-Use the official React binding and construct one typed client service:
+Alchemy's Worker `env` declaration contains both scalar configuration and native Cloudflare resources. Consume each through the interface that preserves its meaning:
 
-```ts
-export class AppApiClient extends AtomHttpApi.Service<AppApiClient>()(
-  "@effect-forge/web/AppApiClient",
-  {
-    api: AppApi,
-    httpClient: FetchHttpClient.layer,
-    baseUrl,
-  },
-) {}
-```
+| Value                                                        | Declaration                                                 | Consumption                        |
+| ------------------------------------------------------------ | ----------------------------------------------------------- | ---------------------------------- |
+| Public scalar                                                | Alchemy `env` and `apps/web/src/env.ts` with `public: true` | `$app/env/public`                  |
+| Private scalar or secret                                     | Alchemy `env` and a private `apps/web/src/env.ts` entry     | `$app/env/private`                 |
+| Worker, Hyperdrive, D1, KV, R2, or other Cloudflare resource | Alchemy resource binding                                    | `event.platform.env`               |
+| Deployment input                                             | CI or local shell                                           | Effect `Config` in deployment code |
+| Vite framework metadata                                      | Vite                                                        | `import.meta.env`                  |
 
-Queries return atoms of `AsyncResult`. Mutations return writable result functions. Use reactivity keys to refresh dependent queries after successful mutations and an idle TTL only when data should survive unmount.
+Define and parse scalar application configuration once with SvelteKit's `defineEnvVars`. Variables are dynamic by default; use `static: true` only when build-time replacement is required and verified. Public variables are an explicit browser-disclosure decision. Never expose secrets through public variables or model resource bindings as scalar environment variables.
 
-Use `AtomRpc.Service` instead when an operation belongs to the private RPC tier.
+Use `import.meta.env` for Vite-owned metadata such as `MODE`, `DEV`, `PROD`, and `SSR`, not application configuration. When browser code needs a value derived from a resource or other server-only state, project only that value through a server load or remote function rather than exposing the binding.
 
-## SSR and hydration
+## Remote functions
 
-```text
-request
-  → new AtomRegistry
-  → route loader fetches required data
-  → seed serializable atoms
-  → render and serialize hydration state
-  → browser registry hydrates once
-```
-
-Never reuse an authenticated registry across server requests. Keep browser-only atoms away from SSR or provide an explicit server value.
-
-## Optimistic mutation
-
-Effect Atom provides `Atom.optimistic` and `Atom.optimisticFn`.
+Keep each remote function with its feature. It owns the browser-to-server application boundary:
 
 ```text
-form submits input
-  → reducer applies provisional value
-  → typed mutation runs
-     ├─ success → invalidate and refresh authoritative query
-     └─ failure → roll back to the latest source value
+component
+  → query or form
+  → validate untrusted input
+  → resolve request principal
+  → run core capability
+  → project expected failure
 ```
 
-Use stable temporary identities so list rendering and reconciliation do not duplicate an item. Keep conflict or version policy on the server; optimistic UI is presentation, not authority.
+Remote handlers call core capabilities directly through the web runtime. They do not call the public API.
+
+Use `query` for reads and `form` for progressively enhanced mutations. Use `command` only when a mutation cannot be represented as a form. Do not put business policy in the handler.
 
 ## Forms
 
-Pass the owned RPC or `HttpApi` input schema to TanStack Form through Standard Schema. TanStack Form validates schema input but does not return transformed schema output from `onSubmit`; decode again before invoking the mutation.
+Pass an Effect Schema to a remote `form` through Standard Schema. The remote boundary validates untrusted input before application code runs.
 
-Map typed application failures to form or field errors at the feature boundary. Transport failures remain page-level or toast-level failures unless a field can truthfully correct them.
+Map failures where they become meaningful:
 
-## Server functions
+- Field-correctable failures → `invalid` with field issues.
+- Expected page-level failures → SvelteKit `error` or a safe form message.
+- Defects and interruptions → remain defects and interruptions.
 
-TanStack Start server functions are same-origin RPC endpoints. Do not place application policy or database access in them and do not use them as a mandatory BFF. They may bootstrap SSR data or perform work that requires credentials owned by the web server.
+Keep provider diagnostics, credentials, and private identifiers out of browser-facing messages.
+
+Use component-local runes for pending presentation or UI state not already owned by the remote form. Do not mirror server data in a client store.
+
+## Authentication
+
+Better Auth is the exception to remote functions. Its Svelte client calls same-origin `/api/auth/*` routes directly so Better Auth owns request shape, cookies, and browser behavior.
+
+A server layout may resolve the principal required by its pages and redirect anonymous users. Every remote function and endpoint still owns authorization for its operation.
+
+Client-side role or permission checks may hide or disable controls, but they are never authoritative.
+
+## SSR
+
+Resolve only data required to render the route. Keep authenticated state scoped to the SvelteKit request. Never retain principals, cookies, or request-scoped services in a shared mutable singleton.
+
+The browser sees one public origin. Worker names, service bindings, provider credentials, and deployment origins remain server-side.

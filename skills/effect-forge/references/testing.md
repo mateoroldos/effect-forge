@@ -1,15 +1,16 @@
 # Testing
 
-Test through public interfaces. Each seam verifies the behavior it owns.
+Test through public interfaces. Each seam verifies only the behavior it owns.
 
-| Seam                | What it verifies                                                                 |
-| ------------------- | -------------------------------------------------------------------------------- |
-| Domain              | parsing, invariants, permission decisions                                        |
-| Application service | policy and effect ordering                                                       |
-| PostgreSQL adapter  | SQL, scoping, constraints, row decoding                                          |
-| HTTP                | request decoding, middleware, public error projection                            |
-| Web state           | form error mapping, invalidation, optimistic apply and rollback                  |
-| End-to-end          | representative critical request flows without repeating every lower-level branch |
+| Seam                | What it verifies                                             |
+| ------------------- | ------------------------------------------------------------ |
+| Domain              | parsing, invariants, authorization, entitlement decisions    |
+| Application service | policy, authorization, effect ordering                       |
+| PostgreSQL adapter  | SQL, scoping, constraints, row decoding                      |
+| Provider adapter    | provider translation and error projection                    |
+| Public HTTP API     | decoding, authentication, and public error projection        |
+| SvelteKit           | remote validation, redirects, forms, and safe failure output |
+| End-to-end          | representative critical flows                                |
 
 ## Test doubles
 
@@ -18,45 +19,50 @@ Provide substitute Layers instead of mocking modules.
 - Use an in-memory Layer for service tests when it preserves the port contract.
 - Use PGlite for PostgreSQL adapter tests.
 - Use Effect test clocks and deterministic services for time and randomness.
-- Exercise HTTP capabilities through the production router as Fetch-compatible `Request → Response` handlers. Use a listening test server only for runtime adapter or network lifecycle behavior.
-- Use a fresh `AtomRegistry` for each web-state test.
-- Run a shared port contract suite against each adapter when several adapters exist. Keep adapter-specific behavior, such as SQL constraints and provider error translation, in adapter tests.
+- Exercise HTTP capabilities through the production router as Fetch-compatible `Request → Response` handlers.
+- Exercise remote functions and endpoints through built SvelteKit server boundaries.
+- Run a shared port contract suite against each adapter when several implementations exist.
 
-Choose test Layer provisioning by lifecycle and isolation:
+Choose Layer provisioning by lifecycle and isolation:
 
-- Use `Effect.provide(...)` for a one-off dependency or configuration local to one test.
-- Use `layer(...)` when several tests intentionally share one scoped fixture and state cannot leak between them.
-- Use `it.layer(...)` when a nested group needs additional dependencies or independently built scoped setup.
+- `Effect.provide(...)` for one dependency local to one test.
+- `layer(...)` for tests that intentionally share one scoped fixture without mutable state leakage.
+- `it.layer(...)` for a nested scenario with independently built scoped setup.
 
-An `it.layer` label names the fixture context or scenario; each nested `it.effect` names observable behavior. Build mutable Layers independently per scenario. Share a Layer only when one test's state cannot affect another.
+Keep setup in the narrowest useful scope. Add a helper only when it hides meaningful repeated mechanics. Do not alias one library call.
 
-Keep test setup in the narrowest useful scope. Inline one-use values and operations. Use file-level fixtures for immutable values or infrastructure shared across scenarios. Add a helper only when it hides meaningful repeated mechanics; do not alias a single library call.
+Do not use module mocks, arbitrary sleeps, or assertions against private calls.
 
-Do not use `vi.mock`, `jest.mock`, arbitrary sleeps, or assertions against private calls.
+## Authorization
 
-### Substitute adapters
+Test each authorization rule once where it is owned:
 
-A substitute Layer implements the existing port; it is not a parallel testing service. Use it through the application service when testing application behavior. A shared port contract may exercise the port directly. Do not add inspection-only services or application queries.
+- Pure role-to-permission decisions in domain tests.
+- Membership resolution and enforcement in core service tests.
+- Better Auth role translation in adapter tests.
+- HTTP or SvelteKit status and message projection at the framework boundary.
+
+Browser permission checks are presentation behavior; they do not replace a server authorization test.
 
 ## Property tests
 
-Use fast-check when one assertion should hold across a large input space. Good properties compare independent operations or check an output invariant, for example:
+Use fast-check when one assertion should hold across a large input space. Good properties compare independent operations or check an output invariant:
 
 - `decode(encode(value)) === value`
 - `normalize(normalize(value)) === normalize(value)`
 - every legal transition preserves the entity invariant
 
-Do not generate a value from a schema and only assert that the same schema decodes it; that tests the schema against itself.
+Do not generate a value from a schema and only assert that the same schema decodes it.
 
 In Effect tests, prefer `it.effect.prop`. Pass a Schema for valid domain inputs or use `FastCheck` from `effect/testing` for custom generation. Keep named examples and regression cases.
 
 ## Placement
 
-Test an expected failure where its policy is owned. A service authorization failure belongs in the service test; its HTTP status mapping belongs in the handler test; its field presentation belongs in a form test only when the user can correct that field.
+Test an expected failure where its policy is owned. A service authorization failure belongs in the service test; its HTTP status belongs in the handler test; its field presentation belongs in a form test only when the field can correct it.
 
-Test optimistic behavior at the Atom boundary: provisional value, success reconciliation, failure rollback, and overlapping mutations when supported. Do not repeat every service branch through HTTP and browser tests.
+A public API test and a SvelteKit test may cover the same capability boundary without repeating every core policy branch.
 
-## Target validation commands
+## Validation
 
 ```bash
 bun run check-types
@@ -67,4 +73,4 @@ bun run check-arch
 bun run knip
 ```
 
-Do not report these commands as available or passing until the root workspace implements them.
+Do not report a command as available or passing until the root workspace implements it.

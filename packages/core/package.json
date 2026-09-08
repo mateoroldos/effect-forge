@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./application": "./src/application.ts",
     "./identity-directory": "./src/identity/identity-directory.ts",
     "./identity-store": "./src/identity/identity-store.ts",
     "./provider-account": "./src/identity/provider-account.ts",

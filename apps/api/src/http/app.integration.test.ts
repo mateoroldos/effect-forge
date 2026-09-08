@@ -1,6 +1,7 @@
 import { Memory } from "@alchemy.run/better-auth";
 import { assert, describe, it } from "@effect/vitest";
 import { AuthBetter } from "@effect-forge/auth-better";
+import { Application } from "@effect-forge/core/application";
 import { ProviderId } from "@effect-forge/core/provider-account";
 import { CryptoDeterministic } from "@effect-forge/core/test/crypto-deterministic";
 import { AppApi } from "@effect-forge/contracts";
@@ -14,7 +15,9 @@ import { ApiTest } from "../test/api-test.ts";
 import { App } from "./app.ts";
 import { RequestAuth } from "./request-auth.ts";
 
-const applicationRequirements = Layer.merge(CryptoDeterministic.layer, PersistencePglite.layer);
+const applicationLayer = Application.layer.pipe(
+  Layer.provide(Layer.merge(CryptoDeterministic.layer, PersistencePglite.layer)),
+);
 
 /** The complete HTTP application with deterministic local infrastructure. */
 const served = Layer.unwrap(
@@ -37,7 +40,7 @@ const served = Layer.unwrap(
     });
 
     return Layer.merge(
-      App.layer.pipe(Layer.provide(Layer.merge(applicationRequirements, authenticator))),
+      App.layer.pipe(Layer.provide(Layer.merge(applicationLayer, authenticator))),
       HttpRouter.add(
         "*",
         `${AppApi.authBasePath}/*`,

@@ -6,9 +6,12 @@ import * as GitHub from "alchemy/GitHub";
 import * as Neon from "alchemy/Neon";
 import * as Output from "alchemy/Output";
 import { Config, Effect, Layer, Option } from "effect";
+import { fileURLToPath } from "node:url";
 import { stageHostFor } from "./stacks/stage-host.ts";
 
-export class WebWorker extends Cloudflare.Website.Vite<WebWorker>()(
+const webRoot = fileURLToPath(new URL("apps/web", import.meta.url));
+
+export class WebWorker extends Cloudflare.Website.SvelteKit<WebWorker>()(
   "Web",
   Effect.gen(function* () {
     const { stage } = yield* Alchemy.Stack;
@@ -17,15 +20,14 @@ export class WebWorker extends Cloudflare.Website.Vite<WebWorker>()(
     const api = yield* ApiWorker;
 
     return {
-      rootDir: "apps/web",
+      rootDir: webRoot,
       memo: {
         include: ["**/*", "../../packages/contracts/src/**", "../../packages/domain/src/**"],
         lockfile: true,
       },
       env: {
         API: api,
-        VITE_API_URL: stageHost?.origin ?? api.url.as<string>(),
-        VITE_SEARCH_INDEXABLE: String(stage === "prod"),
+        SEARCH_INDEXABLE: String(stage === "prod"),
         ...browserTelemetryEnv,
       },
       domain: stageHost?.hostname ?? null,

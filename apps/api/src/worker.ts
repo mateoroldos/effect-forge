@@ -1,6 +1,7 @@
 import { CloudflareHyperdrive } from "@alchemy.run/better-auth/CloudflareHyperdrive";
 import { AppApi } from "@effect-forge/contracts";
 import { AuthBetter } from "@effect-forge/auth-better";
+import { Application } from "@effect-forge/core/application";
 import { ProviderId } from "@effect-forge/core/provider-account";
 import { PersistencePostgres } from "@effect-forge/database-postgres";
 import { NodeCrypto } from "@effect/platform-node";
@@ -67,11 +68,12 @@ export default class ApiWorker extends Cloudflare.Worker<ApiWorker>()(
           Effect.mapError((cause) => new RequestAuth.IdentificationFailed({ cause })),
         ),
     });
+    const applicationLayer = Application.layer.pipe(
+      Layer.provide(Layer.merge(NodeCrypto.layer, persistenceLayer)),
+    );
 
     const routerLayer = Layer.merge(
-      App.layer.pipe(
-        Layer.provide(Layer.mergeAll(NodeCrypto.layer, persistenceLayer, authenticatorLayer)),
-      ),
+      App.layer.pipe(Layer.provide(Layer.merge(applicationLayer, authenticatorLayer))),
       HttpRouter.add(
         "*",
         `${AppApi.authBasePath}/*`,

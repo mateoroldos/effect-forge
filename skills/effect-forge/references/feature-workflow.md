@@ -1,61 +1,54 @@
 # Feature workflow
 
-Use one capability path from domain to UI. The Agent example defines the expected ownership and file sequence.
+Build one capability through its owned boundaries. Add only the layers the capability needs.
 
 ## Shape
 
 ```text
 packages/domain/src/agent/
-  Agent, AgentId, AgentName
+  Agent, AgentId, AgentName, pure decisions
 
-packages/core/src/agent-directory/
-  AgentDirectory service
-  AgentStore port
+packages/core/src/agent/
+  AgentDirectory service, AgentStore port
 
-adapters/database-postgres/src/agent-store-postgres/
+adapters/database-postgres/src/agent/
   AgentStore PostgreSQL adapter
 
-packages/contracts/src/agents-api/
-  HttpApi group, payloads, success values, public errors
+apps/web/src/lib/features/agents/
+  remote functions, forms, presentation
+
+packages/contracts/src/agents-api.ts
+  public HttpApi group, payloads, success values, public errors
 
 apps/api/src/http/agents.ts
-  handlers and application-to-HTTP error projection
-
-apps/web/src/lib/api/app-api-client.ts
-  AtomHttpApi client
-
-apps/web/src/features/agents/
-  query atoms, create form, optimistic list, presentation
-
-apps/web/src/routes/agents.tsx
-  route metadata, loader, and feature composition
+  public handlers and error projection
 ```
+
+The web and public API are independent entrypoints to the same application service. A capability does not require an API contract unless an external client needs one.
 
 ## Sequence
 
-1. Add domain schemas and invariant tests.
-2. Define the application service contract, its expected errors, and the port it requires.
-3. Write service policy tests with a substitute port Layer.
-4. Implement the PostgreSQL adapter and verify it with PGlite.
-5. Add the operation to the public `HttpApi` contract using domain schemas.
-6. Implement the API handler and compose its Layers in `apps/api`.
-7. Add the operation to the shared `AtomHttpApi` client.
-8. Build the TanStack Form from the contract input schema.
-9. Add an optimistic mutation only when immediate feedback improves the interaction; verify success reconciliation and failure rollback.
-10. Compose the feature from a thin TanStack route.
-11. Add one HTTP round-trip and one representative browser flow.
-12. Run every repository validation command.
+1. Add the domain vocabulary and invariant tests.
+2. Define the application service and the smallest port it needs.
+3. Test application policy with substitute Layers.
+4. Implement and test the production adapter.
+5. Add a SvelteKit remote function for browser access.
+6. Build the feature UI from the remote schema and result.
+7. If external clients need the capability, add its public `HttpApi` contract and handler.
+8. Add one integration test at each new framework boundary.
+9. Run every repository validation command.
 
-## Contract ownership
+Stop when the slice is coherent. Do not add generalized policy, providers, transports, or UI state for anticipated features.
+
+## Ownership
 
 ```text
-domain schemas
-  → application service inputs and outputs
-  → HttpApi payload and success schemas
-  → AtomHttpApi client
-  → TanStack Form validation
+domain schema and decisions
+  → core application service and owned port
+  ├─ SvelteKit remote boundary → browser UI
+  └─ HttpApi boundary → external clients
 ```
 
-Reuse schemas outward. Create a wire-specific schema only when the public representation intentionally differs. Decode form values again on submission because Standard Schema validation preserves the input type rather than transformed output.
+Reuse domain schemas outward. Create a protocol-specific schema only when the public representation intentionally differs.
 
-Handlers own authentication extraction, transport decoding, service invocation, and HTTP error projection. They do not own application policy or persistence.
+Remote handlers and API handlers own authentication extraction, input decoding, service invocation, and protocol error projection. They do not own application policy or persistence.
