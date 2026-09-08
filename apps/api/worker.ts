@@ -10,11 +10,11 @@ import * as Cloudflare from "alchemy/Cloudflare";
 import * as SQL from "alchemy/SQL/Postgres";
 import { Effect, Layer } from "effect";
 import { HttpMiddleware, HttpRouter } from "effect/unstable/http";
-import { stageHostFor, zoneName } from "../../../stacks/stage-host.ts";
-import { App } from "./http/app.ts";
-import { RequestAuth } from "./http/request-auth.ts";
-import { Database } from "./infrastructure/database.ts";
-import { Telemetry } from "./infrastructure/telemetry.ts";
+import { Database } from "../../infra/database.ts";
+import { stageHostFor, zoneName } from "../../infra/stage.ts";
+import { App } from "./src/http/app.ts";
+import { RequestAuth } from "./src/http/request-auth.ts";
+import { Telemetry } from "./src/infrastructure/telemetry.ts";
 
 /** Hosts local development is reached at, which no stage assigns. */
 const localHosts = ["localhost", "localhost:*", "127.0.0.1:*"];

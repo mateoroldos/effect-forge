@@ -6,7 +6,7 @@
   "exclude": ["exports", "types"],
   "workspaces": {
     ".": {
-      "entry": ["alchemy.run.ts", "alchemy.site.ts", "stacks/*.ts", "scripts/*.ts"],
+      "entry": ["alchemy.run.ts", "alchemy.site.ts", "infra/*.ts", "stacks/*.ts", "scripts/*.ts"],
       "ignoreBinaries": ["maple"],
     },
     "apps/site": {
@@ -16,9 +16,9 @@
     "apps/web": {
       // SvelteKit discovers the explicit environment contract by convention.
       "entry": ["src/env.ts"],
-      // Alchemy loads the framework adapter dynamically at deploy time, and svelte-check
-      // loads TypeScript 7 through the `--tsgo` flag. Neither appears in an import.
-      "ignoreDependencies": ["@alchemy.run/frontend-frameworks", "@typescript/native"],
+      // svelte-check loads TypeScript 7 through the `--tsgo` flag, which does not
+      // appear in an import.
+      "ignoreDependencies": ["@typescript/native"],
     },
     "packages/ui": {
       // svelte-check refuses to start unless a TypeScript 6 is resolvable, so it is

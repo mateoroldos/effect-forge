@@ -1,4 +1,4 @@
-import type { WebWorkerEnv } from "../../../alchemy.run.ts";
+import type { WebWorkerEnv } from "../worker.ts";
 
 declare global {
   namespace App {

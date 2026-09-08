@@ -48,7 +48,7 @@ export const originUrl = Effect.map(postgres, ({ branch }) => branch.connectionU
 export const hyperdrive = Effect.gen(function* () {
   const { branch } = yield* postgres;
 
-  return yield* Cloudflare.Hyperdrive.Connection("ApiDatabaseConnection", {
+  return yield* Cloudflare.Hyperdrive.Connection("ApplicationDatabaseConnection", {
     origin: branch.origin,
     dev: branch.pooledOrigin,
     caching: { disabled: true },
