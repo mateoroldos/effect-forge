@@ -96,6 +96,8 @@ The web and API are peer composition roots. The web app does not call the API as
 
 `infra/database.ts` owns shared database provisioning and `infra/stage.ts` owns deterministic host policy. Application-root `worker.ts` files declare each Worker's runtime and bindings. The root `alchemy.run.ts` remains a concise Stack summary that composes those declarations.
 
+SvelteKit scalar configuration is declared in `apps/web/src/env.ts` and consumed through `$app/env/public` or `$app/env/private`. Native Cloudflare resources remain on `event.platform.env`; Vite variables are reserved for Vite-owned build metadata.
+
 ## Database stages
 
 ```text
