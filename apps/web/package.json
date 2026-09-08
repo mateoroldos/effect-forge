@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@effect-forge/ui": "workspace:*",
+    "alchemy": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

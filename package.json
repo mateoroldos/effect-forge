@@ -23,7 +23,7 @@
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
     "prepare": "./scripts/prepare-effect.sh && effect-tsgo patch --oxlint",
-    "test": "turbo test && vitest run stacks"
+    "test": "turbo test && vitest run infra"
   },
   "dependencies": {
     "@effect/platform-bun": "catalog:",

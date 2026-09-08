@@ -5,16 +5,17 @@
 ```text
 apps/
 ├─ web/                        SvelteKit composition root
+│  ├─ worker.ts                deployment declaration and bindings
 │  └─ src/
 │     ├─ routes/               pages, layouts, endpoints
 │     └─ lib/
 │        ├─ features/          remote functions and feature UI
 │        └─ server/            runtime and Layer composition
 ├─ api/                        public Effect API composition root
+│  ├─ worker.ts                production runtime and deployment declaration
 │  └─ src/
 │     ├─ http/                 HttpApi handlers
-│     ├─ app.ts                dependency-open HTTP graph
-│     └─ worker.ts             production composition
+│     └─ app.ts                dependency-open HTTP graph
 └─ site/                       project landing page
 
 packages/
@@ -27,7 +28,8 @@ adapters/
 ├─ database-postgres/          PostgreSQL port implementations
 └─ auth-better/                Better Auth and provider translation
 
-alchemy.run.ts                 infrastructure composition
+infra/                         shared deployment resources and stage policy
+alchemy.run.ts                 application Stack summary
 AGENTS.md                      repository rules
 skills/effect-forge/           task guidance
 ```
@@ -92,7 +94,7 @@ The web and API are peer composition roots. The web app does not call the API as
 
 `apps/web` composes SvelteKit, `Application.layer`, adapters, and server telemetry. `apps/api` keeps its HttpApi graph dependency-open and provides `Application.layer`, adapters, and server telemetry from its Worker. Tests provide the same application graph with substitute capabilities.
 
-The root `alchemy.run.ts` composes their infrastructure. Each application provisions only the resources it consumes.
+`infra/database.ts` owns shared database provisioning and `infra/stage.ts` owns deterministic host policy. Application-root `worker.ts` files declare each Worker's runtime and bindings. The root `alchemy.run.ts` remains a concise Stack summary that composes those declarations.
 
 ## Database stages
 

@@ -40,7 +40,8 @@ adapters/
 ├─ auth-better           Better Auth and provider translation
 └─ database-postgres     PostgreSQL port implementations
 
-alchemy.run.ts           infrastructure as code
+infra/                   shared deployment resources and stage policy
+alchemy.run.ts           application Stack summary
 ```
 
 The web and API are peer composition roots over the same application services. SvelteKit remote functions call those services directly; the public API exists for independent clients. Better Auth owns identity and organization governance behind same-origin web routes.
