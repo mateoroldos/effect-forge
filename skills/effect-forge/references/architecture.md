@@ -98,6 +98,8 @@ The web and API are peer composition roots. The web app does not call the API as
 
 SvelteKit scalar configuration is declared in `apps/web/src/env.ts` and consumed through `$app/env/public` or `$app/env/private`. Native Cloudflare resources remain on `event.platform.env`; Vite variables are reserved for Vite-owned build metadata.
 
+Server-side SvelteKit operations enter the application through `apps/web/src/lib/server/application.ts`. `hooks.server.ts` builds one managed runtime from the request's native `DATABASE` binding, shares it through `event.locals` for that request, and disposes it after SvelteKit resolves the response. Cloudflare does not expose an isolate shutdown hook, and Hyperdrive discourages global database clients, so the runtime must not outlive the request. Principal and workspace context remain explicit operation inputs rather than runtime services.
+
 ## Database stages
 
 ```text

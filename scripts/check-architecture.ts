@@ -15,6 +15,8 @@ const allowedDependencies = {
   "@effect-forge/site": new Set(["@effect-forge/ui"]),
   "@effect-forge/web": new Set([
     "@effect-forge/contracts",
+    "@effect-forge/core",
+    "@effect-forge/database-postgres",
     "@effect-forge/ui",
     "@effect-forge/domain",
   ]),

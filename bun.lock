@@ -100,7 +100,10 @@
       "name": "@effect-forge/web",
       "version": "0.0.0",
       "dependencies": {
+        "@effect-forge/core": "workspace:*",
+        "@effect-forge/database-postgres": "workspace:*",
         "@effect-forge/ui": "workspace:*",
+        "@effect/platform-node": "catalog:",
         "alchemy": "catalog:",
         "effect": "catalog:",
       },
@@ -174,6 +177,10 @@
         "svelte": ">=5",
       },
     },
+  },
+  "patchedDependencies": {
+    "@alchemy.run/cloudflare-runtime@2.0.0-beta.76": "patches/@alchemy.run%2Fcloudflare-runtime@2.0.0-beta.76.patch",
+    "@alchemy.run/frontend-frameworks@2.0.0-beta.76": "patches/@alchemy.run%2Ffrontend-frameworks@2.0.0-beta.76.patch",
   },
   "catalog": {
     "@alchemy.run/better-auth": "2.0.0-beta.76",
