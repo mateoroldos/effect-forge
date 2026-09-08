@@ -14,7 +14,10 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@effect-forge/core": "workspace:*",
+    "@effect-forge/database-postgres": "workspace:*",
     "@effect-forge/ui": "workspace:*",
+    "@effect/platform-node": "catalog:",
     "alchemy": "catalog:",
     "effect": "catalog:"
   },

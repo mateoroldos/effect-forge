@@ -15,7 +15,7 @@
     },
     "apps/web": {
       // SvelteKit discovers the explicit environment contract by convention.
-      "entry": ["src/env.ts"],
+      "entry": ["src/env.ts", "src/lib/server/application.ts"],
       // svelte-check loads TypeScript 7 through the `--tsgo` flag, which does not
       // appear in an import.
       "ignoreDependencies": ["@typescript/native"],

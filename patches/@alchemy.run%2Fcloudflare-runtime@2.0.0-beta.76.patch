@@ -1,0 +1,62 @@
+diff --git a/dist/core/node/platform-proxy/PlatformProxy.d.mts b/dist/core/node/platform-proxy/PlatformProxy.d.mts
+index e78fbe54cdd37b5d694091e691c5d80aa46f17de..0ed6cb1f38820a8cf4f0cf4eaa29e48549252709 100644
+--- a/dist/core/node/platform-proxy/PlatformProxy.d.mts
++++ b/dist/core/node/platform-proxy/PlatformProxy.d.mts
+@@ -2,6 +2,7 @@ import { RuntimeError } from "../RuntimeError.shared.mjs";
+ import { BindingHooks, DurableObjectNamespace, Module } from "../RuntimeWorker.mjs";
+ import { BindingHook } from "../PluginContext.mjs";
+ import { Runtime } from "../Runtime.mjs";
++import { HyperdriveOrigin } from "../bindings/hyperdrive/HyperdriveOrigin.shared.mjs";
+ import { CacheQueryOptions, CacheRequestLike, CacheResponseLike, CfProperties, ConnectInfo, ConnectedPlatformProxy, ExecutionContext, PlatformProxyCache, PlatformProxyCacheStorage } from "./connect.mjs";
+ import * as Effect from "effect/Effect";
+ import * as Scope from "effect/Scope";
+@@ -22,6 +23,8 @@ interface PlatformProxyOptions<B extends BindingHooks = BindingHooks> {
+    * `DurableObjectNamespace.local`, `Service.local`, remote bindings, …).
+    */
+   readonly bindings: B;
++  /** Local origins keyed by the Hyperdrive identifiers used by bindings. */
++  readonly hyperdrives?: Record<string, HyperdriveOrigin>;
+   /**
+    * Extra modules hosted alongside the proxy worker. Required when binding
+    * Durable Objects: the first module must export every configured
+diff --git a/dist/core/node/platform-proxy/PlatformProxy.mjs b/dist/core/node/platform-proxy/PlatformProxy.mjs
+index bbb52b48eb2793ec4111ad437af6e21c81f2fa43..c93ff598e0c7f38ca7beca3ed38696cc760d091f 100644
+--- a/dist/core/node/platform-proxy/PlatformProxy.mjs
++++ b/dist/core/node/platform-proxy/PlatformProxy.mjs
+@@ -103,6 +103,7 @@ const open = Effect.fn("PlatformProxy.open")(function* (options) {
+ 		compatibilityDate: options.compatibilityDate ?? DEFAULT_COMPATIBILITY_DATE,
+ 		compatibilityFlags: options.compatibilityFlags ?? [],
+ 		bindings: [local(BINDING_PLATFORM_PROXY_TOKEN, token), ...options.bindings],
++		hyperdrives: options.hyperdrives,
+ 		modules,
+ 		durableObjectNamespaces: options.durableObjectNamespaces
+ 	});
+diff --git a/src/core/platform-proxy/PlatformProxy.ts b/src/core/platform-proxy/PlatformProxy.ts
+index 20df06bd89af257339b8a5321ea548a35901028d..487f53fb15bf6732f97777d9010415f534e26f52 100644
+--- a/src/core/platform-proxy/PlatformProxy.ts
++++ b/src/core/platform-proxy/PlatformProxy.ts
+@@ -52,6 +52,7 @@ const ProxyWorker = {
+     ),
+ };
+ import * as Text from "../bindings/Text.ts";
++import type { HyperdriveOrigin } from "../bindings/hyperdrive/HyperdriveOrigin.shared.ts";
+ import type { BindingHook } from "../PluginContext.ts";
+ import * as Runtime from "../Runtime.ts";
+ import {
+@@ -100,6 +101,8 @@ export interface PlatformProxyOptions<B extends BindingHooks = BindingHooks> {
+    * `DurableObjectNamespace.local`, `Service.local`, remote bindings, …).
+    */
+   readonly bindings: B;
++  /** Local origins keyed by the Hyperdrive identifiers used by bindings. */
++  readonly hyperdrives?: Record<string, HyperdriveOrigin>;
+   /**
+    * Extra modules hosted alongside the proxy worker. Required when binding
+    * Durable Objects: the first module must export every configured
+@@ -203,6 +206,7 @@ export const open = Effect.fn("PlatformProxy.open")(function* <
+       Text.local(BINDING_PLATFORM_PROXY_TOKEN, token),
+       ...options.bindings,
+     ] as unknown as B,
++    hyperdrives: options.hyperdrives,
+     modules,
+     durableObjectNamespaces: options.durableObjectNamespaces,
+   });

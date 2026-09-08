@@ -3,6 +3,7 @@ import * as Cloudflare from "alchemy/Cloudflare";
 import { Context, Effect } from "effect";
 import { fileURLToPath } from "node:url";
 import { stageHostFor } from "../../infra/stage.ts";
+import { Database } from "../../infra/database.ts";
 
 const webRoot = fileURLToPath(new URL(".", import.meta.url));
 
@@ -17,11 +18,13 @@ export class WebWorker extends Cloudflare.Website.SvelteKit<WebWorker>()(
     const { stage } = yield* Alchemy.Stack;
     const stageHost = stageHostFor(stage);
     const api = yield* ApiBinding;
+    const database = yield* Database.hyperdrive;
 
     return {
       rootDir: webRoot,
       env: {
         API: api,
+        DATABASE: database,
         SEARCH_INDEXABLE: String(stage === "prod"),
       },
       domain: stageHost?.hostname ?? null,
