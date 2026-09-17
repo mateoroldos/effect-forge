@@ -1,7 +1,9 @@
 import { Schema } from "effect";
 
 /** A same-document path that cannot be normalized into an external URL. */
-export const ReturnPath = Schema.String.pipe(Schema.check(Schema.isPattern(/^\/(?!\/)[^\\]*$/)));
+export const ReturnPath = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^\/(?!\/)[^\\\p{Cc}]*$/u)),
+);
 export type ReturnPath = typeof ReturnPath.Type;
 
 /** Reads a safe post-authentication destination from a page URL. */

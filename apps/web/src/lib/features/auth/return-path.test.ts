@@ -10,10 +10,16 @@ describe("ReturnPath", () => {
     (path) => expect(isReturnPath(path)).toBe(true),
   );
 
-  it.each(["//evil.example", "/\\evil.example", "https://evil.example", "javascript:alert(1)"])(
-    "rejects the external destination %s",
-    (path) => expect(isReturnPath(path)).toBe(false),
-  );
+  it.each([
+    "//evil.example",
+    "/\\evil.example",
+    "https://evil.example",
+    "javascript:alert(1)",
+    "/\t/evil.example",
+    "/\n/evil.example",
+    "/\r/evil.example",
+    "/workspaces\u0000",
+  ])("rejects the external destination %s", (path) => expect(isReturnPath(path)).toBe(false));
 
   it("reads a safe return path and rejects an external one", () => {
     expect(fromURL(new URL("https://app.example/sign-in?returnTo=%2Fworkspaces%3Ftab%3Dnew"))).toBe(

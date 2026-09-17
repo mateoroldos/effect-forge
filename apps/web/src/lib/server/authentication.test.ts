@@ -2,7 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as authSchema from "@effect-forge/database-postgres/auth-schema";
 import { PgliteDatabase } from "@effect-forge/database-postgres/test/pglite-database";
 import { eq } from "drizzle-orm";
-import { Effect, Redacted, Result } from "effect";
+import { Effect, Fiber, Redacted, Result } from "effect";
 import { Authentication } from "./authentication.ts";
 
 const baseURL = new URL("http://localhost:5173");
@@ -10,7 +10,8 @@ const secret = Redacted.make("test-secret-value-with-at-least-32-characters");
 const signUpBody =
   '{"name":"Ada Lovelace","email":"ada@example.com","password":"correct-horse-battery-staple"}';
 
-const request = (path: string, init?: RequestInit) => new Request(new URL(path, baseURL), init);
+const request = (path: string, init?: RequestInit & { duplex?: "half" }) =>
+  new Request(new URL(path, baseURL), init);
 
 const fixture = Effect.gen(function* () {
   const { database } = yield* PgliteDatabase.make;
@@ -45,6 +46,52 @@ const fixture = Effect.gen(function* () {
 });
 
 describe("Authentication", () => {
+  it.effect("settles provider work before interruption releases request resources", () =>
+    Effect.gen(function* () {
+      const auth = yield* fixture;
+      const reading = Promise.withResolvers<void>();
+      const releaseBody = Promise.withResolvers<void>();
+      const body = new ReadableStream<Uint8Array>(
+        {
+          pull(controller) {
+            reading.resolve();
+            return releaseBody.promise.then(() => {
+              controller.enqueue(new TextEncoder().encode(signUpBody));
+              controller.close();
+            });
+          },
+        },
+        { highWaterMark: 0 },
+      );
+      const service = yield* auth.authentication(
+        request("/api/auth/sign-up/email", {
+          method: "POST",
+          headers: { "content-type": "application/json", origin: baseURL.origin },
+          body,
+          duplex: "half",
+        }),
+      );
+      let released = false;
+      const operation = yield* Effect.gen(function* () {
+        yield* Effect.addFinalizer(() =>
+          Effect.sync(() => {
+            released = true;
+          }),
+        );
+        return yield* service.handle;
+      }).pipe(Effect.scoped, Effect.forkChild);
+      yield* Effect.promise(() => reading.promise);
+      const interruption = yield* Fiber.interrupt(operation).pipe(Effect.forkChild);
+      yield* Effect.yieldNow;
+      assert.isFalse(released);
+      releaseBody.resolve();
+      yield* Fiber.join(interruption);
+      assert.isTrue(released);
+      const users = yield* Effect.promise(() => auth.database.select().from(authSchema.user));
+      assert.lengthOf(users, 1);
+    }),
+  );
+
   it.effect("returns null when the request has no session", () =>
     Effect.gen(function* () {
       const auth = yield* fixture;

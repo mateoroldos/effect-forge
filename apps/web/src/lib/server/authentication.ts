@@ -67,11 +67,12 @@ export const make = Effect.fn("Authentication.make")(function* ({
     baseURL,
   } satisfies BetterAuthOptions);
 
+  // Better Auth cannot cancel its database promises. Let them settle before request cleanup.
   const handleRequest = Effect.fn("Authentication.handle")(function* (currentRequest: Request) {
     return yield* Effect.tryPromise({
       try: () => auth.handler(currentRequest),
       catch: () => new Unavailable({}),
-    });
+    }).pipe(Effect.uninterruptible);
   });
   const handle = handleRequest(request);
 
@@ -83,7 +84,7 @@ export const make = Effect.fn("Authentication.make")(function* ({
           query: { disableRefresh: true, disableCookieCache: true },
         }),
       catch: () => new Unavailable({}),
-    });
+    }).pipe(Effect.uninterruptible);
     const session = yield* decodeProviderSession(providerSession).pipe(
       Effect.mapError(() => new Unavailable({})),
     );
