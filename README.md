@@ -69,6 +69,18 @@ bun run build   # production builds
 
 CI runs `check` and `build`.
 
+### Database changes
+
+After changing Better Auth options, run `bun run auth:schema:generate`. After changing
+either authentication or application table definitions, run `bun run db:generate`.
+Review and commit the generated SQL and snapshots with the schema change. Add new
+migrations instead of editing migrations already applied to a database.
+
+`bun run db:check` uses the existing Drizzle configuration and a disposable copy of
+the migration history to detect missing migrations. It runs as part of `check`;
+PGlite tests apply the checked-in SQL. Alchemy applies that migration directory to
+Neon during provisioning, before the Worker uses the database.
+
 ## Deployment
 
 ```text

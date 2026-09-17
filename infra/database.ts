@@ -1,6 +1,5 @@
 import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
-import * as Drizzle from "alchemy/Drizzle";
 import * as Neon from "alchemy/Neon";
 import { DateTime, Effect } from "effect";
 
@@ -12,28 +11,26 @@ const branchPolicy = Effect.fn(function* (stage: string) {
   return {};
 });
 
-/** Generates PostgreSQL migrations before provisioning the database. */
+const migrations = "./adapters/database-postgres/drizzle";
+
+/** Applies checked-in PostgreSQL migrations while provisioning the database. */
 export const postgres = Effect.gen(function* () {
   const { stage } = yield* Alchemy.Stack;
-  const schema = yield* Drizzle.Schema("ApplicationDatabaseSchema", {
-    schema: "./adapters/database-postgres/src/schema.ts",
-    out: "./adapters/database-postgres/drizzle",
-  });
 
   const ownsProject = stage === "prod" || stage === "staging";
   const project = ownsProject
     ? yield* Neon.Project("ApplicationDatabase", {
         region: "aws-us-east-1",
-        migrations: schema,
+        migrations,
       })
     : yield* Neon.Project.ref("ApplicationDatabase", { stage: "staging" });
   const branch = yield* Neon.Branch("ApplicationDatabaseBranch", {
     project,
-    migrations: schema,
+    migrations,
     ...(yield* branchPolicy(stage)),
   });
 
-  return { branch, project, schema };
+  return { branch, project };
 });
 
 /**
