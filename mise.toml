@@ -1,5 +1,6 @@
 [tools]
 bun = "1.4.0"
+node = "24"
 
 [env]
 ALCHEMY_PROFILE = "effect-forge"
@@ -7,4 +8,4 @@ ALCHEMY_STAGE = "dev_{{ env.USER }}_{{ config_root | basename }}"
 
 [tasks.setup]
 description = "Bootstrap a fresh checkout"
-run = ["mise install", "bun install"]
+run = ["mise install", "bun install", "bun run --cwd apps/web playwright install chromium"]
