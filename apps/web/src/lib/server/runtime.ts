@@ -17,7 +17,7 @@ export interface Input {
 
 /** Builds all stable services owned by one SvelteKit request. */
 export const make = ({ baseURL, database, request, secret }: Input) => {
-  const postgres = Postgres.sqlLayer(database.connectionString);
+  const postgres = Postgres.applicationLayer(database.connectionString);
   const persistence = PersistencePostgres.layer.pipe(Layer.provide(postgres));
   const application = Application.layer.pipe(
     Layer.provide(Layer.merge(NodeCrypto.layer, persistence)),
@@ -36,7 +36,7 @@ export const make = ({ baseURL, database, request, secret }: Input) => {
         secret,
       });
     }),
-  ).pipe(Layer.provide(Postgres.authLayer(database.connectionString)));
+  ).pipe(Layer.provide(Postgres.authenticationLayer(database.connectionString)));
 
   return ManagedRuntime.make(Layer.merge(application, authentication));
 };

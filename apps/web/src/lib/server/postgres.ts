@@ -12,7 +12,7 @@ class AuthConnectionError extends Schema.TaggedError<AuthConnectionError>()(
   {},
 ) {}
 
-export const authLayer = (connectionString: string) =>
+export const authenticationLayer = (connectionString: string) =>
   Layer.effect(
     AuthClient,
     Effect.acquireRelease(
@@ -34,7 +34,7 @@ export const authLayer = (connectionString: string) =>
     ),
   );
 
-export const sqlLayer = (connectionString: string) =>
+export const applicationLayer = (connectionString: string) =>
   PgClient.layerFrom(
     PgClient.makeClient({
       url: Redacted.make(connectionString),
