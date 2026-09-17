@@ -28,7 +28,7 @@
     "pg": "catalog:"
   },
   "devDependencies": {
-    "@alchemy.run/frontend-frameworks": "2.0.0-beta.76",
+    "@alchemy.run/frontend-frameworks": "2.0.0-beta.77",
     "@effect/vitest": "catalog:",
     "@electric-sql/pglite": "catalog:",
     "@sveltejs/kit": "3.0.0-next.25",

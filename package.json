@@ -57,7 +57,7 @@
     "@tailwindcss/vite": "4.3.3",
     "@types/bun": "1.3.14",
     "@types/pg": "8.20.0",
-    "alchemy": "2.0.0-beta.76",
+    "alchemy": "2.0.0-beta.77",
     "auth": "1.7.4",
     "better-auth": "1.7.4",
     "drizzle-kit": "1.0.0-rc.5-ab785fc",
@@ -69,7 +69,7 @@
     "vitest": "4.1.11"
   },
   "patchedDependencies": {
-    "@alchemy.run/frontend-frameworks@2.0.0-beta.76": "patches/@alchemy.run%2Ffrontend-frameworks@2.0.0-beta.76.patch",
-    "@alchemy.run/cloudflare-runtime@2.0.0-beta.76": "patches/@alchemy.run%2Fcloudflare-runtime@2.0.0-beta.76.patch"
+    "@alchemy.run/cloudflare-runtime@2.0.0-beta.77": "patches/@alchemy.run%2Fcloudflare-runtime@2.0.0-beta.77.patch",
+    "@alchemy.run/frontend-frameworks@2.0.0-beta.77": "patches/@alchemy.run%2Ffrontend-frameworks@2.0.0-beta.77.patch"
   }
 }
