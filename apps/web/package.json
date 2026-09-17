@@ -11,7 +11,8 @@
     "build": "vite build",
     "check-types": "svelte-kit sync && svelte-check --tsgo --tsconfig ./tsconfig.json",
     "prepare": "svelte-kit sync",
-    "test": "vitest run"
+    "test": "vitest run src",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "catalog:",
@@ -31,9 +32,11 @@
     "@alchemy.run/frontend-frameworks": "2.0.0-beta.77",
     "@effect/vitest": "catalog:",
     "@electric-sql/pglite": "catalog:",
+    "@playwright/test": "1.63.0",
     "@sveltejs/kit": "3.0.0-next.25",
     "@sveltejs/vite-plugin-svelte": "7.3.0",
     "@tailwindcss/vite": "catalog:",
+    "@testcontainers/postgresql": "12.1.0",
     "@types/pg": "catalog:",
     "@typescript/native": "npm:typescript@7.0.2",
     "svelte": "catalog:",

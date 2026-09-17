@@ -67,7 +67,17 @@ bun run check   # formatting, lint, types, and tests
 bun run build   # production builds
 ```
 
-CI runs `check` and `build`.
+CI runs `check`, `build`, and the browser acceptance test.
+
+### Browser acceptance test
+
+With Docker running:
+
+```sh
+bun run test:e2e
+```
+
+This runs the authentication journey against the built app and a disposable PostgreSQL database.
 
 ### Database changes
 

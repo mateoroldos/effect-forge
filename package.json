@@ -25,7 +25,8 @@
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
     "prepare": "./scripts/prepare-effect.sh && effect-tsgo patch --oxlint",
-    "test": "turbo test && vitest run infra"
+    "test": "turbo test && vitest run infra",
+    "test:e2e": "bun run --cwd apps/web test:e2e"
   },
   "dependencies": {
     "@effect/platform-bun": "catalog:",

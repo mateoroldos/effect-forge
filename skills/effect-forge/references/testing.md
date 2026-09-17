@@ -22,6 +22,8 @@ Provide substitute Layers instead of mocking modules.
 - Use Effect test clocks and deterministic services for time and randomness.
 - Exercise HTTP capabilities through the production router as Fetch-compatible `Request → Response` handlers.
 - Exercise remote functions and endpoints through built SvelteKit server boundaries.
+- Run representative Playwright flows against the built app, Cloudflare adapter, and
+  disposable PostgreSQL; use accessible locators and no production test hooks.
 - Run a shared port contract suite against each adapter when several implementations exist.
 
 Choose Layer provisioning by lifecycle and isolation:
@@ -68,9 +70,9 @@ A future public API test and a SvelteKit test may cover the same capability boun
 ```bash
 bun run check-types
 bun run test
-bun run test:integration
+bun run test:e2e
 bun run check
-bun run check-arch
+bun run check:architecture
 bun run knip
 ```
 
