@@ -1,7 +1,6 @@
 import WebWorker from "./apps/web/worker.ts";
 import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
-import * as Drizzle from "alchemy/Drizzle";
 import * as GitHub from "alchemy/GitHub";
 import * as Neon from "alchemy/Neon";
 import * as Output from "alchemy/Output";
@@ -10,8 +9,7 @@ import { Config, Effect, Layer } from "effect";
 export default Alchemy.Stack(
   "EffectForge",
   {
-    // Existing stages need this provider to retire their former Drizzle.Schema state row.
-    providers: Layer.mergeAll(Drizzle.providers(), Neon.providers()).pipe(
+    providers: Neon.providers().pipe(
       Layer.provideMerge(Cloudflare.providers()),
       Layer.provideMerge(GitHub.providers()),
     ),

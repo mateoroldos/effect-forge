@@ -33,7 +33,7 @@ export const authenticationLayer = (connectionString: string) =>
         Effect.tryPromise({
           try: () => client.connect(),
           catch: () => new AuthConnectionError(),
-        }).pipe(Effect.orDie),
+        }),
       ),
     ),
   );

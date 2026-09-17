@@ -3,6 +3,7 @@ import { EmailAddress } from "@effect-forge/domain/email-address";
 import { Principal, UserId } from "@effect-forge/domain/identity";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { betterAuth, type BetterAuthOptions } from "better-auth/minimal";
+import type { PgAsyncDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import { Context, Effect, Layer, Redacted, Schema } from "effect";
 import { betterAuthOptions } from "./better-auth-options.ts";
 
@@ -45,7 +46,7 @@ export class Service extends Context.Service<Service, Interface>()(
 
 export interface Options {
   readonly baseURL: string;
-  readonly database: Parameters<typeof drizzleAdapter>[0];
+  readonly database: PgAsyncDatabase<PgQueryResultHKT, typeof authSchema.authRelations>;
   readonly request: Request;
   readonly secret: Redacted.Redacted<string>;
 }
