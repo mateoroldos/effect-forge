@@ -16,13 +16,17 @@ export const authenticationLayer = (connectionString: string) =>
   Layer.effect(
     AuthClient,
     Effect.acquireRelease(
-      Effect.sync(
-        () =>
-          new Client({
-            connectionString,
-            types: PersistencePostgres.typeParsers,
-          }),
-      ),
+      Effect.sync(() => {
+        const client = new Client({
+          connectionString,
+          types: PersistencePostgres.typeParsers,
+        });
+        // pg emits socket errors independently of query promises. Never print driver payloads.
+        client.on("error", () =>
+          Effect.runSync(Effect.logError("Authentication PostgreSQL connection failed")),
+        );
+        return client;
+      }),
       (client) => Effect.promise(() => client.end()).pipe(Effect.timeoutOption(1000)),
     ).pipe(
       Effect.tap((client) =>

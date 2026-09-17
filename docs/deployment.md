@@ -22,7 +22,7 @@ A maintainer completes this once before enabling deployment.
 Use Alchemy's token helper instead of assembling policies in the dashboard:
 
 ```sh
-bun alchemy cloudflare create-token --name effect-forge-admin
+bun alchemy provider cloudflare token --name effect-forge-admin
 ```
 
 Alchemy asks for the Global API Key once, resolves the account's current permission groups, creates the token, and verifies it. The Global API Key is not stored. Select this account and grant:
@@ -42,7 +42,7 @@ Alchemy asks for the Global API Key once, resolves the account's current permiss
 ### 2. Configure the admin profile
 
 ```sh
-bun alchemy login stacks/github.ts --profile admin --configure
+bun alchemy profile edit --config stacks/github.ts --profile admin
 ```
 
 Choose:
@@ -50,7 +50,7 @@ Choose:
 - **Cloudflare:** `API Token`, then paste the bootstrap token.
 - **GitHub:** `gh-cli` when available.
 
-Alchemy stores both credentials under the local `admin` profile. This profile is privileged; use it only with `stacks/github.ts`. Normal development uses the default profile.
+Alchemy stores both credentials under the local `admin` profile. This profile is privileged; use it only with `stacks/github.ts`. Normal development uses the `effect-forge` profile configured by `mise`.
 
 Neon profiles can store an API key for local deployments, but Alchemy does not expose that stored value to a stack that must copy it into GitHub. Create an ignored `.env` for this one pass-through secret:
 
