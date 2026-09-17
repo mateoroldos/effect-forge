@@ -50,7 +50,7 @@ Bootstrap a checkout and authenticate the local Alchemy profile:
 ```sh
 mise trust
 mise run setup
-bun alchemy login --configure
+bun alchemy profile edit
 ```
 
 ```sh
