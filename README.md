@@ -57,7 +57,7 @@ bun alchemy login --configure
 bun run dev
 ```
 
-`mise` derives `STAGE` from the user and checkout directory. Each clone, `git worktree`, or `jj workspace` therefore gets its own Neon branch and local Alchemy stage, branched from the staging project — so staging has to exist first.
+`mise` derives `ALCHEMY_STAGE` from the user and checkout directory. Each clone, `git worktree`, or `jj workspace` therefore gets its own Neon branch and local Alchemy stage, branched from the staging project — so staging has to exist first.
 
 ## Validation
 

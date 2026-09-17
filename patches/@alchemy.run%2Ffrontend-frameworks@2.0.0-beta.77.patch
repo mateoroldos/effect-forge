@@ -1,7 +1,7 @@
-diff --git a/dist/_chunks/SvelteKit-Dmmwl3z4.js b/dist/_chunks/SvelteKit-Dmmwl3z4.js
-index 1e15c41ac4f54cd1d2937c320cb4d1a778aa1e9a..2a5267618720f7affcd15ada1f60b678fd471ec6 100644
---- a/dist/_chunks/SvelteKit-Dmmwl3z4.js
-+++ b/dist/_chunks/SvelteKit-Dmmwl3z4.js
+diff --git a/dist/_chunks/SvelteKit-Bdq_hb-4.js b/dist/_chunks/SvelteKit-Bdq_hb-4.js
+index 9a55e72ad043aeb6f8def559b6bb4f3ee41d1de1..a0ed636712645689694e12f7f486874e97a43621 100644
+--- a/dist/_chunks/SvelteKit-Bdq_hb-4.js
++++ b/dist/_chunks/SvelteKit-Bdq_hb-4.js
 @@ -331,6 +331,7 @@ const make = Effect.fnUntraced(function* (options) {
  			dev: {
  				env: options?.dev?.env,
@@ -10,10 +10,10 @@ index 1e15c41ac4f54cd1d2937c320cb4d1a778aa1e9a..2a5267618720f7affcd15ada1f60b678
  				services: options?.dev?.services
  			}
  		});
-diff --git a/dist/_chunks/cloudflare-C-ipEOR6.js b/dist/_chunks/cloudflare-C-ipEOR6.js
-index fccb9ac0948e429e94a2c1d92e97859d06c49486..b39101ab332bd80647252330eb7ab654c4e7f6d8 100644
---- a/dist/_chunks/cloudflare-C-ipEOR6.js
-+++ b/dist/_chunks/cloudflare-C-ipEOR6.js
+diff --git a/dist/_chunks/cloudflare-UpQGzQtR.js b/dist/_chunks/cloudflare-UpQGzQtR.js
+index a3cba32dd4d39d12c4cb62a70d28d2f63f907554..6862d1fdc01f71c76725f1f1ced776f0df2e6036 100644
+--- a/dist/_chunks/cloudflare-UpQGzQtR.js
++++ b/dist/_chunks/cloudflare-UpQGzQtR.js
 @@ -335,6 +335,7 @@ const openPlatformProxy = async (options) => {
  		...options.compatibilityDate !== void 0 ? { compatibilityDate: options.compatibilityDate } : void 0,
  		...options.compatibilityFlags !== void 0 ? { compatibilityFlags: [...options.compatibilityFlags] } : void 0,
@@ -39,7 +39,7 @@ index fccb9ac0948e429e94a2c1d92e97859d06c49486..b39101ab332bd80647252330eb7ab654
  			compatibilityDate: config.compatibilityDate,
  			compatibilityFlags: config.compatibilityFlags
 diff --git a/dist/sveltekit/source.js b/dist/sveltekit/source.js
-index f4bc556c5027fbd9e3c468b30468c2ae0227eeb1..6e9891b958972cc3a2b04d8392d17d5dd68927fa 100644
+index 791e2a90d196d70d982d8a2425e6c33121a9488f..ce0b9bdab796a3f0acd6fe39d0a5f8327444622f 100644
 --- a/dist/sveltekit/source.js
 +++ b/dist/sveltekit/source.js
 @@ -310,6 +310,7 @@ const makeSvelteKitSource = (options) => {

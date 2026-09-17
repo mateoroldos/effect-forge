@@ -4,12 +4,12 @@ These patches are temporary, version-specific corrections to published dependenc
 
 ## Alchemy SvelteKit Hyperdrive development support
 
-Alchemy `2.0.0-beta.76` resolves local Hyperdrive origins into its Worker development context, but the SvelteKit source provider does not forward them to the Cloudflare platform proxy. The platform proxy also omits Hyperdrive origins when it starts its internal Worker runtime. As a result, accessing a SvelteKit route that uses a Hyperdrive binding fails locally with `No hyperdrive origin was provided`.
+Alchemy `2.0.0-beta.77` resolves local Hyperdrive origins into its Worker development context, but the SvelteKit source provider does not forward them to the Cloudflare platform proxy. The platform proxy also omits Hyperdrive origins when it starts its internal Worker runtime. As a result, accessing a SvelteKit route that uses a Hyperdrive binding fails locally with `No hyperdrive origin was provided`.
 
 The two patches form one fix:
 
-- `@alchemy.run%2Ffrontend-frameworks@2.0.0-beta.76.patch` carries the origin map from the SvelteKit source provider through its development adapter to `getPlatformProxy`.
-- `@alchemy.run%2Fcloudflare-runtime@2.0.0-beta.76.patch` adds that map to the platform proxy options and forwards it to `Runtime.start`.
+- `@alchemy.run%2Ffrontend-frameworks@2.0.0-beta.77.patch` carries the origin map from the SvelteKit source provider through its development adapter to `getPlatformProxy`.
+- `@alchemy.run%2Fcloudflare-runtime@2.0.0-beta.77.patch` adds that map to the platform proxy options and forwards it to `Runtime.start`.
 
 This matches Alchemy's existing Vite, Astro, Waku, and Next.js development paths. It does not change production Hyperdrive configuration or application database composition.
 
