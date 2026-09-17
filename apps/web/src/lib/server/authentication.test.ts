@@ -134,6 +134,23 @@ describe("Authentication", () => {
     }),
   );
 
+  it.effect("sign-out revokes the session for subsequent requests", () =>
+    Effect.gen(function* () {
+      const auth = yield* fixture;
+      const cookie = yield* auth.signUp();
+      assert.isNotNull(yield* auth.authenticate(cookie));
+
+      const service = yield* auth.authentication(
+        request("/api/auth/sign-out", {
+          method: "POST",
+          headers: { cookie, origin: baseURL.origin },
+        }),
+      );
+      assert.strictEqual((yield* service.handle).status, 200);
+      assert.isNull(yield* auth.authenticate(cookie));
+    }),
+  );
+
   it.effect("fails closed when provider data is invalid", () =>
     Effect.gen(function* () {
       const auth = yield* fixture;
