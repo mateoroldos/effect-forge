@@ -10,6 +10,7 @@ import { Config, Effect, Layer } from "effect";
 export default Alchemy.Stack(
   "EffectForge",
   {
+    // Existing stages need this provider to retire their former Drizzle.Schema state row.
     providers: Layer.mergeAll(Drizzle.providers(), Neon.providers()).pipe(
       Layer.provideMerge(Cloudflare.providers()),
       Layer.provideMerge(GitHub.providers()),
