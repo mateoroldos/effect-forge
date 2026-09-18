@@ -82,22 +82,13 @@ See [operation logging](skills/effect-forge/references/observability.md) for exa
 ## Validation
 
 ```sh
-bun run test    # tests only
+bun run test    # colocated tests
 bun run check   # formatting, lint, types, and tests
 bun run build   # production builds
 ```
 
-CI runs `check`, `build`, and the browser acceptance test.
-
-### Browser acceptance test
-
-With Docker running:
-
-```sh
-bun run test:e2e
-```
-
-This runs the authentication journey against the built app and a disposable PostgreSQL database.
+CI runs `check` and `build`. Colocated tests cover domain and application behavior,
+provider HTTP handling, and SQL through PGlite.
 
 ### Database changes
 

@@ -16,8 +16,7 @@
     },
     "apps/web": {
       // SvelteKit discovers the explicit environment contract by convention.
-      // Playwright starts the isolated preview server through its webServer command.
-      "entry": ["auth.config.ts", "src/env.ts", "src/lib/server/runtime.ts", "tests/server.ts"],
+      "entry": ["auth.config.ts", "src/env.ts", "src/lib/server/runtime.ts"],
       // svelte-check resolves this compiler through `--tsgo`; knip cannot see
       // dependencies selected by a command-line flag.
       "ignoreDependencies": ["@typescript/native"],

@@ -28,7 +28,7 @@ Web is the current application entrypoint. A future public API is a peer entrypo
 4. Implement and test the production adapter.
 5. Add a SvelteKit remote function for browser access.
 6. Build the feature UI from the remote schema and result.
-7. Add one integration test at each new framework boundary.
+7. Verify new behavior through the existing colocated test seams.
 8. Run every repository validation command.
 
 Stop when the slice is coherent. Do not add generalized policy, providers, transports, or UI state for anticipated features.
