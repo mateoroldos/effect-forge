@@ -5,6 +5,7 @@ import { Effect, Layer } from "effect";
 import { Database } from "../internal/database.ts";
 import { migrationConfig } from "../migrations.ts";
 import { WorkspaceStorePostgres } from "../workspace/workspace-store-postgres.ts";
+import { TodoStorePostgres } from "../todo/todo-store-postgres.ts";
 
 /** Provides the migrated test database for adapter fixtures that insert prerequisite records. */
 export const databaseLayer = Layer.effect(
@@ -17,6 +18,8 @@ export const databaseLayer = Layer.effect(
 ).pipe(Layer.provide(PgliteClient.layer()));
 
 /** Provides every PostgreSQL persistence port through an isolated migrated PGlite database. */
-export const layer = WorkspaceStorePostgres.layer.pipe(Layer.provide(databaseLayer));
+export const layer = Layer.merge(WorkspaceStorePostgres.layer, TodoStorePostgres.layer).pipe(
+  Layer.provide(databaseLayer),
+);
 
 export * as PersistencePglite from "./persistence-pglite.ts";

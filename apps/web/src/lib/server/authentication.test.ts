@@ -1,11 +1,15 @@
 import { assert, describe, it } from "@effect/vitest";
+import { OrganizationMembership } from "@effect-forge/core/organization-membership";
+import { UserId } from "@effect-forge/domain/identity";
+import { OrganizationId, OrganizationMember } from "@effect-forge/domain/organization";
 import * as authSchema from "@effect-forge/database-postgres/auth-schema";
 import { PgliteDatabase } from "@effect-forge/database-postgres/test/pglite-database";
-import { eq } from "drizzle-orm";
-import { Effect, Fiber, Redacted, Result, Schema } from "effect";
+import { eq, sql } from "drizzle-orm";
+import { DateTime, Effect, Fiber, Option, Redacted, Result, Schema } from "effect";
 import { Authentication } from "./authentication.ts";
 
 const baseURL = new URL("http://localhost:5173");
+const createdAt = DateTime.toDateUtc(DateTime.makeUnsafe(0));
 const secret = Redacted.make("test-secret-value-with-at-least-32-characters");
 const signUpBody =
   '{"name":"Ada Lovelace","email":"ada@example.com","password":"correct-horse-battery-staple"}';
@@ -49,6 +53,99 @@ const fixture = Effect.gen(function* () {
 });
 
 describe("Authentication", () => {
+  describe("organization membership", () => {
+    const organizationId = OrganizationId.make("org-1");
+    const userId = UserId.make("user-1");
+    const membershipFixture = Effect.gen(function* () {
+      const auth = yield* fixture;
+      yield* Effect.promise(() =>
+        auth.database
+          .insert(authSchema.user)
+          .values({ id: userId, name: "Ada", email: "ada@example.com" }),
+      );
+      yield* Effect.promise(() =>
+        auth.database
+          .insert(authSchema.organization)
+          .values({ id: organizationId, name: "Engine", slug: "engine", createdAt }),
+      );
+      yield* Effect.promise(() =>
+        auth.database.insert(authSchema.member).values({
+          id: "member-1",
+          userId,
+          organizationId,
+          role: "owner",
+          createdAt,
+        }),
+      );
+      const service = yield* auth.authentication(request("/organizations"));
+      return { ...auth, service };
+    });
+
+    it.effect.each([
+      { role: "owner", roles: ["owner"] },
+      { role: "admin", roles: ["admin"] },
+      { role: "member", roles: ["member"] },
+      { role: "admin,member", roles: ["admin", "member"] },
+    ] as const)("decodes provider role $role", ({ role, roles }) =>
+      Effect.gen(function* () {
+        const { database, service } = yield* membershipFixture;
+        yield* Effect.promise(() => database.update(authSchema.member).set({ role }));
+        assert.deepEqual(
+          yield* service.member(organizationId, userId),
+          Option.some(OrganizationMember.make({ organizationId, userId, roles })),
+        );
+      }),
+    );
+
+    it.effect("looks up the explicit organization/user pair without a session", () =>
+      Effect.gen(function* () {
+        const { service } = yield* membershipFixture;
+        assert.isNull(yield* service.authenticate);
+        assert.deepEqual(
+          yield* service.member(organizationId, userId),
+          Option.some(OrganizationMember.make({ organizationId, userId, roles: ["owner"] })),
+        );
+        assert.isTrue(Option.isNone(yield* service.member(OrganizationId.make("other"), userId)));
+        assert.isTrue(Option.isNone(yield* service.member(organizationId, UserId.make("other"))));
+      }),
+    );
+
+    it.effect("rereads membership after revocation in the same and next request", () =>
+      Effect.gen(function* () {
+        const { database, service, authentication } = yield* membershipFixture;
+        assert.isTrue(Option.isSome(yield* service.member(organizationId, userId)));
+        yield* Effect.promise(() => database.delete(authSchema.member));
+        assert.isTrue(Option.isNone(yield* service.member(organizationId, userId)));
+        const nextRequest = yield* authentication(request("/organizations"));
+        assert.isTrue(Option.isNone(yield* nextRequest.member(organizationId, userId)));
+      }),
+    );
+
+    it.effect.each(["unsupported", "", "owner,unsupported"])(
+      "rejects malformed provider roles instead of granting access: %s",
+      (role) =>
+        Effect.gen(function* () {
+          const { database, service } = yield* membershipFixture;
+          yield* Effect.promise(() => database.update(authSchema.member).set({ role }));
+          assert.instanceOf(
+            yield* service.member(organizationId, userId).pipe(Effect.flip),
+            OrganizationMembership.Unavailable,
+          );
+        }),
+    );
+
+    it.effect("preserves a database failure as Unavailable rather than missing membership", () =>
+      Effect.gen(function* () {
+        const { database, service } = yield* membershipFixture;
+        yield* Effect.promise(() => database.execute(sql`drop table member`));
+        assert.instanceOf(
+          yield* service.member(organizationId, userId).pipe(Effect.flip),
+          OrganizationMembership.Unavailable,
+        );
+      }),
+    );
+  });
+
   it.effect("settles provider work before interruption releases request resources", () =>
     Effect.gen(function* () {
       const auth = yield* fixture;
