@@ -2,13 +2,16 @@ import { assert, describe, it } from "@effect/vitest";
 import * as authSchema from "@effect-forge/database-postgres/auth-schema";
 import { PgliteDatabase } from "@effect-forge/database-postgres/test/pglite-database";
 import { eq } from "drizzle-orm";
-import { Effect, Fiber, Redacted, Result } from "effect";
+import { Effect, Fiber, Redacted, Result, Schema } from "effect";
 import { Authentication } from "./authentication.ts";
 
 const baseURL = new URL("http://localhost:5173");
 const secret = Redacted.make("test-secret-value-with-at-least-32-characters");
 const signUpBody =
   '{"name":"Ada Lovelace","email":"ada@example.com","password":"correct-horse-battery-staple"}';
+const encodeBody = Schema.encodeSync(
+  Schema.fromJsonString(Schema.Record(Schema.String, Schema.String)),
+);
 
 const request = (path: string, init?: RequestInit & { duplex?: "half" }) =>
   new Request(new URL(path, baseURL), init);
@@ -144,5 +147,70 @@ describe("Authentication", () => {
         assert.deepEqual(result.failure, new Authentication.Unavailable({}));
       }
     }),
+  );
+
+  it.effect(
+    "creates organizations with owner membership and rejects another user's selection",
+    () =>
+      Effect.gen(function* () {
+        const auth = yield* fixture;
+        const cookie = yield* auth.signUp();
+        const call = Effect.fnUntraced(function* (
+          path: string,
+          body: Readonly<Record<string, string>>,
+          session = cookie,
+        ) {
+          const service = yield* auth.authentication(
+            request(`/api/auth/organization/${path}`, {
+              method: "POST",
+              headers: {
+                "content-type": "application/json",
+                origin: baseURL.origin,
+                cookie: session,
+              },
+              body: encodeBody(body),
+            }),
+          );
+          return yield* service.handle;
+        });
+        const created = yield* call("create", {
+          name: "Analytical Engine",
+          slug: "analytical-engine",
+        });
+        assert.strictEqual(created.status, 200);
+        const organization = yield* Effect.promise(() => created.json()).pipe(
+          Effect.flatMap(Schema.decodeUnknownEffect(Schema.Struct({ id: Schema.String }))),
+        );
+        const members = yield* Effect.promise(() => auth.database.select().from(authSchema.member));
+        assert.lengthOf(members, 1);
+        assert.strictEqual(members[0]?.role, "owner");
+        assert.strictEqual(members[0]?.organizationId, organization.id);
+
+        assert.strictEqual(
+          (yield* call("set-active", { organizationId: organization.id })).status,
+          200,
+        );
+        const other = yield* auth.authentication(
+          request("/api/auth/sign-up/email", {
+            method: "POST",
+            headers: { "content-type": "application/json", origin: baseURL.origin },
+            body: encodeBody({
+              name: "Grace",
+              email: "grace@example.com",
+              password: "correct-horse-battery-staple",
+            }),
+          }),
+        );
+        const response = yield* other.handle;
+        assert.strictEqual(response.status, 200);
+        const otherCookie = response.headers
+          .getSetCookie()
+          .map((value) => value.split(";")[0])
+          .join("; ");
+        assert.strictEqual(
+          (yield* call("set-active", { organizationId: organization.id }, otherCookie)).status,
+          403,
+        );
+      }),
   );
 });
