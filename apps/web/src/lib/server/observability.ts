@@ -28,6 +28,16 @@ export const operation =
               : Cause.hasInterruptsOnly(exit.cause)
                 ? "cancelled"
                 : "failure";
+            if (Exit.isFailure(exit)) {
+              yield* Effect.annotateCurrentSpan(
+                "error.kind",
+                Cause.hasDies(exit.cause)
+                  ? "defect"
+                  : outcome === "cancelled"
+                    ? "interruption"
+                    : "typed",
+              );
+            }
             yield* (outcome === "failure" ? Effect.logError : Effect.logInfo)(
               "application.operation.completed",
             ).pipe(

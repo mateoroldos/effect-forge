@@ -1,8 +1,23 @@
 import { decodeAuthOrigin } from "#lib/server/auth-origin.ts";
 import { decodeAuthSecret } from "#lib/server/auth-secret.ts";
 import { WebRuntime } from "#lib/server/runtime.ts";
-import type { Handle } from "@sveltejs/kit/hooks";
+import type { CaughtError, Handle, HandleServerError } from "@sveltejs/kit/hooks";
+import { Cause } from "effect";
 import { dev } from "$app/env";
+
+export const handleError = (({ kind, error, event }: CaughtError) => {
+  if (kind !== "unknown") return;
+  const cancelled =
+    event.request.signal.aborted &&
+    error instanceof Error &&
+    Cause.isCause(error.cause) &&
+    Cause.hasInterruptsOnly(error.cause);
+  if (!cancelled) {
+    // oxlint-disable-next-line effecttsgo/global-console -- this boundary must report failures even when the Effect runtime is unavailable.
+    console.error(error);
+  }
+  return { message: "Something went wrong. Refresh before trying again." };
+}) satisfies HandleServerError;
 
 export const handle: Handle = ({ event, resolve }) => {
   const platform = event.platform;
