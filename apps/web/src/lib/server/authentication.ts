@@ -1,10 +1,12 @@
 import * as authSchema from "@effect-forge/database-postgres/auth-schema";
+import { OrganizationMembership } from "@effect-forge/core/organization-membership";
 import { EmailAddress } from "@effect-forge/domain/email-address";
 import { Principal, UserId } from "@effect-forge/domain/identity";
+import { OrganizationId, OrganizationMember } from "@effect-forge/domain/organization";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { betterAuth, type BetterAuthOptions } from "better-auth/minimal";
 import type { PgAsyncDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
-import { Context, Effect, Layer, Redacted, Schema } from "effect";
+import { Context, Effect, Layer, Option, Redacted, Schema } from "effect";
 import { betterAuthOptions } from "./better-auth-options.ts";
 
 export const Viewer = Schema.Struct({
@@ -34,8 +36,15 @@ const ProviderSession = Schema.NullOr(
   }),
 );
 const decodeProviderSession = Schema.decodeUnknownEffect(ProviderSession);
+const ProviderMember = Schema.NullOr(
+  Schema.Struct({
+    organizationId: OrganizationId,
+    userId: UserId,
+    role: Schema.String,
+  }),
+);
 
-export interface Interface {
+export interface Interface extends OrganizationMembership.Interface {
   readonly authenticate: Effect.Effect<AuthenticatedIdentity | null, Unavailable>;
   readonly handle: Effect.Effect<Response, Unavailable>;
 }
@@ -97,11 +106,45 @@ export const make = Effect.fnUntraced(function* ({ baseURL, database, request, s
     Effect.withSpan("Authentication.authenticate", { attributes: { "app.auth.reused": true } }),
   );
 
-  return Service.of({ authenticate, handle });
+  const member = Effect.fn("Authentication.member")(
+    function* (organizationId: OrganizationId, userId: UserId) {
+      // Read membership without re-entering session middleware or refreshing cookies.
+      const raw: unknown = yield* Effect.tryPromise({
+        try: () =>
+          auth.$context.then(({ adapter }) =>
+            adapter.findOne({
+              model: "member",
+              where: [
+                { field: "organizationId", value: organizationId },
+                { field: "userId", value: userId },
+              ],
+            }),
+          ),
+        catch: (cause) => new OrganizationMembership.Unavailable({ cause }),
+      }).pipe(Effect.uninterruptible);
+      const row = yield* Schema.decodeUnknownEffect(ProviderMember)(raw);
+      if (row === null) return Option.none();
+      const membership = yield* Schema.decodeUnknownEffect(OrganizationMember)({
+        organizationId: row.organizationId,
+        userId: row.userId,
+        roles: row.role.split(","),
+      });
+      return Option.some(membership);
+    },
+    Effect.catchTag("SchemaError", (cause) => new OrganizationMembership.Unavailable({ cause })),
+  );
+
+  return Service.of({ authenticate, handle, member });
 });
 
 /** Builds request-scoped authentication over an acquired Drizzle database. */
-export const layer = (options: Options): Layer.Layer<Service> =>
-  Layer.effect(Service, make(options));
+export const layer = (options: Options): Layer.Layer<Service | OrganizationMembership.Service> =>
+  Layer.effectContext(
+    make(options).pipe(
+      Effect.map((service) =>
+        Context.make(Service, service).pipe(Context.add(OrganizationMembership.Service, service)),
+      ),
+    ),
+  );
 
 export * as Authentication from "./authentication.ts";

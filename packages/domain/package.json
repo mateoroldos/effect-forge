@@ -6,6 +6,8 @@
   "exports": {
     "./email-address": "./src/email-address/email-address.ts",
     "./identity": "./src/identity/identity.ts",
+    "./organization": "./src/organization/organization.ts",
+    "./todo": "./src/todo/todo.ts",
     "./workspace": "./src/workspace/workspace.ts",
     "./workspace-member": "./src/workspace/workspace-member.ts"
   },

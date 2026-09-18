@@ -53,7 +53,8 @@ export const make = ({
 
   const route = routeId === null ? null : routeId.replace(/\/\([^/)]+\)(?=\/|$)/g, "") || "/";
   const runtime = ManagedRuntime.make(
-    Layer.merge(application, authentication).pipe(
+    application.pipe(
+      Layer.provideMerge(authentication),
       Layer.provideMerge(
         Layer.span(route === null ? "Web.requestScope" : `Web.requestScope ${route}`, {
           attributes: {
