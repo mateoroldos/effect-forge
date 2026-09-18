@@ -2,11 +2,16 @@ import * as authSchema from "@effect-forge/database-postgres/auth-schema";
 import { OrganizationMembership } from "@effect-forge/core/organization-membership";
 import { EmailAddress } from "@effect-forge/domain/email-address";
 import { Principal, UserId } from "@effect-forge/domain/identity";
-import { OrganizationId, OrganizationMember } from "@effect-forge/domain/organization";
+import {
+  Organization,
+  OrganizationId,
+  OrganizationMember,
+} from "@effect-forge/domain/organization";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { betterAuth, type BetterAuthOptions } from "better-auth/minimal";
+import { asc, eq } from "drizzle-orm";
 import type { PgAsyncDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
-import { Context, Effect, Layer, Option, Redacted, Schema } from "effect";
+import { Cache, Context, Effect, Layer, Option, Redacted, Schema } from "effect";
 import { betterAuthOptions } from "./better-auth-options.ts";
 
 export const Viewer = Schema.Struct({
@@ -20,9 +25,13 @@ export interface AuthenticatedIdentity {
   readonly viewer: Viewer;
 }
 
-export class Unavailable extends Schema.TaggedError<Unavailable>()(
-  "Authentication.Unavailable",
-  {},
+export class Unavailable extends Schema.TaggedError<Unavailable>()("Authentication.Unavailable", {
+  cause: Schema.Defect(),
+}) {}
+
+export class OrganizationsUnavailable extends Schema.TaggedError<OrganizationsUnavailable>()(
+  "Authentication.OrganizationsUnavailable",
+  { cause: Schema.Defect() },
 ) {}
 
 const ProviderSession = Schema.NullOr(
@@ -44,9 +53,14 @@ const ProviderMember = Schema.NullOr(
   }),
 );
 
+const Organizations = Schema.Array(Organization);
+
 export interface Interface extends OrganizationMembership.Interface {
   readonly authenticate: Effect.Effect<AuthenticatedIdentity | null, Unavailable>;
   readonly handle: Effect.Effect<Response, Unavailable>;
+  readonly listOrganizations: (
+    userId: UserId,
+  ) => Effect.Effect<ReadonlyArray<Organization>, OrganizationsUnavailable>;
 }
 
 export class Service extends Context.Service<Service, Interface>()(
@@ -76,7 +90,7 @@ export const make = Effect.fnUntraced(function* ({ baseURL, database, request, s
   const handleRequest = Effect.fn("Authentication.handle")(function* (currentRequest: Request) {
     return yield* Effect.tryPromise({
       try: () => auth.handler(currentRequest),
-      catch: () => new Unavailable({}),
+      catch: (cause) => new Unavailable({ cause }),
     }).pipe(Effect.uninterruptible);
   });
   const handle = handleRequest(request);
@@ -89,10 +103,10 @@ export const make = Effect.fnUntraced(function* ({ baseURL, database, request, s
           headers: request.headers,
           query: { disableRefresh: true, disableCookieCache: true },
         }),
-      catch: () => new Unavailable({}),
+      catch: (cause) => new Unavailable({ cause }),
     }).pipe(Effect.uninterruptible);
     const session = yield* decodeProviderSession(providerSession).pipe(
-      Effect.mapError(() => new Unavailable({})),
+      Effect.mapError((cause) => new Unavailable({ cause })),
     );
     if (session === null) return null;
 
@@ -106,7 +120,7 @@ export const make = Effect.fnUntraced(function* ({ baseURL, database, request, s
     Effect.withSpan("Authentication.authenticate", { attributes: { "app.auth.reused": true } }),
   );
 
-  const member = Effect.fn("Authentication.member")(
+  const resolveMember = Effect.fnUntraced(
     function* (organizationId: OrganizationId, userId: UserId) {
       // Read membership without re-entering session middleware or refreshing cookies.
       const raw: unknown = yield* Effect.tryPromise({
@@ -134,10 +148,49 @@ export const make = Effect.fnUntraced(function* ({ baseURL, database, request, s
     Effect.catchTag("SchemaError", (cause) => new OrganizationMembership.Unavailable({ cause })),
   );
 
-  return Service.of({ authenticate, handle, member });
+  // The request owns this snapshot, including absence and lookup failures.
+  const memberships = yield* Cache.make({
+    capacity: Number.POSITIVE_INFINITY,
+    lookup: ([organizationId, userId]: readonly [OrganizationId, UserId]) =>
+      resolveMember(organizationId, userId),
+  });
+  const member = Effect.fn("Authentication.member")(function* (
+    organizationId: OrganizationId,
+    userId: UserId,
+  ) {
+    return yield* Cache.get(memberships, [organizationId, userId]);
+  });
+
+  const listOrganizations = Effect.fn("Authentication.listOrganizations")(function* (
+    userId: UserId,
+  ) {
+    const raw: unknown = yield* Effect.tryPromise({
+      // The provider adapter's joined findMany silently defaults to 100 rows.
+      try: () =>
+        database
+          .select({
+            id: authSchema.organization.id,
+            name: authSchema.organization.name,
+            slug: authSchema.organization.slug,
+          })
+          .from(authSchema.member)
+          .innerJoin(
+            authSchema.organization,
+            eq(authSchema.member.organizationId, authSchema.organization.id),
+          )
+          .where(eq(authSchema.member.userId, userId))
+          .orderBy(asc(authSchema.organization.name), asc(authSchema.organization.id)),
+      catch: (cause) => new OrganizationsUnavailable({ cause }),
+    }).pipe(Effect.uninterruptible);
+    return yield* Schema.decodeUnknownEffect(Organizations)(raw).pipe(
+      Effect.mapError((cause) => new OrganizationsUnavailable({ cause })),
+    );
+  });
+
+  return Service.of({ authenticate, handle, member, listOrganizations });
 });
 
-/** Builds request-scoped authentication over an acquired Drizzle database. */
+/** Shares one request-owned provider and its identity and membership snapshots. */
 export const layer = (options: Options): Layer.Layer<Service | OrganizationMembership.Service> =>
   Layer.effectContext(
     make(options).pipe(

@@ -13,5 +13,5 @@ export const fromURL = (url: {
   const candidate = url.searchParams.get("returnTo");
   return candidate !== null && Schema.is(ReturnPath)(candidate)
     ? candidate
-    : ReturnPath.make("/workspaces");
+    : ReturnPath.make("/organizations");
 };

@@ -8,6 +8,13 @@ export const OrganizationId = Schema.String.pipe(
 );
 export type OrganizationId = typeof OrganizationId.Type;
 
+export const Organization = Schema.Struct({
+  id: OrganizationId,
+  name: Schema.String,
+  slug: Schema.String,
+});
+export interface Organization extends Schema.Schema.Type<typeof Organization> {}
+
 export const OrganizationRole = Schema.Literals(["owner", "admin", "member"]);
 export type OrganizationRole = typeof OrganizationRole.Type;
 

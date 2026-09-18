@@ -28,7 +28,9 @@
 						: 'We couldn’t sign you in right now. Please try again.';
 				return;
 			}
-		} catch {
+		} catch (failure) {
+			// oxlint-disable-next-line effecttsgo/global-console -- Locally recovered failures do not reach Kit's error hook.
+			console.error(failure);
 			message = 'We couldn’t sign you in right now. Please try again.';
 			return;
 		} finally {
@@ -50,7 +52,7 @@
 			<h1 id="sign-in-title" class="mt-3 font-serif text-4xl leading-none tracking-[-0.035em]">
 				Sign in
 			</h1>
-			<p class="mt-3 text-sm leading-6 text-muted-foreground">Continue to your workspaces.</p>
+            <p class="mt-3 text-sm leading-6 text-muted-foreground">Continue to your organizations.</p>
 
 			<form class="mt-8 space-y-5" onsubmit={submit}>
 				<label class="block space-y-2 text-sm font-medium">

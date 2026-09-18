@@ -9,7 +9,7 @@ export interface Interface {
   ) => Effect.Effect<Option.Option<OrganizationMember>, Unavailable>;
 }
 
-/** Reads current membership from the tenant authority, independently of session selection. */
+/** Resolves membership from the tenant authority, independently of session selection. */
 export class Service extends Context.Service<Service, Interface>()(
   "@effect-forge/core/OrganizationMembership",
 ) {}

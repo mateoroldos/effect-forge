@@ -8,9 +8,7 @@
     "./organization-membership": "./src/organization-access/organization-membership.ts",
     "./todo-directory": "./src/todo/todo-directory.ts",
     "./todo-store": "./src/todo/todo-store.ts",
-    "./test/crypto-deterministic": "./src/test/crypto-deterministic.ts",
-    "./workspace-directory": "./src/workspace/workspace-directory.ts",
-    "./workspace-store": "./src/workspace/workspace-store.ts"
+    "./test/crypto-deterministic": "./src/test/crypto-deterministic.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

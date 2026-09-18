@@ -29,6 +29,7 @@ ui → nothing
 - Remote functions own application calls from the browser. A `query` is the cache; a `form` is the mutation. Do not add a client-side state library.
 - Remote handlers invoke core capabilities directly.
 - Better Auth is the deliberate exception: its Svelte client calls the same-origin `/api/auth/*` routes directly so the provider owns its browser protocol and cookies.
+- Better Auth owns organizations and memberships. Core owns application permissions; require the capability through `OrganizationAccess` and scope persistence by the explicit organization ID.
 - Effect Schema validates remote form input through Standard Schema. Remote handlers map expected failures to SvelteKit `error` or `invalid` results.
 - Svelte runes are limited to component-local presentation state.
 - Server layouts resolve principals required by their pages; remote handlers and endpoints own authorization for their operations.

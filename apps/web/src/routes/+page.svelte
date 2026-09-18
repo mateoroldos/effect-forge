@@ -17,9 +17,9 @@
 		</p>
 		<a
 			class="mt-10 inline-block rounded-md bg-stone-900 px-5 py-3 text-sm font-medium text-stone-50"
-			href="/workspaces"
+            href="/organizations"
 		>
-			Open your workspaces
+            Open your organizations
 		</a>
 		<div
 			class="mt-10 flex items-center gap-3 text-sm text-stone-600"
