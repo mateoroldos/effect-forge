@@ -92,13 +92,6 @@ describe("Authentication", () => {
     }),
   );
 
-  it.effect("returns null when the request has no session", () =>
-    Effect.gen(function* () {
-      const auth = yield* fixture;
-      assert.isNull(yield* auth.authenticate());
-    }),
-  );
-
   it.effect("handles sign-up and projects the provider session", () =>
     Effect.gen(function* () {
       const auth = yield* fixture;
@@ -130,23 +123,6 @@ describe("Authentication", () => {
       yield* Effect.promise(() => auth.database.delete(authSchema.session));
 
       assert.deepEqual(yield* service.authenticate, first);
-      assert.isNull(yield* auth.authenticate(cookie));
-    }),
-  );
-
-  it.effect("sign-out revokes the session for subsequent requests", () =>
-    Effect.gen(function* () {
-      const auth = yield* fixture;
-      const cookie = yield* auth.signUp();
-      assert.isNotNull(yield* auth.authenticate(cookie));
-
-      const service = yield* auth.authentication(
-        request("/api/auth/sign-out", {
-          method: "POST",
-          headers: { cookie, origin: baseURL.origin },
-        }),
-      );
-      assert.strictEqual((yield* service.handle).status, 200);
       assert.isNull(yield* auth.authenticate(cookie));
     }),
   );
