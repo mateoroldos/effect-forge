@@ -45,6 +45,6 @@ ui → nothing
 
 ## Tests
 
-Test through public interfaces using substitute Layers, PGlite, and real HTTP or SvelteKit boundaries. Do not mock modules or use arbitrary sleeps.
+Test through public interfaces using substitute Layers, PGlite, and provider HTTP handlers. Do not mock modules or use arbitrary sleeps.
 
 A change is complete only after type checks, tests, formatting, architecture checks, and dead-code checks pass.

@@ -2,15 +2,12 @@
 
 Test through public interfaces. Each seam verifies only the behavior it owns.
 
-| Seam                | What it verifies                                             |
-| ------------------- | ------------------------------------------------------------ |
-| Domain              | parsing, invariants, authorization, entitlement decisions    |
-| Application service | policy, authorization, effect ordering                       |
-| PostgreSQL adapter  | SQL, scoping, constraints, row decoding                      |
-| Provider adapter    | provider translation and error projection                    |
-| Public HTTP API     | decoding, authentication, and public error projection        |
-| SvelteKit           | remote validation, redirects, forms, and safe failure output |
-| End-to-end          | representative critical flows                                |
+| Seam                  | What it verifies                                                            |
+| --------------------- | --------------------------------------------------------------------------- |
+| Domain                | parsing, invariants, authorization, entitlement decisions                   |
+| Application service   | policy, authorization, effect ordering                                      |
+| PostgreSQL adapter    | SQL, scoping, constraints, row decoding                                     |
+| Provider HTTP handler | decoding, authentication, provider translation, and public error projection |
 
 ## Test doubles
 
@@ -21,9 +18,6 @@ Provide substitute Layers instead of mocking modules.
 - Share migrated PGlite resource mechanics through an explicit test-only package export when provider adapters in another package need the same physical schema.
 - Use Effect test clocks and deterministic services for time and randomness.
 - Exercise HTTP capabilities through the production router as Fetch-compatible `Request → Response` handlers.
-- Exercise remote functions and endpoints through built SvelteKit server boundaries.
-- Run representative Playwright flows against the built app, Cloudflare adapter, and
-  disposable PostgreSQL; use accessible locators and no production test hooks.
 - Run a shared port contract suite against each adapter when several implementations exist.
 
 Choose Layer provisioning by lifecycle and isolation:
@@ -40,10 +34,10 @@ Do not use module mocks, arbitrary sleeps, or assertions against private calls.
 
 Test each authorization rule once where it is owned:
 
-- Pure role-to-permission decisions in domain tests.
+- Pure role-to-permission decisions beside the permission definition.
 - Membership resolution and enforcement in core service tests.
 - Better Auth role translation in adapter tests.
-- HTTP or SvelteKit status and message projection at the framework boundary.
+- Provider HTTP status and message projection through its real handler.
 
 Browser permission checks are presentation behavior; they do not replace a server authorization test.
 
@@ -61,16 +55,13 @@ In Effect tests, prefer `it.effect.prop`. Pass a Schema for valid domain inputs 
 
 ## Placement
 
-Test an expected failure where its policy is owned. A service authorization failure belongs in the service test; its HTTP status belongs in the handler test; its field presentation belongs in a form test only when the field can correct it.
-
-A future public API test and a SvelteKit test may cover the same capability boundary without repeating every core policy branch.
+Test an expected failure where its policy is owned. A service authorization failure belongs in the service test; its HTTP status belongs in the handler test.
 
 ## Validation
 
 ```bash
 bun run check-types
 bun run test
-bun run test:e2e
 bun run check
 bun run check:architecture
 bun run knip

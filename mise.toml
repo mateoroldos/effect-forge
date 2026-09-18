@@ -8,4 +8,4 @@ ALCHEMY_STAGE = "dev_{{ env.USER }}_{{ config_root | basename }}"
 
 [tasks.setup]
 description = "Bootstrap a fresh checkout"
-run = ["mise install", "bun install", "bun run --cwd apps/web playwright install chromium"]
+run = ["mise install", "bun install"]
