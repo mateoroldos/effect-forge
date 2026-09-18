@@ -1,7 +1,9 @@
 import type { BetterAuthOptions } from "better-auth";
+import { organization } from "better-auth/plugins/organization";
 
 /** Provider behavior shared by the Web runtime and schema generator. */
 export const betterAuthOptions = {
+  plugins: [organization()],
   emailAndPassword: { enabled: true },
   logger: { disabled: true },
   telemetry: { enabled: false },
