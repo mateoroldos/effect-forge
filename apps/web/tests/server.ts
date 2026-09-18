@@ -36,6 +36,7 @@ const server = Effect.gen(function* () {
             AUTH_SECRET: "playwright-local-secret-not-for-deployment",
             DATABASE: { connectionString: database.getConnectionUri() },
             SEARCH_INDEXABLE: "false",
+            DEPLOYMENT_ENVIRONMENT: "test",
           },
         },
       }),

@@ -1,0 +1,68 @@
+import { Cause, Clock, Effect, Exit, Layer, Logger } from "effect";
+import { FetchHttpClient } from "effect/unstable/http";
+import { OtlpLogger, OtlpSerialization, OtlpTracer } from "effect/unstable/observability";
+
+/** One summary per application operation; Effect owns the span and original result. */
+export const operation =
+  (name: string) =>
+  <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+    Effect.useSpan(name, (span) =>
+      self.pipe(
+        Effect.onExit((exit) =>
+          Effect.gen(function* () {
+            const clock = yield* Clock.Clock;
+            const outcome = Exit.isSuccess(exit)
+              ? "success"
+              : Cause.hasInterruptsOnly(exit.cause)
+                ? "cancelled"
+                : "failure";
+            yield* (outcome === "failure" ? Effect.logError : Effect.logInfo)(
+              "application.operation.completed",
+            ).pipe(
+              Effect.annotateLogs({
+                ...Object.fromEntries(span.attributes),
+                operation: name,
+                outcome,
+                duration_ms:
+                  Number(clock.currentTimeNanosUnsafe() - span.status.startTime) / 1_000_000,
+                trace_id: span.traceId,
+                span_id: span.spanId,
+              }),
+            );
+          }),
+        ),
+        Effect.withParentSpan(span),
+      ),
+    );
+
+export interface Settings {
+  readonly endpoint: string | undefined;
+  readonly stage: string;
+  readonly dev?: boolean;
+}
+
+export const layer = ({ endpoint, stage, dev = false }: Settings) => {
+  const console = Logger.layer([
+    Logger.withLeveledConsole(dev ? Logger.formatLogFmt : Logger.formatJson),
+  ]);
+  if (endpoint === undefined) return console;
+
+  const base = endpoint.replace(/\/$/, "");
+  const options = {
+    resource: {
+      serviceName: "effect-forge.web",
+      attributes: { "deployment.environment.name": stage },
+    },
+    shutdownTimeout: "1 second",
+  } as const;
+  return Layer.merge(
+    OtlpTracer.layer({ ...options, url: `${base}/v1/traces` }),
+    OtlpLogger.layer({ ...options, url: `${base}/v1/logs` }),
+  ).pipe(
+    Layer.provide(OtlpSerialization.layerJson),
+    Layer.provide(FetchHttpClient.layer),
+    Layer.provideMerge(console),
+  );
+};
+
+export * as Observability from "./observability.ts";

@@ -41,7 +41,7 @@ component
   → project expected failure
 ```
 
-Remote handlers call core capabilities directly through the web runtime. They do not call the public API.
+Run core capabilities through [`locals.run(name, program)`](observability.md#application-operations), then project the returned `Result` at this boundary.
 
 Use `query` for reads and `form` for progressively enhanced mutations. Use `command` only when a mutation cannot be represented as a form. Do not put business policy in the handler.
 
