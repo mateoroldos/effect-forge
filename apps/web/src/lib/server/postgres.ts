@@ -7,10 +7,9 @@ export class AuthClient extends Context.Service<AuthClient, Client>()(
   "@effect-forge/web/Postgres/AuthClient",
 ) {}
 
-class AuthConnectionError extends Schema.TaggedError<AuthConnectionError>()(
-  "AuthConnectionError",
-  {},
-) {}
+class AuthConnectionError extends Schema.TaggedError<AuthConnectionError>()("AuthConnectionError", {
+  cause: Schema.Defect(),
+}) {}
 
 export const authenticationLayer = (connectionString: string) =>
   Layer.effect(
@@ -32,7 +31,7 @@ export const authenticationLayer = (connectionString: string) =>
       Effect.tap((client) =>
         Effect.tryPromise({
           try: () => client.connect(),
-          catch: () => new AuthConnectionError(),
+          catch: (cause) => new AuthConnectionError({ cause }),
         }),
       ),
     ),

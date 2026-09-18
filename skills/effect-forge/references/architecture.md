@@ -84,7 +84,7 @@ Web invokes core services directly rather than through an internal HTTP API. Int
 
 Browser-visible scalar configuration is declared in `apps/web/src/env.ts` and consumed through `$app/env/public`. Worker runtime configuration and native Cloudflare resources remain on `event.platform.env`; Vite variables are reserved for Vite-owned build metadata.
 
-`apps/web/src/lib/server/runtime.ts` owns one lazy runtime per SvelteKit request, exposed through `locals.run(name, program)`. The first operation awaits service acquisition.
+`apps/web/src/lib/server/runtime.ts` composes one lazy runtime per SvelteKit request, exposed through `locals.run(name, program)`. The first operation awaits service acquisition. `request-runner.ts` owns execution, cancellation binding, and cause-preserving Result conversion; `observability.ts` owns operation summaries and severity. Feature boundaries project typed failures into public responses.
 
 After response-producing work settles, `hooks.server.ts` schedules `runtime.dispose()` through `ctx.waitUntil` without awaiting cleanup for the response. Do not defer runtime-dependent work into streamed response bodies.
 

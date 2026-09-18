@@ -7,6 +7,7 @@ import { Effect, Layer, ManagedRuntime, Redacted } from "effect";
 import { Authentication } from "./authentication.ts";
 import { Postgres } from "./postgres.ts";
 import { Observability } from "./observability.ts";
+import { RequestRunner } from "./request-runner.ts";
 
 export interface Input {
   readonly baseURL: string;
@@ -56,7 +57,7 @@ export const make = ({
     application.pipe(
       Layer.provideMerge(authentication),
       Layer.provideMerge(
-        Layer.span(route === null ? "Web.requestScope" : `Web.requestScope ${route}`, {
+        Layer.span(`${request.method} ${route ?? "(unmatched route)"} (runtime)`, {
           attributes: {
             "http.request.method": request.method,
             "sveltekit.route_id": routeId ?? "unknown",
@@ -67,20 +68,7 @@ export const make = ({
     ),
   );
 
-  const run = <A, E extends { readonly _tag: string }>(
-    name: string,
-    program: Effect.Effect<A, E, ManagedRuntime.ManagedRuntime.Services<typeof runtime>>,
-  ) =>
-    runtime.runPromise(
-      program.pipe(
-        Effect.tapError((failure) => Effect.annotateCurrentSpan("error.type", failure._tag)),
-        Observability.operation(name),
-        Effect.result,
-      ),
-      { signal: request.signal },
-    );
-
-  return { run, dispose: runtime.dispose };
+  return { run: RequestRunner.make(runtime, request.signal), dispose: runtime.dispose };
 };
 
 export type Runtime = ReturnType<typeof make>;
