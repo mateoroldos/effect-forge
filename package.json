@@ -18,6 +18,7 @@
     "db:check": "bun scripts/check-migrations.ts",
     "db:generate": "bun run --cwd adapters/database-postgres db:generate",
     "dev": "alchemy dev",
+    "dev:otel": "OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4318 bun run dev",
     "dev:site": "alchemy dev alchemy.site.ts",
     "format": "oxfmt",
     "format:check": "oxfmt --check",

@@ -78,11 +78,15 @@ Web invokes core services directly rather than through an internal HTTP API. Int
 
 Browser-visible scalar configuration is declared in `apps/web/src/env.ts` and consumed through `$app/env/public`. Worker runtime configuration and native Cloudflare resources remain on `event.platform.env`; Vite variables are reserved for Vite-owned build metadata.
 
-Server-side SvelteKit operations enter through the request-owned runtime in `apps/web/src/lib/server/runtime.ts`. `hooks.server.ts` builds it from the request and Worker environment, shares it through `event.locals`, and awaits disposal after SvelteKit resolves the response.
+`apps/web/src/lib/server/runtime.ts` owns one lazy runtime per SvelteKit request, exposed through `locals.run(name, program)`. The first operation awaits service acquisition.
+
+After response-producing work settles, `hooks.server.ts` schedules `runtime.dispose()` through `ctx.waitUntil` without awaiting cleanup for the response. Do not defer runtime-dependent work into streamed response bodies.
 
 `postgres.ts` owns two request-scoped PostgreSQL clients: one for Better Auth's Drizzle adapter and one for application persistence through Effect SQL. Separate clients keep provider transactions from interleaving with application SQL. The authentication client handles independent socket error events. Better Auth promises settle before interruption can release their database resources; configured background-capable operations also use the provider's default awaited execution.
 
 Authentication is bound to the request and memoized as one Effect result. A separate HTTP request receives a new runtime, bypasses Better Auth's cookie cache, and reads the authoritative session again. Protected application reads deliberately disable session refresh: ordinary page activity does not extend the provider's default seven-day session lifetime. Cloudflare does not expose an isolate shutdown hook, and Hyperdrive discourages global database clients, so database ownership remains request-scoped. Principal and workspace context remain explicit application-operation inputs rather than runtime services.
+
+See [observability](observability.md) for the runner contract, operation summaries, and export configuration.
 
 ## Database stages
 
@@ -100,9 +104,3 @@ dev_* or pr-*
 Deploy `staging` before developer or preview stages. Developer branches are durable. Preview branches should be destroyed when their pull request closes and expire after seven days as a fallback. Production and non-production never share a Neon project.
 
 Hyperdrive targets the branch's direct origin in Cloudflare and its pooled origin locally. Alchemy applies migrations during deployment, never during Worker startup or requests.
-
-## Telemetry
-
-Effect's observability services are the server seam. Each composition root installs its runtime-native telemetry Layer. Browser telemetry uses the browser SDK directly.
-
-Telemetry is disabled by default. Hosted telemetry uses separate private server and publishable browser ingest keys. Never expose provider credentials, diagnostics, or private deployment origins to the browser.

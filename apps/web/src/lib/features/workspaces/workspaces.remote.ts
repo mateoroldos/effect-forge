@@ -8,8 +8,9 @@ import { Authentication } from "#lib/server/authentication.ts";
 export const listWorkspaces = query(() => {
   const event = getRequestEvent();
 
-  return event.locals.runtime
-    .runPromise(
+  return event.locals
+    .run(
+      "Web.listWorkspaces",
       Effect.gen(function* () {
         const authentication = yield* Authentication.Service;
         const identity = yield* authentication.authenticate;
@@ -17,9 +18,9 @@ export const listWorkspaces = query(() => {
 
         const directory = yield* WorkspaceDirectory.Service;
         const workspaces = yield* directory.list(identity.principal);
+        yield* Effect.annotateCurrentSpan("workspace.count", workspaces.length);
         return { _tag: "Authenticated", workspaces } as const;
-      }).pipe(Effect.withSpan("Web.listWorkspaces"), Effect.result),
-      { signal: event.request.signal },
+      }),
     )
     .then((result) => {
       if (Result.isSuccess(result)) {

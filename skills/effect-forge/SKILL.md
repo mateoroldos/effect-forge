@@ -14,6 +14,7 @@ Effect Forge is an AI-first monorepo with a SvelteKit application that hosts Bet
 - Effect services, ports, schemas, errors, or Layers: [`references/effect-conventions.md`](references/effect-conventions.md)
 - Adding an end-to-end capability: [`references/feature-workflow.md`](references/feature-workflow.md)
 - Test placement, test Layers, or validation: [`references/testing.md`](references/testing.md)
+- Operation logging, tracing, or exporter setup: [`references/observability.md`](references/observability.md)
 
 Read the nearest `AGENTS.md`, inspect installed dependency versions, and follow an existing capability before writing code.
 

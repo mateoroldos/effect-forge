@@ -3,14 +3,14 @@ import { Effect, Result } from "effect";
 import { Authentication } from "#lib/server/authentication.ts";
 import type { LayoutServerLoad } from "./$types";
 
-export const load: LayoutServerLoad = ({ locals, request, url }) =>
-  locals.runtime
-    .runPromise(
+export const load: LayoutServerLoad = ({ locals, url }) =>
+  locals
+    .run(
+      "Web.loadAuthenticatedLayout",
       Effect.gen(function* () {
         const authentication = yield* Authentication.Service;
         return yield* authentication.authenticate;
-      }).pipe(Effect.withSpan("Web.loadAuthenticatedLayout"), Effect.result),
-      { signal: request.signal },
+      }),
     )
     .then((result) => {
       if (Result.isFailure(result)) {

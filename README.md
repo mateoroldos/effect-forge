@@ -59,6 +59,26 @@ bun run dev
 
 `mise` derives `ALCHEMY_STAGE` from the user and checkout directory. Each clone, `git worktree`, or `jj workspace` therefore gets its own Neon branch and local Alchemy stage, branched from the staging project — so staging has to exist first.
 
+### Local telemetry
+
+Start the viewer in one terminal:
+
+```sh
+docker run --rm -p 127.0.0.1:8000:8000 -p 127.0.0.1:4318:4318 \
+  ghcr.io/ctrlspice/otel-desktop-viewer:v0.5.0 --host 0.0.0.0 --open-browser=false
+```
+
+Then run the app in another:
+
+```sh
+bun run dev:otel
+```
+
+Open <http://localhost:8000>, service `effect-forge.web`. Development uses native
+single-line logfmt; production uses JSON. Normal `bun run dev` needs no collector.
+
+See [operation logging](skills/effect-forge/references/observability.md) for examples.
+
 ## Validation
 
 ```sh

@@ -2,6 +2,7 @@ import { decodeAuthOrigin } from "#lib/server/auth-origin.ts";
 import { decodeAuthSecret } from "#lib/server/auth-secret.ts";
 import { WebRuntime } from "#lib/server/runtime.ts";
 import type { Handle } from "@sveltejs/kit/hooks";
+import { dev } from "$app/env";
 
 export const handle: Handle = ({ event, resolve }) => {
   const platform = event.platform;
@@ -11,11 +12,19 @@ export const handle: Handle = ({ event, resolve }) => {
   const authOrigin = decodeAuthOrigin(platform.env.AUTH_ORIGIN);
   const runtime = WebRuntime.make({
     baseURL: authOrigin.origin,
-    database: platform.env.DATABASE,
+    connectionString: platform.env.DATABASE.connectionString,
     request: event.request,
+    routeId: event.route.id,
     secret: decodeAuthSecret(platform.env.AUTH_SECRET),
+    telemetry: {
+      endpoint: platform.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+      stage: platform.env.DEPLOYMENT_ENVIRONMENT,
+      dev,
+    },
   });
-  event.locals.runtime = runtime;
+  event.locals.run = runtime.run;
 
-  return resolve(event).finally(() => runtime.dispose());
+  return resolve(event).finally(() => {
+    platform.ctx.waitUntil(runtime.dispose());
+  });
 };
