@@ -43,6 +43,10 @@ alchemy.run.ts           application Stack summary
 
 SvelteKit remote functions call application services directly. The Web Worker hosts Better Auth behind same-origin routes and projects authenticated principals into application operations. Independent API and CLI clients are added only when their concrete contracts and credentials are known.
 
+The example flow is a shared todo list: sign up, create an organization, and add or
+complete todos with its members. Better Auth owns organizations and memberships;
+`TodoDirectory` owns application permissions and `TodoStore` owns organization-scoped persistence.
+
 ## Development
 
 Bootstrap a checkout and authenticate the local Alchemy profile:
@@ -78,6 +82,12 @@ Open <http://localhost:8000>, service `effect-forge.web`. Development uses nativ
 single-line logfmt; production uses JSON. Normal `bun run dev` needs no collector.
 
 See [operation logging](skills/effect-forge/references/observability.md) for examples.
+
+## Organization URLs
+
+Organization URLs use handles, for example `/organizations/analytical-engine/todos`.
+Authorization and persistence use the stable organization ID. Handles can be changed
+through Better Auth; changing one changes its URL without redirecting old links.
 
 ## Validation
 

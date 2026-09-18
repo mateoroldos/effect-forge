@@ -40,7 +40,7 @@ Applications do not import one another. Packages are technology-neutral. Adapter
 
 ## Ownership
 
-Better Auth owns users, credentials, and sessions. The application currently owns workspaces and workspace membership. Organization-provider integration remains deferred; do not introduce a second workspace authority without first defining and migrating that ownership boundary. Provider types do not enter core.
+Better Auth owns users, credentials, sessions, organizations, memberships, and organization administration. Application resources such as todos belong to an organization; do not introduce another tenant or membership authority. Provider types do not enter core.
 
 Authorization has two boundaries:
 
@@ -48,6 +48,12 @@ Authorization has two boundaries:
 - Core protects application operations and invariants.
 
 Client permission checks are presentational only.
+
+Declare application permissions beside their capability, following `TodoDirectory`.
+Use `OrganizationAccess.require(principal, organizationId, permission)` before accessing
+the store. Owners retain authority; grants to admin and member roles are explicit.
+Supply membership evidence through `OrganizationMembership`; lookup failures are not denials.
+Keep every resource read and write organization-scoped, including updates by resource ID.
 
 ## Request flows
 
@@ -84,7 +90,7 @@ After response-producing work settles, `hooks.server.ts` schedules `runtime.disp
 
 `postgres.ts` owns two request-scoped PostgreSQL clients: one for Better Auth's Drizzle adapter and one for application persistence through Effect SQL. Separate clients keep provider transactions from interleaving with application SQL. The authentication client handles independent socket error events. Better Auth promises settle before interruption can release their database resources; configured background-capable operations also use the provider's default awaited execution.
 
-Authentication is bound to the request and memoized as one Effect result. A separate HTTP request receives a new runtime, bypasses Better Auth's cookie cache, and reads the authoritative session again. Protected application reads deliberately disable session refresh: ordinary page activity does not extend the provider's default seven-day session lifetime. Cloudflare does not expose an isolate shutdown hook, and Hyperdrive discourages global database clients, so database ownership remains request-scoped. Principal and workspace context remain explicit application-operation inputs rather than runtime services.
+Authentication is bound to the request and memoized as one Effect result. A separate HTTP request receives a new runtime, bypasses Better Auth's cookie cache, and reads the authoritative session again. Protected application reads deliberately disable session refresh: ordinary page activity does not extend the provider's default seven-day session lifetime. Cloudflare does not expose an isolate shutdown hook, and Hyperdrive discourages global database clients, so database ownership remains request-scoped. Principal and organization ID remain explicit application-operation inputs rather than runtime services. Treat the session's active organization as navigation state, never as authorization or an implicit mutation target.
 
 See [observability](observability.md) for the runner contract, operation summaries, and export configuration.
 

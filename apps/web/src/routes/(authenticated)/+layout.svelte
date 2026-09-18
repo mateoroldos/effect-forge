@@ -16,7 +16,9 @@
 				signOutFailed = true;
 				return;
 			}
-		} catch {
+		} catch (failure) {
+			// oxlint-disable-next-line effecttsgo/global-console -- Locally recovered failures do not reach Kit's error hook.
+			console.error(failure);
 			signOutFailed = true;
 			return;
 		} finally {
@@ -30,7 +32,7 @@
 	<div class="min-h-screen bg-background">
 		<header class="border-b bg-card/80">
 			<div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-				<a href="/workspaces" class="font-mono text-xs font-medium tracking-[0.14em] uppercase">
+                <a href="/organizations" class="font-mono text-xs font-medium tracking-[0.14em] uppercase">
 					Effect Forge
 				</a>
 				<div class="flex items-center gap-4">
@@ -49,7 +51,7 @@
 			</div>
 			{#if signOutFailed}
 				<p class="border-t px-6 py-2 text-center text-sm text-destructive" role="alert">
-					We couldn’t sign you out. Please try again.
+					We couldn’t confirm that you’re signed out. Refresh before trying again.
 				</p>
 			{/if}
 		</header>

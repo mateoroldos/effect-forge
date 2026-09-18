@@ -5,7 +5,7 @@ import { fromURL, ReturnPath } from "./return-path.ts";
 const isReturnPath = Schema.is(ReturnPath);
 
 describe("ReturnPath", () => {
-  it.each(["/workspaces", "/workspaces?tab=recent", "/workspaces#recent"])(
+  it.each(["/organizations", "/organizations?tab=recent", "/organizations#recent"])(
     "accepts the same-document path %s",
     (path) => expect(isReturnPath(path)).toBe(true),
   );
@@ -18,15 +18,15 @@ describe("ReturnPath", () => {
     "/\t/evil.example",
     "/\n/evil.example",
     "/\r/evil.example",
-    "/workspaces\u0000",
+    "/organizations\u0000",
   ])("rejects the external destination %s", (path) => expect(isReturnPath(path)).toBe(false));
 
   it("reads a safe return path and rejects an external one", () => {
-    expect(fromURL(new URL("https://app.example/sign-in?returnTo=%2Fworkspaces%3Ftab%3Dnew"))).toBe(
-      "/workspaces?tab=new",
-    );
+    expect(
+      fromURL(new URL("https://app.example/sign-in?returnTo=%2Forganizations%3Ftab%3Dnew")),
+    ).toBe("/organizations?tab=new");
     expect(
       fromURL(new URL("https://app.example/sign-in?returnTo=https%3A%2F%2Fevil.example")),
-    ).toBe("/workspaces");
+    ).toBe("/organizations");
   });
 });

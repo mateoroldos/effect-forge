@@ -26,8 +26,10 @@
 				message = 'We couldn’t create your account. Please try again.';
 				return;
 			}
-		} catch {
-			message = 'We couldn’t create your account. Please try again.';
+		} catch (failure) {
+			// oxlint-disable-next-line effecttsgo/global-console -- Locally recovered failures do not reach Kit's error hook.
+			console.error(failure);
+			message = 'We couldn’t confirm whether your account was created. Try signing in before creating another account.';
 			return;
 		} finally {
 			submitting = false;
@@ -49,7 +51,7 @@
 				Create your account
 			</h1>
 			<p class="mt-3 text-sm leading-6 text-muted-foreground">
-				Create an account to access workspaces shared with you.
+                Create an account to collaborate with your organizations.
 			</p>
 
 			<form class="mt-8 space-y-5" onsubmit={submit}>
