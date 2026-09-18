@@ -51,12 +51,7 @@ export interface Options {
   readonly secret: Redacted.Redacted<string>;
 }
 
-export const make = Effect.fn("Authentication.make")(function* ({
-  baseURL,
-  database,
-  request,
-  secret,
-}: Options) {
+export const make = Effect.fnUntraced(function* ({ baseURL, database, request, secret }: Options) {
   const auth = betterAuth({
     ...betterAuthOptions,
     database: drizzleAdapter(database, {
@@ -77,7 +72,8 @@ export const make = Effect.fn("Authentication.make")(function* ({
   });
   const handle = handleRequest(request);
 
-  const resolveIdentity = Effect.fn("Authentication.authenticate")(function* () {
+  const resolveIdentity = Effect.fnUntraced(function* () {
+    yield* Effect.annotateCurrentSpan("app.auth.reused", false);
     const providerSession: unknown = yield* Effect.tryPromise({
       try: () =>
         auth.api.getSession({
@@ -96,7 +92,10 @@ export const make = Effect.fn("Authentication.make")(function* ({
       viewer: Viewer.make({ name: session.user.name, email: session.user.email }),
     };
   });
-  const authenticate = yield* Effect.cached(resolveIdentity());
+  const cachedIdentity = yield* Effect.cached(resolveIdentity());
+  const authenticate = cachedIdentity.pipe(
+    Effect.withSpan("Authentication.authenticate", { attributes: { "app.auth.reused": true } }),
+  );
 
   return Service.of({ authenticate, handle });
 });

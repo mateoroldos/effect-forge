@@ -4,20 +4,22 @@ import * as authSchema from "@effect-forge/database-postgres/auth-schema";
 import { NodeCrypto } from "@effect/platform-node";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Effect, Layer, ManagedRuntime, Redacted } from "effect";
-import type { WebWorkerEnv } from "../../../worker.ts";
 import { Authentication } from "./authentication.ts";
 import { Postgres } from "./postgres.ts";
+import { Observability } from "./observability.ts";
 
 export interface Input {
   readonly baseURL: string;
-  readonly database: WebWorkerEnv["DATABASE"];
+  readonly connectionString: string;
   readonly request: Request;
+  readonly routeId: string | null;
   readonly secret: Redacted.Redacted<string>;
+  readonly telemetry: Observability.Settings;
 }
 
 /** Builds all stable services owned by one SvelteKit request. */
-export const make = ({ baseURL, database, request, secret }: Input) => {
-  const postgres = Postgres.applicationLayer(database.connectionString);
+export const make = ({ baseURL, connectionString, request, routeId, secret, telemetry }: Input) => {
+  const postgres = Postgres.applicationLayer(connectionString);
   const persistence = PersistencePostgres.layer.pipe(Layer.provide(postgres));
   const application = Application.layer.pipe(
     Layer.provide(Layer.merge(NodeCrypto.layer, persistence)),
@@ -36,11 +38,40 @@ export const make = ({ baseURL, database, request, secret }: Input) => {
         secret,
       });
     }),
-  ).pipe(Layer.provide(Postgres.authenticationLayer(database.connectionString)));
+  ).pipe(Layer.provide(Postgres.authenticationLayer(connectionString)));
 
-  return ManagedRuntime.make(Layer.merge(application, authentication));
+  const route = routeId === null ? null : routeId.replace(/\/\([^/)]+\)(?=\/|$)/g, "") || "/";
+  const runtime = ManagedRuntime.make(
+    Layer.merge(application, authentication).pipe(
+      Layer.provideMerge(
+        Layer.span(route === null ? "Web.requestScope" : `Web.requestScope ${route}`, {
+          attributes: {
+            "http.request.method": request.method,
+            "sveltekit.route_id": routeId ?? "unknown",
+          },
+        }),
+      ),
+      Layer.provideMerge(Observability.layer(telemetry)),
+    ),
+  );
+
+  const run = <A, E extends { readonly _tag: string }>(
+    name: string,
+    program: Effect.Effect<A, E, ManagedRuntime.ManagedRuntime.Services<typeof runtime>>,
+  ) =>
+    runtime.runPromise(
+      program.pipe(
+        Effect.tapError((failure) => Effect.annotateCurrentSpan("error.type", failure._tag)),
+        Observability.operation(name),
+        Effect.result,
+      ),
+      { signal: request.signal },
+    );
+
+  return { run, dispose: runtime.dispose };
 };
 
 export type Runtime = ReturnType<typeof make>;
+export type Run = Runtime["run"];
 
 export * as WebRuntime from "./runtime.ts";
