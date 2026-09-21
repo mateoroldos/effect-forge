@@ -14,11 +14,22 @@ export interface Input {
   readonly request: Request;
   readonly routeId: string | null;
   readonly secret: Redacted.Redacted<string>;
-  readonly telemetry: Observability.Settings;
+  readonly stage: string;
+  readonly dev: boolean;
+  readonly telemetry: { readonly endpoint: string | undefined };
 }
 
 /** Builds all stable services owned by one SvelteKit request. */
-export const make = ({ baseURL, connectionString, request, routeId, secret, telemetry }: Input) => {
+export const make = ({
+  baseURL,
+  connectionString,
+  request,
+  routeId,
+  secret,
+  stage,
+  dev,
+  telemetry,
+}: Input) => {
   const postgres = Postgres.applicationLayer(connectionString);
   const persistence = PersistencePostgres.layer.pipe(Layer.provide(postgres));
   const application = Application.layer.pipe(
@@ -51,7 +62,7 @@ export const make = ({ baseURL, connectionString, request, routeId, secret, tele
           },
         }),
       ),
-      Layer.provideMerge(Observability.layer(telemetry)),
+      Layer.provideMerge(Observability.layer({ ...telemetry, stage, dev })),
     ),
   );
 

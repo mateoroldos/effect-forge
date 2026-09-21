@@ -16,10 +16,10 @@ export const handle: Handle = ({ event, resolve }) => {
     request: event.request,
     routeId: event.route.id,
     secret: decodeAuthSecret(platform.env.AUTH_SECRET),
+    stage: platform.env.DEPLOYMENT_ENVIRONMENT,
+    dev,
     telemetry: {
       endpoint: platform.env.OTEL_EXPORTER_OTLP_ENDPOINT,
-      stage: platform.env.DEPLOYMENT_ENVIRONMENT,
-      dev,
     },
   });
   event.locals.run = runtime.run;

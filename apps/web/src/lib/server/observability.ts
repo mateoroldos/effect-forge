@@ -1,6 +1,18 @@
-import { Cause, Clock, Effect, Exit, Layer, Logger } from "effect";
+import { Cause, Clock, Effect, Exit, Layer, Logger, Schema } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import { OtlpLogger, OtlpSerialization, OtlpTracer } from "effect/unstable/observability";
+
+export const CollectorEndpoint = Schema.URLFromString.check(
+  Schema.makeFilter((url) =>
+    ["http:", "https:"].includes(url.protocol) &&
+    !url.username &&
+    !url.password &&
+    !url.href.includes("?") &&
+    !url.href.includes("#")
+      ? undefined
+      : "Expected an HTTP(S) collector base URL without credentials, query or fragment",
+  ),
+);
 
 /** One summary per application operation; Effect owns the span and original result. */
 export const operation =

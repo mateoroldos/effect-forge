@@ -36,6 +36,9 @@ expose these diagnostics through browser-facing errors.
 
 ## Maintaining telemetry
 
+- `Observability.CollectorEndpoint` defines supported collector URLs beside exporter construction. `worker.ts` reads the optional configuration and declares the binding; malformed configuration is fatal during provisioning.
+- Effect's default configuration provider treats empty strings as missing before validation.
+- `stage` and SvelteKit `dev` describe the runtime environment. The runtime passes them to observability for resource metadata and console formatting; they are independent values.
 - Use route templates, not concrete paths, in span names. Omit route groups from the display name and retain the original `sveltekit.route_id` as metadata.
 - Treat `Web.requestScope` as runtime-scope timing, from first use through cleanup, not HTTP latency or aggregate operation status. Cloudflare owns HTTP telemetry.
 - Trace memoized public operations outside the cache when caller visibility matters. Authentication's `app.auth.reused` includes completed and in-flight reuse.
