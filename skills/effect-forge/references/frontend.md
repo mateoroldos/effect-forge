@@ -92,7 +92,7 @@ Keep provider diagnostics, credentials, private identifiers, and retained causes
 
 ## Authentication
 
-Organization pages use `/organizations/[organizationSlug]/todos`. Resolve the slug from the authenticated directory already loaded by the page; return a uniform `404` for a missing or inaccessible match. Pass the resolved stable organization ID to todo queries and forms, and key organization-local UI by that ID. Slug resolution never replaces each operation's capability check; a revoked mounted form still receives `403`.
+Resolve organization slugs in `organizations/[organizationSlug]/+layout.ts` through the authenticated directory; return `{ organization }` or a uniform `404` for a missing or inaccessible match. Consume `data.organization` in child pages, pass its stable ID to queries and forms, and key organization-local UI by that ID. Do not select Better Auth's active organization to resolve a URL. Slug resolution never replaces each operation's capability check; a revoked mounted form still receives `403`.
 
 Slugs are mutable addresses, not permanent identity. Provider hooks validate the lowercase/alphanumeric, single-hyphen grammar and 48-character limit on create and update; HTML constraints alone are insufficient. Name changes do not change URLs; slug changes do. Old slug addresses have no redirect/history guarantee and may be reused. Do not shorten provider IDs or guess whether a route segment is a slug or an ID.
 
@@ -110,71 +110,18 @@ Client-side role or permission checks may hide or disable controls, but they are
 
 Keep memoized identity and membership evidence request-owned. Key membership lookups by explicit user and organization IDs, and evaluate each capability's permission independently. Invalidate user-dependent remote queries when authentication changes.
 
-## SSR
+## Loading and navigation
 
-The organizations list and organization-keyed todo section use pending boundaries to show local skeletons while their queries resolve. These sections render placeholders during SSR and load their content in the browser. The organizations creation form stays outside its list boundary. The universal `organizations/[organizationSlug]/+layout.ts` resolves the URL's organization and supplies `data.organization` to child pages; it does not load todos or select Better Auth's active organization. Query failures propagate to Kit's route error handling, and subsequent refreshes retain existing content rather than returning to the initial placeholder.
+1. Separate required route context from deferred content. Await identity and slug resolution in the owning layout; keep list queries in components. Remote queries are valid in universal loads, but awaiting them blocks destination rendering—do not add loads solely to warm their cache.
+2. Choose the initial render contract:
 
-Hover preloading is enabled in `app.html`. `experimental.forkPreloads` in `apps/web/vite.config.ts` additionally lets Kit speculatively render destination components and start their remote queries.
+   | Need                          | Use                                                                   | SSR output                                   |
+   | ----------------------------- | --------------------------------------------------------------------- | -------------------------------------------- |
+   | Data required in initial HTML | Async expression without a pending snippet                            | Resolved content                             |
+   | Deferred section              | `<svelte:boundary pending={loading}>` around the query-owning subtree | Placeholder; content resolves in the browser |
 
-### Remote-query preloading
+3. Put the await inside the boundary: use `{@const items = await query()}` there, or wrap the component whose script awaits it. Keep independent headings and forms outside. Key organization-local boundaries by organization ID. See the organizations and todos pages for working examples.
+4. Let query errors reach Kit's route boundary unless the feature requires local recovery. Do not add a `failed` snippet merely because a loading boundary exists. Retain existing content and optimistic overrides during refreshes; pending snippets only cover initial resolution.
+5. Use the existing hover setting in `app.html` and `experimental.forkPreloads` in `apps/web/vite.config.ts` for speculative component reads. Keep these reads free of mutations. Do not add manual hover-fetch handlers, duplicate list snapshots, or another cache; remote queries own their live data and deduplicate while in active use.
 
-Remote queries **can be awaited in universal `load` functions**. Kit's [query deduplication contract](https://svelte.dev/docs/kit/remote-functions#query-Deduplication) explicitly supports this and shares identical query keys with component consumers while the query remains in active use. There is no need for a separate query cache or HTTP endpoint. The absence of a dedicated `prefetch` method does not prevent route-load preloading.
-
-Keep list reads in their components rather than await them in page loads solely to warm the cache. Kit waits for loads before rendering the destination, so an awaited list in a load would prevent its pending boundary from showing until the list finishes. Forked preloading starts the component-owned reads without introducing that load dependency. The organization layout deliberately awaits only the directory needed to resolve the route's identity; every remote operation still authorizes its own access.
-
-Components continue consuming the live queries for refreshes and optimistic overrides. Cache lifetime follows active consumers and references, not a permanent route cache. Use Kit-owned preloading rather than manual hover handlers or application-managed cache retention. The relevant public contracts are [link preloading](https://svelte.dev/docs/kit/link-options#data-sveltekit-preload-data) and [universal load](https://svelte.dev/docs/kit/load#Universal-vs-server).
-
-### Render modes
-
-Resolve only data required to render the route. Keep authenticated state scoped to the SvelteKit request. Never retain principals, cookies, or request-scoped services in a shared mutable singleton.
-
-Choose the remote-query render mode deliberately:
-
-| Need                           | Pattern                                      | SSR output       |
-| ------------------------------ | -------------------------------------------- | ---------------- |
-| Data required for initial HTML | Async expression without a `pending` snippet | Resolved content |
-| Intentionally deferred data    | `<svelte:boundary>` with a `pending` snippet | Placeholder      |
-
-For required initial data, await the query through Svelte's async expression syntax. Use `{@const ... = await ...}` when the resolved value feeds multiple branches:
-
-```svelte
-<svelte:boundary>
-	{@const todos = await listTodos(organizationId)}
-
-	{#if todos.length === 0}
-		<p>No todos yet.</p>
-	{:else}
-		<ul>
-			{#each todos as todo}
-				<li>{todo.title}</li>
-			{/each}
-		</ul>
-	{/if}
-
-	{#snippet failed()}
-		<p>Todos are unavailable.</p>
-	{/snippet}
-</svelte:boundary>
-```
-
-For intentionally deferred data, make the loading state explicit. A boundary with a `pending` snippet renders that placeholder during SSR and starts its awaited content in the browser:
-
-```svelte
-<svelte:boundary>
-	{#each await listActivity() as activity}
-		<p>{activity.summary}</p>
-	{/each}
-
-	{#snippet pending()}
-		<p>Loading activity…</p>
-	{/snippet}
-
-	{#snippet failed()}
-		<p>Activity is unavailable.</p>
-	{/snippet}
-</svelte:boundary>
-```
-
-Do not use a traditional `{#await}` pending branch for data required in initial HTML.
-
-The browser sees one public origin. Worker names, service bindings, provider credentials, and deployment origins remain server-side.
+When changing loading behavior, verify direct SSR/hydration, hover then click, click before completion, abandoned preloads, organization switching, query errors/redirects, and mutation refreshes. Check server request counts to distinguish preloading from duplicate fetching.
