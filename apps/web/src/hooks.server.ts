@@ -1,8 +1,8 @@
 import { WebRuntime } from "#lib/server/runtime.ts";
-import type { CaughtError, Handle, HandleServerError } from "@sveltejs/kit/hooks";
+import type { Handle, HandleServerError } from "@sveltejs/kit/hooks";
 import { Cause } from "effect";
 
-export const handleError = (({ kind, error, event }: CaughtError) => {
+export const handleError = (({ kind, error, event }) => {
   if (kind !== "unknown") return;
   const cancelled =
     event.request.signal.aborted &&
