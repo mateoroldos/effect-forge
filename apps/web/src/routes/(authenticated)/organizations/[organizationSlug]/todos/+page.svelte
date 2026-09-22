@@ -19,6 +19,25 @@
 	</header>
 
 	{#key organization.id}
-		<TodoList organizationId={organization.id} />
+		<svelte:boundary pending={loadingTodos}>
+			<TodoList organizationId={organization.id} />
+		</svelte:boundary>
 	{/key}
 </main>
+
+{#snippet loadingTodos()}
+	<div class="mt-8" role="status">
+		<span class="sr-only">Loading todos…</span>
+		<div aria-hidden="true">
+			<div class="h-10 rounded-md bg-muted"></div>
+			<div class="mt-8 divide-y rounded-xl border bg-card">
+				{#each [1, 2, 3] as row (row)}
+					<div class="flex items-center gap-3 px-4 py-5">
+						<div class="size-5 rounded bg-muted"></div>
+						<div class="h-4 w-2/3 rounded bg-muted"></div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	</div>
+{/snippet}

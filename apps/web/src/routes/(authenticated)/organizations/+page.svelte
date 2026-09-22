@@ -6,7 +6,6 @@
 	import { authClient } from '#lib/features/auth/client.ts';
 	import { listOrganizations } from '#lib/features/organizations/organizations.remote.ts';
 
-	const organizations = $derived(await listOrganizations());
 	let name = $state('');
 	let slug = $state('');
 	let creating = $state(false);
@@ -53,22 +52,25 @@
 	</header>
 	<div class="grid gap-12 pt-10 lg:grid-cols-[1fr_22rem]">
 		<section aria-label="Your organizations">
-			{#if organizations.length === 0}
-				<h2 class="font-serif text-3xl">No organizations yet.</h2>
-				<p class="mt-3 text-sm text-muted-foreground">Create your first organization to start a shared todo list.</p>
-			{:else}
-				<ul class="grid gap-4 sm:grid-cols-2">
-					{#each organizations as organization (organization.id)}
-						<li class="rounded-xl border bg-card p-5 shadow-sm">
-							<h2 class="break-words text-lg font-medium">{organization.name}</h2>
-							<p class="mt-1 break-all text-sm text-muted-foreground">{organization.slug}</p>
-							<Button class="mt-5" variant="outline" href={`/organizations/${encodeURIComponent(organization.slug)}/todos`} aria-label={`Open ${organization.name}`}>
-								Open todos
-							</Button>
-						</li>
-					{/each}
-				</ul>
-			{/if}
+			<svelte:boundary pending={loadingOrganizations}>
+				{@const organizations = await listOrganizations()}
+				{#if organizations.length === 0}
+					<h2 class="font-serif text-3xl">No organizations yet.</h2>
+					<p class="mt-3 text-sm text-muted-foreground">Create your first organization to start a shared todo list.</p>
+				{:else}
+					<ul class="grid gap-4 sm:grid-cols-2">
+						{#each organizations as organization (organization.id)}
+							<li class="rounded-xl border bg-card p-5 shadow-sm">
+								<h2 class="break-words text-lg font-medium">{organization.name}</h2>
+								<p class="mt-1 break-all text-sm text-muted-foreground">{organization.slug}</p>
+								<Button class="mt-5" variant="outline" href={`/organizations/${encodeURIComponent(organization.slug)}/todos`} aria-label={`Open ${organization.name}`}>
+									Open todos
+								</Button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</svelte:boundary>
 		</section>
 		<section class="self-start rounded-xl border bg-card p-6" aria-labelledby="create-organization-title">
 			<h2 id="create-organization-title" class="text-lg font-medium">Create an organization</h2>
@@ -90,3 +92,18 @@
 		</section>
 	</div>
 </main>
+
+{#snippet loadingOrganizations()}
+	<div role="status">
+		<span class="sr-only">Loading organizations…</span>
+		<div class="grid gap-4 sm:grid-cols-2" aria-hidden="true">
+			{#each [1, 2] as card (card)}
+				<div class="rounded-xl border bg-card p-5 shadow-sm">
+					<div class="h-7 w-2/3 rounded bg-muted"></div>
+					<div class="mt-1 h-5 w-1/2 rounded bg-muted"></div>
+					<div class="mt-5 h-9 w-28 rounded-md bg-muted"></div>
+				</div>
+			{/each}
+		</div>
+	</div>
+{/snippet}
