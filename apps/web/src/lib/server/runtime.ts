@@ -53,18 +53,28 @@ export const make = (event: RequestEvent) => {
       : requestKind === "data"
         ? `Data · ${route ?? request.method}`
         : `Request · ${request.method}${route === null ? "" : ` ${route}`}`;
+  let remoteOperation: string | undefined;
   const runtime = ManagedRuntime.make(
     application.pipe(
       Layer.provideMerge(authentication),
       Layer.provideMerge(
-        Layer.span(spanName, {
-          attributes: {
-            "app.request.kind": requestKind,
-            "app.span.kind": "request_scope",
-            "http.request.method": request.method,
-            "sveltekit.route_id": routeId ?? "unknown",
-          },
-        }),
+        Layer.unwrap(
+          Effect.sync(() =>
+            Layer.span(
+              remoteOperation === undefined
+                ? spanName
+                : `Remote · ${remoteOperation.replace(/^Remote\./, "")}`,
+              {
+                attributes: {
+                  "app.request.kind": requestKind,
+                  "app.span.kind": "request_scope",
+                  "http.request.method": request.method,
+                  "sveltekit.route_id": routeId ?? "unknown",
+                },
+              },
+            ),
+          ),
+        ),
       ),
       Layer.provideMerge(
         Observability.layer({
@@ -76,7 +86,14 @@ export const make = (event: RequestEvent) => {
     ),
   );
 
-  return { run: RequestRunner.make(runtime, request.signal), dispose: runtime.dispose };
+  const execute = RequestRunner.make(runtime, request.signal);
+  const run: typeof execute = (name, program) => {
+    // The first application operation names a remote request, including its later refreshes.
+    if (requestKind === "remote") remoteOperation ??= name;
+    return execute(name, program);
+  };
+
+  return { run, dispose: runtime.dispose };
 };
 
 export type Runtime = ReturnType<typeof make>;
