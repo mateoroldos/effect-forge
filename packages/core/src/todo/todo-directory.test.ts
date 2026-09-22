@@ -1,7 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Principal, UserId } from "@effect-forge/domain/identity";
 import { OrganizationId, OrganizationMember } from "@effect-forge/domain/organization";
-import { TodoId, TodoTitle } from "@effect-forge/domain/todo";
+import { TodoDescription, TodoId, TodoTitle } from "@effect-forge/domain/todo";
 import { Effect, Layer, Option, PlatformError, Ref } from "effect";
 import { OrganizationAccess } from "../organization-access/organization-access.ts";
 import { OrganizationMembership } from "../organization-access/organization-membership.ts";
@@ -15,6 +15,8 @@ const organizationId = OrganizationId.make("org-1");
 const principal = Principal.make({ userId: UserId.make("user-1") });
 const colleague = Principal.make({ userId: UserId.make("user-2") });
 const title = TodoTitle.make("Ship organizations");
+const description = TodoDescription.make("Review the changes.\nThen ship them.");
+const emptyDescription = TodoDescription.make("");
 const members = [principal, colleague].map(({ userId }) =>
   OrganizationMember.make({ organizationId, userId, roles: ["member"] }),
 );
@@ -49,17 +51,29 @@ describe("TodoDirectory", () => {
     it.effect("creates distinct todos and lets another member complete them", () =>
       Effect.gen(function* () {
         const directory = yield* TodoDirectory.Service;
-        const first = yield* directory.create(principal, organizationId, title);
-        const second = yield* directory.create(colleague, organizationId, title);
+        const first = yield* directory.create(principal, organizationId, title, description);
+        const second = yield* directory.create(colleague, organizationId, title, emptyDescription);
         assert.notStrictEqual(first.id, second.id);
-        assert.deepEqual(first, { id: first.id, organizationId, title, completed: false });
-        assert.deepEqual(second, { id: second.id, organizationId, title, completed: false });
+        assert.deepEqual(first, {
+          id: first.id,
+          organizationId,
+          title,
+          description,
+          completed: false,
+        });
+        assert.deepEqual(second, {
+          id: second.id,
+          organizationId,
+          title,
+          description: emptyDescription,
+          completed: false,
+        });
         assert.sameDeepMembers(
           [...(yield* directory.list(colleague, organizationId))],
           [first, second],
         );
         const done = yield* directory.setCompleted(colleague, organizationId, first.id, true);
-        const expected = { id: first.id, organizationId, title, completed: true };
+        const expected = { id: first.id, organizationId, title, description, completed: true };
         assert.deepEqual(done, expected);
         assert.sameDeepMembers(
           [...(yield* directory.list(principal, organizationId))],
@@ -109,7 +123,7 @@ describe("TodoDirectory", () => {
       yield* Effect.gen(function* () {
         const directory = yield* TodoDirectory.Service;
         const store = yield* TodoStore.Service;
-        const todo = yield* directory.create(principal, organizationId, title);
+        const todo = yield* directory.create(principal, organizationId, title, description);
         yield* Ref.update(currentMembers, (rows) =>
           rows.filter((member) => member.userId !== principal.userId),
         );
@@ -122,7 +136,7 @@ describe("TodoDirectory", () => {
           }),
         );
         assert.deepEqual(
-          yield* directory.create(principal, organizationId, title).pipe(Effect.flip),
+          yield* directory.create(principal, organizationId, title, description).pipe(Effect.flip),
           new OrganizationAccess.Denied({
             organizationId,
             permission: Permission.Key.make("todo:create"),
@@ -138,7 +152,13 @@ describe("TodoDirectory", () => {
         assert.strictEqual(yield* Ref.get(accesses), before);
         assert.deepEqual(yield* store.list(organizationId), [todo]);
         const done = yield* directory.setCompleted(colleague, organizationId, todo.id, true);
-        assert.deepEqual(done, { id: todo.id, organizationId, title, completed: true });
+        assert.deepEqual(done, {
+          id: todo.id,
+          organizationId,
+          title,
+          description,
+          completed: true,
+        });
         assert.deepEqual(yield* directory.list(colleague, organizationId), [done]);
       }).pipe(Effect.provide(revocationLayer));
     }),
@@ -162,7 +182,9 @@ describe("TodoDirectory", () => {
       Effect.gen(function* () {
         const directory = yield* TodoDirectory.Service;
         const store = yield* TodoStore.Service;
-        const failure = yield* directory.create(principal, organizationId, title).pipe(Effect.flip);
+        const failure = yield* directory
+          .create(principal, organizationId, title, description)
+          .pipe(Effect.flip);
         assert.instanceOf(failure, TodoDirectory.IdGenerationError);
         assert.strictEqual(failure.cause, cryptoError);
         assert.deepEqual(yield* store.list(organizationId), []);

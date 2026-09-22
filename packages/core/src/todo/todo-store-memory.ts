@@ -34,7 +34,13 @@ export const layer = Layer.effect(
             const previous = rows.get(id);
             if (previous === undefined || previous.organizationId !== organizationId)
               return [Effect.fail(new TodoStore.NotFound({ organizationId, id })), rows];
-            const todo = Todo.make({ id, organizationId, title: previous.title, completed });
+            const todo = Todo.make({
+              id,
+              organizationId,
+              title: previous.title,
+              description: previous.description,
+              completed,
+            });
             return [Effect.succeed(todo), new Map(rows).set(id, todo)];
           },
         ).pipe(Effect.flatten),

@@ -1,6 +1,6 @@
 import type { Principal } from "@effect-forge/domain/identity";
 import type { OrganizationId } from "@effect-forge/domain/organization";
-import { Todo, TodoId, TodoTitle } from "@effect-forge/domain/todo";
+import { Todo, TodoDescription, TodoId, TodoTitle } from "@effect-forge/domain/todo";
 import { Context, Crypto, Effect, Layer, Schema } from "effect";
 import { OrganizationAccess } from "../organization-access/organization-access.ts";
 import type { OrganizationMembership } from "../organization-access/organization-membership.ts";
@@ -23,6 +23,7 @@ export interface Interface {
     principal: Principal,
     organizationId: OrganizationId,
     title: TodoTitle,
+    description: TodoDescription,
   ) => Effect.Effect<Todo, AccessError | IdGenerationError | TodoStore.PersistenceError>;
   readonly setCompleted: (
     principal: Principal,
@@ -61,13 +62,16 @@ export const layer = Layer.effect(
       principal: Principal,
       organizationId: OrganizationId,
       title: TodoTitle,
+      description: TodoDescription,
     ) {
       yield* access.require(principal, organizationId, permissions.create);
       const id = yield* crypto.randomUUIDv4.pipe(
         Effect.flatMap(Schema.decodeEffect(TodoId)),
         Effect.mapError((cause) => new IdGenerationError({ cause })),
       );
-      return yield* store.create(Todo.make({ id, organizationId, title, completed: false }));
+      return yield* store.create(
+        Todo.make({ id, organizationId, title, description, completed: false }),
+      );
     });
     const setCompleted = Effect.fn("TodoDirectory.setCompleted")(function* (
       principal: Principal,

@@ -9,6 +9,7 @@ export const todos = pgTable(
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
     title: varchar("title", { length: 200 }).notNull(),
+    description: varchar("description", { length: 2000 }).notNull().default(""),
     completed: boolean("completed").notNull().default(false),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
