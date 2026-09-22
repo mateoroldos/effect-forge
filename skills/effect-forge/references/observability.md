@@ -15,7 +15,7 @@ directly to the browser:
 
 ```ts
 const result = await event.locals.run(
-  "Web.listTodos",
+  "Remote.listTodos",
   Effect.gen(function* () {
     const directory = yield* TodoDirectory.Service;
     const todos = yield* directory.list(principal, organizationId);
@@ -35,6 +35,7 @@ return result.success;
 ```
 
 - Add meaningful operation facts with `Effect.annotateCurrentSpan`; use named `Effect.fn` spans for internal work.
+- Name boundary operations `Remote.<exported function>`, `Load.<route or layout purpose>`, or `Endpoint.<endpoint purpose>`, such as `Remote.createTodo`, `Load.authenticatedLayout`, and `Endpoint.authentication`. Internal operations retain their service-owner names, such as `TodoDirectory.create`.
 - Reuse the runtime's request parent; do not create another parent in each handler.
 - Avoid adding spans for trivial construction.
 - Keep expected-error projection in the handler and unexpected-error handling with SvelteKit's hooks. Public wording and recovery follow the [frontend error-channel policy](frontend.md#error-channels-and-recovery).

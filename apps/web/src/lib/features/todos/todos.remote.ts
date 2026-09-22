@@ -31,7 +31,7 @@ const reject = (failure: Failure): never =>
 export const listTodos = query(Schema.toStandardSchemaV1(OrganizationId), (organizationId) =>
   getRequestEvent()
     .locals.run(
-      "Web.listTodos",
+      "Remote.listTodos",
       Effect.gen(function* () {
         const { principal } = yield* AuthGuard.requireIdentity;
         const directory = yield* TodoDirectory.Service;
@@ -53,7 +53,7 @@ export const createTodo = form(
   (input) =>
     getRequestEvent()
       .locals.run(
-        "Web.createTodo",
+        "Remote.createTodo",
         Effect.gen(function* () {
           const { principal } = yield* AuthGuard.requireIdentity;
           const directory = yield* TodoDirectory.Service;
@@ -75,7 +75,7 @@ export const setTodoCompleted = form(
   (input) =>
     getRequestEvent()
       .locals.run(
-        "Web.setTodoCompleted",
+        "Remote.setTodoCompleted",
         Effect.gen(function* () {
           const { principal } = yield* AuthGuard.requireIdentity;
           const directory = yield* TodoDirectory.Service;
