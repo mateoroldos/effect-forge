@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Cause } from "effect";
+import type { RequestEvent } from "@sveltejs/kit";
 import { handleError } from "./hooks.server.ts";
+
+// SAFETY: This local fixture supplies the real Request, the only event field read by handleError.
+const eventFor = (request: Request) => ({ request }) as RequestEvent;
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -11,7 +15,7 @@ describe("handleError", () => {
     const request = new Request("https://example.com/organizations", {
       signal: AbortSignal.abort(),
     });
-    expect(handleError({ kind: "unknown", error, event: { request } })).toEqual({
+    expect(handleError({ kind: "unknown", error, event: eventFor(request) })).toEqual({
       message: "Something went wrong. Refresh before trying again.",
     });
     expect(report).not.toHaveBeenCalled();
@@ -32,7 +36,7 @@ describe("handleError", () => {
     const request = new Request("https://example.com/organizations", {
       signal: AbortSignal.abort(),
     });
-    expect(handleError({ kind: "unknown", error, event: { request } })).toEqual({
+    expect(handleError({ kind: "unknown", error, event: eventFor(request) })).toEqual({
       message: "Something went wrong. Refresh before trying again.",
     });
     expect(report).toHaveBeenCalledExactlyOnceWith(error);
@@ -45,7 +49,7 @@ describe("handleError", () => {
       handleError({
         kind: "app",
         error: { status: 403, message: "Access denied" },
-        event: { request },
+        event: eventFor(request),
       }),
     ).toBeUndefined();
     expect(report).not.toHaveBeenCalled();
