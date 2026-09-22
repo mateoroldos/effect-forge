@@ -36,7 +36,7 @@
 		<input {...update.fields.completed.as('hidden', todo.completed ? 'false' : 'true')} />
 		<span class={todo.completed ? 'break-words text-muted-foreground line-through' : 'break-words'}>{todo.title}</span>
 		<Button type="submit" variant="outline" disabled={update.pending > 0} aria-label={`${todo.completed ? 'Reopen' : 'Complete'} ${todo.title}`}>
-			{update.pending ? 'Saving…' : todo.completed ? 'Reopen' : 'Complete'}
+			{todo.completed ? 'Reopen' : 'Complete'}
 		</Button>
 	</form>
 	{#if update.fields.allIssues()?.length}<p class="mt-2 text-sm text-destructive" role="alert">We couldn’t apply this change. Refresh and try again.</p>{/if}

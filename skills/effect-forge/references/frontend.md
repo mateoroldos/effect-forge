@@ -59,7 +59,9 @@ Compose visible inputs with the shared `Field.Field`, `Field.Label`, `Field.Desc
 
 Use `query.withOverride` with `submission.submit().updates(...)` for optimistic changes to existing records. Capture the intended value before applying the override; do not toggle it inside the override callback. Refresh the affected query after a successful mutation so authoritative data returns with the response.
 
-Represent pending creation as a local draft, not a persisted domain record with a fabricated ID. With custom `form.enhance`, reset only when `submission.submit()` returns `true`; validation failures return `false` and must retain input. A transport failure may follow a committed write, so do not automatically retry or claim nothing was saved.
+For optimistic creation, let the query's presentation type admit an unsaved row (`id: null`); keep persisted domain records unchanged. Append the captured title with `submission.submit().updates(query.withOverride(...))`, then reset the input immediately. Kit removes the override on completion or failure. Do not automatically overwrite newer input; an explicit Restore text action replaces it. Handle both `false` validation results and thrown failures. Never automatically retry an uncertain mutation.
+
+Use normal todo row styling and action labels. Disable actions on unsaved rows and the same saved row while its form is pending. Keep the query as the only list; do not add draft registries, identity maps, queues, or mutation coordinators. Single-flight refreshes do not guarantee ordering across concurrent mutation responses.
 
 Keep mutation failures local unless they invalidate access to the page. Propagate denied access to SvelteKit's error handling; let Kit follow authentication redirects. Otherwise, roll back optimistic presentation, preserve input, and show the safe server message or an uncertainty toast. Report unknown client failures where they are caught, since they no longer reach `handleError`. Use `finally` for local presentation cleanup, and do not automatically retry an uncertain mutation.
 

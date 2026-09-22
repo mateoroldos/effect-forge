@@ -1,6 +1,6 @@
 import { TodoDirectory } from "@effect-forge/core/todo-directory";
 import { OrganizationId } from "@effect-forge/domain/organization";
-import { TodoId, TodoTitle } from "@effect-forge/domain/todo";
+import { type Todo, TodoId, TodoTitle } from "@effect-forge/domain/todo";
 import { error } from "@sveltejs/kit";
 import { form, getRequestEvent, query } from "$app/server";
 import { Effect, Match, Result, Schema } from "effect";
@@ -13,6 +13,9 @@ type Failure =
   | Effect.Error<ReturnType<TodoDirectory.Interface["list"]>>
   | Effect.Error<ReturnType<TodoDirectory.Interface["create"]>>
   | Effect.Error<ReturnType<TodoDirectory.Interface["setCompleted"]>>;
+
+// The query also renders optimistic titles before the server assigns their IDs.
+export type TodoListItem = Todo | { readonly id: null; readonly title: string };
 
 const reject = (failure: Failure): never =>
   Match.valueTags(failure, {
@@ -28,19 +31,21 @@ const reject = (failure: Failure): never =>
       error(500, "We couldn’t create your todo. Refresh before trying again."),
   });
 
-export const listTodos = query(Schema.toStandardSchemaV1(OrganizationId), (organizationId) =>
-  getRequestEvent()
-    .locals.run(
-      "Remote.listTodos",
-      Effect.gen(function* () {
-        const { principal } = yield* AuthGuard.requireIdentity;
-        const directory = yield* TodoDirectory.Service;
-        const todos = yield* directory.list(principal, organizationId);
-        yield* Effect.annotateCurrentSpan("todo.count", todos.length);
-        return todos;
-      }),
-    )
-    .then(Result.getOrElse(reject)),
+export const listTodos = query(
+  Schema.toStandardSchemaV1(OrganizationId),
+  (organizationId): Promise<ReadonlyArray<TodoListItem>> =>
+    getRequestEvent()
+      .locals.run(
+        "Remote.listTodos",
+        Effect.gen(function* () {
+          const { principal } = yield* AuthGuard.requireIdentity;
+          const directory = yield* TodoDirectory.Service;
+          const todos = yield* directory.list(principal, organizationId);
+          yield* Effect.annotateCurrentSpan("todo.count", todos.length);
+          return todos;
+        }),
+      )
+      .then(Result.getOrElse(reject)),
 );
 
 export const createTodo = form(
