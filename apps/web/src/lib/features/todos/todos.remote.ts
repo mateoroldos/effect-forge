@@ -1,11 +1,12 @@
 import { TodoDirectory } from "@effect-forge/core/todo-directory";
 import { OrganizationId } from "@effect-forge/domain/organization";
-import { type Todo, TodoDescription, TodoId, TodoTitle } from "@effect-forge/domain/todo";
+import { TodoDescription, TodoId, TodoTitle } from "@effect-forge/domain/todo";
 import { error } from "@sveltejs/kit";
 import { form, getRequestEvent, query } from "$app/server";
 import { Effect, Match, Result, Schema } from "effect";
 import { Authentication } from "#lib/server/authentication.ts";
 import { AuthGuard } from "#lib/server/auth-guard.ts";
+import type { TodoListItem } from "./todo-list-item.ts";
 
 type Failure =
   | AuthGuard.Unauthenticated
@@ -13,11 +14,6 @@ type Failure =
   | Effect.Error<ReturnType<TodoDirectory.Interface["list"]>>
   | Effect.Error<ReturnType<TodoDirectory.Interface["create"]>>
   | Effect.Error<ReturnType<TodoDirectory.Interface["setCompleted"]>>;
-
-// The query also renders optimistic rows before the server assigns their IDs.
-export type TodoListItem =
-  | Todo
-  | { readonly id: null; readonly title: string; readonly description: string };
 
 const reject = (failure: Failure): never =>
   Match.valueTags(failure, {
@@ -35,6 +31,7 @@ const reject = (failure: Failure): never =>
 
 export const listTodos = query(
   Schema.toStandardSchemaV1(OrganizationId),
+  // The server returns persisted todos; the query also renders unconfirmed optimistic rows.
   (organizationId): Promise<ReadonlyArray<TodoListItem>> =>
     getRequestEvent()
       .locals.run(

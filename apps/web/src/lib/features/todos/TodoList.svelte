@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Button } from '@effect-forge/ui/ui/button';
 	import { listTodos } from './todos.remote.ts';
 	import TodoCreateForm from './TodoCreateForm.svelte';
 	import TodoItem from './TodoItem.svelte';
@@ -15,17 +14,7 @@
 {:else}
 	<ul class="mt-8 divide-y rounded-xl border bg-card" aria-label="Todos">
 		{#each todos as todo (todo.id ?? todo)}
-			{#if todo.id === null}
-				<li class="flex items-center justify-between gap-4 p-4">
-					<div class="min-w-0">
-						<span class="break-words">{todo.title}</span>
-						{#if todo.description}<p class="mt-1 whitespace-pre-wrap break-words text-sm text-muted-foreground">{todo.description}</p>{/if}
-					</div>
-					<Button type="button" variant="outline" disabled aria-label={`Complete ${todo.title}`}>Complete</Button>
-				</li>
-			{:else}
-				<TodoItem {todo} />
-			{/if}
+			<TodoItem {todo} />
 		{/each}
 	</ul>
 {/if}

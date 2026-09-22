@@ -5,21 +5,22 @@
 	import { Textarea } from '@effect-forge/ui/ui/textarea';
 	import * as Field from '@effect-forge/ui/ui/field';
 	import { toast } from 'svelte-sonner';
-	import { createTodo, listTodos, type TodoListItem } from './todos.remote.ts';
+	import { createTodo, listTodos } from './todos.remote.ts';
+	import type { TodoListItem } from './todo-list-item.ts';
 
 	let { organizationId }: { organizationId: string } = $props();
 	const create = $derived(createTodo.for(organizationId));
 
-	function recover(input: { title: string; description: string }, message: string) {
+	function recover(input: { title: string; description: string }, message?: string) {
 		const restore = () => {
 			create.fields.title.set(input.title);
 			create.fields.description.set(input.description);
 		};
 		if (!create.fields.title.value() && !create.fields.description.value()) {
 			restore();
-			toast.error(message);
+			toast.error(message ?? 'We couldn’t add this todo. Check the highlighted fields.');
 		} else {
-			toast.error(message, {
+			toast.error(message ?? 'Your submitted todo needs changes. Restore its text to review it.', {
 				description: input.title,
 				duration: 15_000,
 				closeButton: true,
@@ -41,11 +42,7 @@
 		);
 		submission.element.reset();
 		if (!await pending) {
-			recover(input, submission.fields.title.issues()?.length
-				? 'Enter 1–200 characters without surrounding spaces.'
-				: submission.fields.description.issues()?.length
-					? 'Use at most 2,000 characters for the description.'
-				: 'We couldn’t apply this request. Refresh and try again.');
+			recover(input);
 		}
 	} catch (failure) {
 		if (isHttpError(failure)) {
