@@ -5,7 +5,7 @@ import type { RequestHandler } from "./$types";
 export const fallback: RequestHandler = ({ locals }) =>
   locals
     .run(
-      "Web.handleAuthentication",
+      "Endpoint.authentication",
       Effect.gen(function* () {
         const authentication = yield* Authentication.Service;
         return yield* authentication.handle;

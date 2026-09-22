@@ -7,7 +7,7 @@ import { AuthGuard } from "#lib/server/auth-guard.ts";
 export const listOrganizations = query(() =>
   getRequestEvent()
     .locals.run(
-      "Web.listOrganizations",
+      "Remote.listOrganizations",
       Effect.gen(function* () {
         const authentication = yield* Authentication.Service;
         const identity = yield* AuthGuard.requireIdentity;
