@@ -14,7 +14,7 @@ export default defineConfig({
       },
 
       // No adapter: Cloudflare.Website.SvelteKit owns it at deploy time.
-      experimental: { remoteFunctions: true },
+      experimental: { remoteFunctions: true, forkPreloads: true },
     }),
   ],
 });

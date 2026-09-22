@@ -112,26 +112,17 @@ Keep memoized identity and membership evidence request-owned. Key membership loo
 
 ## SSR
 
-The organizations list and organization-keyed todo section use pending boundaries to show local skeletons while their queries resolve. These sections render placeholders during SSR and load their content in the browser. The organizations creation form stays outside its list boundary; the todo page resolves the organization before rendering its todo boundary. Query failures propagate to Kit's route error handling, and subsequent refreshes retain existing content rather than returning to the initial placeholder.
+The organizations list and organization-keyed todo section use pending boundaries to show local skeletons while their queries resolve. These sections render placeholders during SSR and load their content in the browser. The organizations creation form stays outside its list boundary. The universal `organizations/[organizationSlug]/+layout.ts` resolves the URL's organization and supplies `data.organization` to child pages; it does not load todos or select Better Auth's active organization. Query failures propagate to Kit's route error handling, and subsequent refreshes retain existing content rather than returning to the initial placeholder.
 
-Hover preloading is enabled in `app.html` for route code and `load` data. It does not prefetch these component-owned remote queries; experimental forked preloading is not enabled.
+Hover preloading is enabled in `app.html`. `experimental.forkPreloads` in `apps/web/vite.config.ts` additionally lets Kit speculatively render destination components and start their remote queries.
 
 ### Remote-query preloading
 
 Remote queries **can be awaited in universal `load` functions**. Kit's [query deduplication contract](https://svelte.dev/docs/kit/remote-functions#query-Deduplication) explicitly supports this and shares identical query keys with component consumers while the query remains in active use. There is no need for a separate query cache or HTTP endpoint. The absence of a dedicated `prefetch` method does not prevent route-load preloading.
 
-Keep the current component-owned reads and ordinary hover preloading for now. Browser probes against Kit `3.0.0-next.25` and Svelte `5.57.0` established these adoption constraints:
+Keep list reads in their components rather than await them in page loads solely to warm the cache. Kit waits for loads before rendering the destination, so an awaited list in a load would prevent its pending boundary from showing until the list finishes. Forked preloading starts the component-owned reads without introducing that load dependency. The organization layout deliberately awaits only the directory needed to resolve the route's identity; every remote operation still authorizes its own access.
 
-| Approach                                                                        | Observed behavior                                                                   | Decision                                                                      |
-| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Universal load awaits a query; destination component awaits the same key        | Hover starts the query and the component reuses it with one server read             | Supported; do not dismiss this approach as incompatible with remote functions |
-| Click while that load is still awaiting the query                               | Previous page remains visible; the destination's pending boundary cannot render yet | Does not preserve the current early-shell navigation behavior                 |
-| Remote query redirects an expired session during hover-triggered universal load | Browser navigates to sign-in without a click                                        | Do not enable this for our redirecting authenticated queries                  |
-| `experimental.forkPreloads` with slug resolution and a keyed pending boundary   | Hover/click sequence failed to complete in the local fixture                        | Keep disabled until a focused reproduction passes on the selected versions    |
-
-These are local framework-fixture observations, not a diagnosis of the fork failure or a deployed application test. The successful load handoff does not prove retention across an arbitrarily delayed click: query cache lifetime follows active consumers and references. Do not return a separate todo snapshot merely to preload it; the live query must remain the owner of refreshes and optimistic overrides.
-
-Revisit adoption when preloading can start and reuse the query without navigating on hover, leave the current page untouched when abandoned, and preserve pending navigation, query-error handling, and mutation refreshes. Prefer Kit-owned route preloading over manual hover handlers or application-managed cache retention. The relevant public contracts are [link preloading](https://svelte.dev/docs/kit/link-options#data-sveltekit-preload-data) and [universal load](https://svelte.dev/docs/kit/load#Universal-vs-server).
+Components continue consuming the live queries for refreshes and optimistic overrides. Cache lifetime follows active consumers and references, not a permanent route cache. Use Kit-owned preloading rather than manual hover handlers or application-managed cache retention. The relevant public contracts are [link preloading](https://svelte.dev/docs/kit/link-options#data-sveltekit-preload-data) and [universal load](https://svelte.dev/docs/kit/load#Universal-vs-server).
 
 ### Render modes
 
