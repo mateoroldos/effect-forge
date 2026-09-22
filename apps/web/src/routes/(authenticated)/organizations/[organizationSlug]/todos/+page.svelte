@@ -1,11 +1,8 @@
 <script lang="ts">
-	import { error } from '@sveltejs/kit';
-	import { listOrganizations } from '#lib/features/organizations/organizations.remote.ts';
 	import TodoList from '#lib/features/todos/TodoList.svelte';
 
-	let { params } = $props();
-	const organizations = $derived(await listOrganizations());
-	const organization = $derived(organizations.find((organization) => organization.slug === params.organizationSlug) ?? error(404, 'Organization not found.'));
+	let { data } = $props();
+	const organization = $derived(data.organization);
 </script>
 
 <svelte:head><title>Todos · Effect Forge</title></svelte:head>
