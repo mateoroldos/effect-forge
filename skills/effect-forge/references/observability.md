@@ -56,7 +56,9 @@ expose these diagnostics through browser-facing errors.
 - Effect's default configuration provider treats empty strings as missing before validation.
 - `stage` and SvelteKit `dev` describe the runtime environment. The runtime passes them to observability for resource metadata and console formatting; they are independent values.
 - Use route templates, not concrete paths, in span names. Omit route groups from the display name and retain the original `sveltekit.route_id` as metadata.
-- Name the parent span with method and route template, such as `GET /organizations/[organizationSlug]/todos (runtime)`. It measures runtime-scope timing, from first use through cleanup, not HTTP latency or aggregate operation status. Cloudflare owns HTTP telemetry.
+- Parent names identify the request kind: `Request · GET /organizations`, `Data · /organizations/[organizationSlug]/todos`, or `Remote · POST`. Classify remote requests before data requests using SvelteKit's flags. Remote queries may have no page route; remote forms may carry the calling page's route, retained only as metadata. Use the method alone after the kind label when no route is available; never substitute raw URLs or remote endpoint IDs.
+- Keep `app.request.kind` and `app.span.kind=request_scope` as metadata. The parent measures runtime-scope timing, from first use through cleanup, not HTTP latency or aggregate operation status. Child operation names identify the work performed. Cloudflare owns HTTP telemetry.
+- Server spans describe server work, not every browser navigation. Reused layout data and retained query results can avoid server calls; hover preloading can perform work before the click. Do not force invalidation to produce telemetry.
 - Trace memoized public operations outside the cache when caller visibility matters. Authentication's `app.auth.reused` includes completed and in-flight reuse.
 - Preserve bounded, best-effort export during disposal; application operations should not await collector delivery.
 
