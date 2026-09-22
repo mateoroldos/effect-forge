@@ -3,36 +3,28 @@ import { PersistencePostgres } from "@effect-forge/database-postgres";
 import * as authSchema from "@effect-forge/database-postgres/auth-schema";
 import { NodeCrypto } from "@effect/platform-node";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { Effect, Layer, ManagedRuntime, Redacted } from "effect";
+import type { RequestEvent } from "@sveltejs/kit";
+import { dev } from "$app/env";
+import { Effect, Layer, ManagedRuntime } from "effect";
+import { decodeAuthOrigin } from "./auth-origin.ts";
+import { decodeAuthSecret } from "./auth-secret.ts";
 import { Authentication } from "./authentication.ts";
 import { Postgres } from "./postgres.ts";
 import { Observability } from "./observability.ts";
 import { RequestRunner } from "./request-runner.ts";
 
-export interface Input {
-  readonly baseURL: string;
-  readonly connectionString: string;
-  readonly request: Request;
-  readonly requestKind: "request" | "data" | "remote";
-  readonly routeId: string | null;
-  readonly secret: Redacted.Redacted<string>;
-  readonly stage: string;
-  readonly dev: boolean;
-  readonly telemetry: { readonly endpoint: string | undefined };
-}
-
 /** Builds all stable services owned by one SvelteKit request. */
-export const make = ({
-  baseURL,
-  connectionString,
-  request,
-  requestKind,
-  routeId,
-  secret,
-  stage,
-  dev,
-  telemetry,
-}: Input) => {
+export const make = (event: RequestEvent) => {
+  const { platform, request } = event;
+  if (platform === undefined) {
+    throw new Error("SvelteKit platform environment is unavailable");
+  }
+  const env = platform.env;
+  const baseURL = decodeAuthOrigin(env.AUTH_ORIGIN).origin;
+  const secret = decodeAuthSecret(env.AUTH_SECRET);
+  const connectionString = env.DATABASE.connectionString;
+  const requestKind = event.isRemoteRequest ? "remote" : event.isDataRequest ? "data" : "request";
+  const routeId = event.route.id;
   const postgres = Postgres.applicationLayer(connectionString);
   const persistence = PersistencePostgres.layer.pipe(Layer.provide(postgres));
   const application = Application.layer.pipe(
@@ -74,7 +66,13 @@ export const make = ({
           },
         }),
       ),
-      Layer.provideMerge(Observability.layer({ ...telemetry, stage, dev })),
+      Layer.provideMerge(
+        Observability.layer({
+          endpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT,
+          stage: env.DEPLOYMENT_ENVIRONMENT,
+          dev,
+        }),
+      ),
     ),
   );
 
