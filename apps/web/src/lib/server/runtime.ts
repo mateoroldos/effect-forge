@@ -13,6 +13,7 @@ export interface Input {
   readonly baseURL: string;
   readonly connectionString: string;
   readonly request: Request;
+  readonly requestKind: "request" | "data" | "remote";
   readonly routeId: string | null;
   readonly secret: Redacted.Redacted<string>;
   readonly stage: string;
@@ -25,6 +26,7 @@ export const make = ({
   baseURL,
   connectionString,
   request,
+  requestKind,
   routeId,
   secret,
   stage,
@@ -53,12 +55,20 @@ export const make = ({
   ).pipe(Layer.provide(Postgres.authenticationLayer(connectionString)));
 
   const route = routeId === null ? null : routeId.replace(/\/\([^/)]+\)(?=\/|$)/g, "") || "/";
+  const spanName =
+    requestKind === "remote"
+      ? `Remote · ${request.method}`
+      : requestKind === "data"
+        ? `Data · ${route ?? request.method}`
+        : `Request · ${request.method}${route === null ? "" : ` ${route}`}`;
   const runtime = ManagedRuntime.make(
     application.pipe(
       Layer.provideMerge(authentication),
       Layer.provideMerge(
-        Layer.span(`${request.method} ${route ?? "(unmatched route)"} (runtime)`, {
+        Layer.span(spanName, {
           attributes: {
+            "app.request.kind": requestKind,
+            "app.span.kind": "request_scope",
             "http.request.method": request.method,
             "sveltekit.route_id": routeId ?? "unknown",
           },

@@ -29,6 +29,7 @@ export const handle: Handle = ({ event, resolve }) => {
     baseURL: authOrigin.origin,
     connectionString: platform.env.DATABASE.connectionString,
     request: event.request,
+    requestKind: event.isRemoteRequest ? "remote" : event.isDataRequest ? "data" : "request",
     routeId: event.route.id,
     secret: decodeAuthSecret(platform.env.AUTH_SECRET),
     stage: platform.env.DEPLOYMENT_ENVIRONMENT,
