@@ -112,6 +112,10 @@ Keep memoized identity and membership evidence request-owned. Key membership loo
 
 ## SSR
 
+The organizations list and organization-keyed todo section use pending boundaries to show local skeletons while their queries resolve. These sections render placeholders during SSR and load their content in the browser. The organizations creation form stays outside its list boundary; the todo page resolves the organization before rendering its todo boundary. Query failures propagate to Kit's route error handling, and subsequent refreshes retain existing content rather than returning to the initial placeholder.
+
+Hover preloading is enabled in `app.html` for route code and `load` data. It does not prefetch these component-owned remote queries; experimental forked preloading is not enabled.
+
 Resolve only data required to render the route. Keep authenticated state scoped to the SvelteKit request. Never retain principals, cookies, or request-scoped services in a shared mutable singleton.
 
 Choose the remote-query render mode deliberately:
