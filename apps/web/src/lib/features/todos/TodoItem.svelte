@@ -34,7 +34,10 @@
 		<input {...update.fields.organizationId.as('hidden', todo.organizationId)} />
 		<input {...update.fields.id.as('hidden', todo.id)} />
 		<input {...update.fields.completed.as('hidden', todo.completed ? 'false' : 'true')} />
-		<span class={todo.completed ? 'break-words text-muted-foreground line-through' : 'break-words'}>{todo.title}</span>
+		<div class="min-w-0">
+			<span class={todo.completed ? 'break-words text-muted-foreground line-through' : 'break-words'}>{todo.title}</span>
+			{#if todo.description}<p class="mt-1 whitespace-pre-wrap break-words text-sm text-muted-foreground">{todo.description}</p>{/if}
+		</div>
 		<Button type="submit" variant="outline" disabled={update.pending > 0} aria-label={`${todo.completed ? 'Reopen' : 'Complete'} ${todo.title}`}>
 			{todo.completed ? 'Reopen' : 'Complete'}
 		</Button>

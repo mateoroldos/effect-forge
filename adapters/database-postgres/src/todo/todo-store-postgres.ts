@@ -10,6 +10,7 @@ const columns = {
   id: todos.id,
   organizationId: todos.organizationId,
   title: todos.title,
+  description: todos.description,
   completed: todos.completed,
 };
 

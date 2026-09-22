@@ -1,6 +1,6 @@
 import { TodoDirectory } from "@effect-forge/core/todo-directory";
 import { OrganizationId } from "@effect-forge/domain/organization";
-import { type Todo, TodoId, TodoTitle } from "@effect-forge/domain/todo";
+import { type Todo, TodoDescription, TodoId, TodoTitle } from "@effect-forge/domain/todo";
 import { error } from "@sveltejs/kit";
 import { form, getRequestEvent, query } from "$app/server";
 import { Effect, Match, Result, Schema } from "effect";
@@ -14,8 +14,10 @@ type Failure =
   | Effect.Error<ReturnType<TodoDirectory.Interface["create"]>>
   | Effect.Error<ReturnType<TodoDirectory.Interface["setCompleted"]>>;
 
-// The query also renders optimistic titles before the server assigns their IDs.
-export type TodoListItem = Todo | { readonly id: null; readonly title: string };
+// The query also renders optimistic rows before the server assigns their IDs.
+export type TodoListItem =
+  | Todo
+  | { readonly id: null; readonly title: string; readonly description: string };
 
 const reject = (failure: Failure): never =>
   Match.valueTags(failure, {
@@ -53,6 +55,7 @@ export const createTodo = form(
     Schema.Struct({
       organizationId: OrganizationId,
       title: TodoTitle,
+      description: TodoDescription,
     }),
   ),
   (input) =>
@@ -62,7 +65,12 @@ export const createTodo = form(
         Effect.gen(function* () {
           const { principal } = yield* AuthGuard.requireIdentity;
           const directory = yield* TodoDirectory.Service;
-          return yield* directory.create(principal, input.organizationId, input.title);
+          return yield* directory.create(
+            principal,
+            input.organizationId,
+            input.title,
+            input.description,
+          );
         }),
       )
       .then(Result.getOrElse(reject))

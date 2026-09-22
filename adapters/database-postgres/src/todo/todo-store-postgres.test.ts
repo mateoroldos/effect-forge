@@ -1,7 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { TodoStore } from "@effect-forge/core/todo-store";
 import { OrganizationId } from "@effect-forge/domain/organization";
-import { Todo, TodoId, TodoTitle } from "@effect-forge/domain/todo";
+import { Todo, TodoDescription, TodoId, TodoTitle } from "@effect-forge/domain/todo";
 import { eq } from "drizzle-orm";
 import { DateTime, Effect, Layer } from "effect";
 import { organization } from "../auth/schema.ts";
@@ -16,6 +16,7 @@ const todo = Todo.make({
   id: TodoId.make("550e8400-e29b-41d4-a716-446655440000"),
   organizationId: orgA,
   title: TodoTitle.make("Ship organizations"),
+  description: TodoDescription.make("Check membership isolation.\nShip together."),
   completed: false,
 });
 const sibling = Todo.make({ ...todo, id: TodoId.make("550e8400-e29b-41d4-a716-446655440001") });
@@ -36,6 +37,21 @@ const fixture = Effect.gen(function* () {
 });
 
 describe("PostgreSQL TodoStore", () => {
+  it.effect("defaults omitted descriptions to empty text", () =>
+    Effect.gen(function* () {
+      const { database, store } = yield* fixture;
+      yield* database.insert(todos).values({
+        id: todo.id,
+        organizationId: orgA,
+        title: todo.title,
+        completed: false,
+      });
+      assert.deepEqual(yield* store.list(orgA), [
+        { ...todo, description: TodoDescription.make("") },
+      ]);
+    }).pipe(Effect.provide(layer)),
+  );
+
   it.effect("persists creation, repeated completion, and reopening", () =>
     Effect.gen(function* () {
       const { store } = yield* fixture;

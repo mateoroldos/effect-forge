@@ -10,10 +10,17 @@ export const TodoTitle = Schema.String.pipe(
 );
 export type TodoTitle = typeof TodoTitle.Type;
 
+export const TodoDescription = Schema.String.pipe(
+  Schema.check(Schema.isMaxLength(2000)),
+  Schema.brand("TodoDescription"),
+);
+export type TodoDescription = typeof TodoDescription.Type;
+
 export const Todo = Schema.Struct({
   id: TodoId,
   organizationId: OrganizationId,
   title: TodoTitle,
+  description: TodoDescription,
   completed: Schema.Boolean,
 });
 export interface Todo extends Schema.Schema.Type<typeof Todo> {}
