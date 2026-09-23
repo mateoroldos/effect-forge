@@ -2,6 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Input } from '@effect-forge/ui/ui/input';
+	import { Button } from '@effect-forge/ui/ui/button';
+	import { Spinner } from '@effect-forge/ui/ui/spinner';
 	import { authClient } from './client.ts';
 	import { fromURL } from './return-path.ts';
 
@@ -81,13 +83,14 @@
 					<p class="text-sm leading-5 text-destructive" role="alert">{message}</p>
 				{/if}
 
-				<button
-					class="inline-flex h-10 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground outline-none transition-[background-color,transform] duration-150 hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-px disabled:pointer-events-none disabled:opacity-50"
+				<Button
+					class="h-10 w-full px-4"
 					type="submit"
 					disabled={submitting}
 				>
+					{#if submitting}<Spinner data-icon="inline-start" />{/if}
 					{submitting ? 'Creating account…' : 'Create account'}
-				</button>
+				</Button>
 			</form>
 
 			<p class="mt-6 text-center text-sm text-muted-foreground">

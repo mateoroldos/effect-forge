@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { Button } from '@effect-forge/ui/ui/button';
+	import { Spinner } from '@effect-forge/ui/ui/spinner';
 	import { Input } from '@effect-forge/ui/ui/input';
 	import * as Field from '@effect-forge/ui/ui/field';
 	import { authClient } from '#lib/features/auth/client.ts';
@@ -87,7 +88,10 @@
 					</Field.Field>
 				</Field.Group>
 				{#if message !== null}<Field.Error>{message}</Field.Error>{/if}
-				<Button type="submit" class="w-full" disabled={creating}>{creating ? 'Creating…' : 'Create organization'}</Button>
+				<Button type="submit" class="w-full" disabled={creating}>
+					{#if creating}<Spinner data-icon="inline-start" />{/if}
+					{creating ? 'Creating…' : 'Create organization'}
+				</Button>
 			</form>
 		</section>
 	</div>

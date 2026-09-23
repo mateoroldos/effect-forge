@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { Button } from '@effect-forge/ui/ui/button';
+	import { Spinner } from '@effect-forge/ui/ui/spinner';
 	import { authClient } from '#lib/features/auth/client.ts';
 
 	let { data, children } = $props();
@@ -40,13 +42,15 @@
 						<p class="text-sm font-medium">{data.viewer.name}</p>
 						<p class="text-xs text-muted-foreground">{data.viewer.email}</p>
 					</div>
-					<button
-						class="inline-flex h-8 items-center justify-center rounded-lg border bg-background px-3 text-sm font-medium outline-none transition-[background-color,transform] duration-150 hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-px disabled:pointer-events-none disabled:opacity-50"
+					<Button
+						variant="outline"
+						class="px-3"
 						onclick={signOut}
 						disabled={signingOut}
 					>
+						{#if signingOut}<Spinner data-icon="inline-start" />{/if}
 						{signingOut ? 'Signing out…' : 'Sign out'}
-					</button>
+					</Button>
 				</div>
 			</div>
 			{#if signOutFailed}

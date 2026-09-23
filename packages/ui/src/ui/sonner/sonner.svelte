@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { mode } from "mode-watcher";
 	import { Toaster as Sonner, type ToasterProps as SonnerProps } from "svelte-sonner";
-	import Loader2Icon from '@lucide/svelte/icons/loader-2';
+	import { Spinner } from '@effect-forge/ui/ui/spinner';
 	import CircleCheckIcon from '@lucide/svelte/icons/circle-check';
 	import OctagonXIcon from '@lucide/svelte/icons/octagon-x';
 	import InfoIcon from '@lucide/svelte/icons/info';
@@ -20,7 +20,7 @@
 	{...restProps}
 >
 	{#snippet loadingIcon()}
-		<Loader2Icon class="size-4 animate-spin" />
+		<Spinner />
 	{/snippet}
 	{#snippet successIcon()}
 		<CircleCheckIcon class="size-4" />
