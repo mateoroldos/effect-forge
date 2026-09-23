@@ -25,7 +25,7 @@ It is opinionated: Effect, Bun, PostgreSQL, and Cloudflare, wired together and d
 
 ```text
 AGENTS.md                conventions every agent reads
-skills/effect-forge/     playbooks, loaded per task
+.agents/skills/effect-forge/     playbooks, loaded per task
 
 apps/
 ├─ web                   SvelteKit and Better Auth composition
@@ -83,7 +83,7 @@ bun run dev:otel
 Open <http://localhost:8000>, service `effect-forge.web`. Development uses native
 single-line logfmt; production uses JSON. Normal `bun run dev` needs no collector.
 
-See [operation logging](skills/effect-forge/references/observability.md) for examples.
+See [operation logging](.agents/skills/effect-forge/references/observability.md) for examples.
 
 ## Organization URLs
 

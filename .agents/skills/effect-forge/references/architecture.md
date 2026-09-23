@@ -24,7 +24,7 @@ adapters/
 infra/                         shared deployment resources and stage policy
 alchemy.run.ts                 application Stack summary
 AGENTS.md                      repository rules
-skills/effect-forge/           task guidance
+.agents/skills/effect-forge/           task guidance
 ```
 
 ## Dependency graph

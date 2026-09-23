@@ -72,4 +72,4 @@ expose these diagnostics through browser-facing errors.
 
 Use a trusted collector. Cloudflare and Effect traces are separate.
 
-See the [README](../../../README.md#local-telemetry) for local viewer commands.
+See the [README](../../../../README.md#local-telemetry) for local viewer commands.

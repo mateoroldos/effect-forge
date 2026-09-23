@@ -2,7 +2,7 @@
 
 Read [`VISION.md`](VISION.md) for the project's purpose, design priorities, and scope. Use it to guide decisions about what belongs here and how the foundation should evolve.
 
-Read [`skills/effect-forge/SKILL.md`](skills/effect-forge/SKILL.md) before changing application code or architecture.
+Read [`.agents/skills/effect-forge/SKILL.md`](.agents/skills/effect-forge/SKILL.md) before changing application code or architecture.
 
 ## Boundaries
 
