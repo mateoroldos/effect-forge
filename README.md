@@ -17,6 +17,8 @@
 
 ## About
 
+Read the [vision](VISION.md) for the project's purpose, design principles, and scope.
+
 Agents write code faster than anyone can review it. `effect-forge` is a monorepo template shaped around that problem — types and traces that make behaviour inspectable, boundaries that keep changes small, and checks fast enough that an agent proves its own work before you read a line of it.
 
 It is opinionated: Effect, Bun, PostgreSQL, and Cloudflare, wired together and deployed by Alchemy.
