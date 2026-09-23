@@ -11,7 +11,5 @@ export const fromURL = (url: {
   readonly searchParams: { readonly get: (name: string) => string | null };
 }): ReturnPath => {
   const candidate = url.searchParams.get("returnTo");
-  return candidate !== null && Schema.is(ReturnPath)(candidate)
-    ? candidate
-    : ReturnPath.make("/organizations");
+  return candidate !== null && Schema.is(ReturnPath)(candidate) ? candidate : ReturnPath.make("/");
 };

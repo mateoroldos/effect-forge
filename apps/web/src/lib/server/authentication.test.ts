@@ -46,7 +46,7 @@ const fixture = Effect.gen(function* () {
   const authenticate = Effect.fn("AuthenticationTest.authenticate")(function* (cookie?: string) {
     const headers = new Headers();
     if (cookie !== undefined) headers.set("cookie", cookie);
-    const service = yield* authentication(request("/organizations", { headers }));
+    const service = yield* authentication(request("/", { headers }));
     return yield* service.authenticate;
   });
 
@@ -58,7 +58,7 @@ describe("Authentication", () => {
     Effect.gen(function* () {
       const { authentication, database, signUp } = yield* fixture;
       const cookie = yield* signUp();
-      const service = yield* authentication(request("/organizations", { headers: { cookie } }));
+      const service = yield* authentication(request("/", { headers: { cookie } }));
       const identity = yield* AuthGuard.requireIdentity.pipe(
         Effect.provideService(Authentication.Service, service),
       );
@@ -75,7 +75,7 @@ describe("Authentication", () => {
   it.effect("requires identity without confusing absence with provider failure", () =>
     Effect.gen(function* () {
       const { authentication, database, signUp } = yield* fixture;
-      const anonymous = yield* authentication(request("/organizations"));
+      const anonymous = yield* authentication(request("/"));
       const absent = yield* AuthGuard.requireIdentity.pipe(
         Effect.provideService(Authentication.Service, anonymous),
         Effect.result,
@@ -85,14 +85,14 @@ describe("Authentication", () => {
         assert.strictEqual(absent.failure._tag, "AuthGuard.Unauthenticated");
 
       const cookie = yield* signUp();
-      const signedIn = yield* authentication(request("/organizations", { headers: { cookie } }));
+      const signedIn = yield* authentication(request("/", { headers: { cookie } }));
       const identity = yield* AuthGuard.requireIdentity.pipe(
         Effect.provideService(Authentication.Service, signedIn),
       );
       assert.strictEqual(identity.viewer.name, "Ada Lovelace");
 
       yield* Effect.promise(() => database.execute(sql`drop table "session"`));
-      const unavailable = yield* authentication(request("/organizations", { headers: { cookie } }));
+      const unavailable = yield* authentication(request("/", { headers: { cookie } }));
       const failed = yield* AuthGuard.requireIdentity.pipe(
         Effect.provideService(Authentication.Service, unavailable),
         Effect.result,
@@ -127,7 +127,7 @@ describe("Authentication", () => {
           createdAt,
         }),
       );
-      const service = yield* auth.authentication(request("/organizations"));
+      const service = yield* auth.authentication(request("/"));
       return { ...auth, service };
     });
 
@@ -213,7 +213,7 @@ describe("Authentication", () => {
         assert.strictEqual(concurrent, first);
         yield* Effect.promise(() => database.delete(authSchema.member));
         assert.strictEqual(yield* service.member(organizationId, userId), first);
-        const nextRequest = yield* authentication(request("/organizations"));
+        const nextRequest = yield* authentication(request("/"));
         assert.isTrue(Option.isNone(yield* nextRequest.member(organizationId, userId)));
         assert.deepEqual(yield* nextRequest.listOrganizations(userId), []);
       }),
@@ -234,7 +234,7 @@ describe("Authentication", () => {
           }),
         );
         assert.isTrue(Option.isNone(yield* service.member(organizationId, userId)));
-        const nextRequest = yield* authentication(request("/organizations"));
+        const nextRequest = yield* authentication(request("/"));
         assert.deepEqual(
           yield* nextRequest.member(organizationId, userId),
           Option.some(OrganizationMember.make({ organizationId, userId, roles: ["member"] })),
@@ -343,7 +343,7 @@ describe("Authentication", () => {
       const auth = yield* fixture;
       const cookie = yield* auth.signUp();
       const headers = new Headers({ cookie });
-      const service = yield* auth.authentication(request("/organizations", { headers }));
+      const service = yield* auth.authentication(request("/", { headers }));
 
       const first = yield* service.authenticate;
       yield* Effect.promise(() => auth.database.delete(authSchema.session));
@@ -446,9 +446,7 @@ describe("Authentication", () => {
           })).status,
           200,
         );
-        const service = yield* auth.authentication(
-          request("/organizations", { headers: { cookie } }),
-        );
+        const service = yield* auth.authentication(request("/", { headers: { cookie } }));
         const identity = yield* AuthGuard.requireIdentity.pipe(
           Effect.provideService(Authentication.Service, service),
         );

@@ -12,7 +12,7 @@ describe("handleError", () => {
   it("keeps pure request cancellation out of unexpected-error diagnostics", () => {
     const report = vi.spyOn(console, "error").mockImplementation(() => {});
     const error = new Error("cancelled", { cause: Cause.interrupt() });
-    const request = new Request("https://example.com/organizations", {
+    const request = new Request("https://example.com/", {
       signal: AbortSignal.abort(),
     });
     expect(handleError({ kind: "unknown", error, event: eventFor(request) })).toEqual({
@@ -33,7 +33,7 @@ describe("handleError", () => {
   ])("reports $name without exposing diagnostics", ({ cause }) => {
     const report = vi.spyOn(console, "error").mockImplementation(() => {});
     const error = new Error("private operation detail", { cause });
-    const request = new Request("https://example.com/organizations", {
+    const request = new Request("https://example.com/", {
       signal: AbortSignal.abort(),
     });
     expect(handleError({ kind: "unknown", error, event: eventFor(request) })).toEqual({
@@ -44,7 +44,7 @@ describe("handleError", () => {
 
   it("leaves deliberate application errors to SvelteKit", () => {
     const report = vi.spyOn(console, "error").mockImplementation(() => {});
-    const request = new Request("https://example.com/organizations");
+    const request = new Request("https://example.com/");
     expect(
       handleError({
         kind: "app",

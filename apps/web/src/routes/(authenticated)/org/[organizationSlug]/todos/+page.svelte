@@ -8,7 +8,7 @@
 <svelte:head><title>Todos · Effect Forge</title></svelte:head>
 
 <main class="mx-auto w-full max-w-3xl px-6 py-12 sm:py-16">
-	<a href="/organizations" class="text-sm text-muted-foreground underline underline-offset-4">Switch organization</a>
+	<a href="/" class="text-sm text-muted-foreground underline underline-offset-4">Switch organization</a>
 	<header class="mt-8 border-b pb-8">
 		<p class="break-words font-mono text-xs tracking-[0.14em] text-primary uppercase">{organization.name}</p>
 		<h1 class="mt-3 font-serif text-5xl tracking-[-0.045em]">Todos</h1>

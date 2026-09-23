@@ -17,7 +17,7 @@ export const requireIdentity = Effect.gen(function* () {
 /** Throws SvelteKit control flow; call only after the request runner, outside Effect. */
 export const reject = (
   failure: Unauthenticated | Authentication.Unavailable,
-  returnTo = "/organizations",
+  returnTo = "/",
 ): never =>
   Match.valueTags(failure, {
     "AuthGuard.Unauthenticated": () =>

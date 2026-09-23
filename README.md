@@ -85,9 +85,10 @@ See [operation logging](skills/effect-forge/references/observability.md) for exa
 
 ## Organization URLs
 
-Organization URLs use handles, for example `/organizations/analytical-engine/todos`.
-Authorization and persistence use the stable organization ID. Handles can be changed
-through Better Auth; changing one changes its URL without redirecting old links.
+`/` is the organization picker; an organization lives under its handle, for example
+`/org/my-org/todos`. The `/org` prefix keeps handles out of the root namespace, so a
+new top-level route can never shadow one. Authorization and persistence use the stable
+organization ID, so changing a handle through Better Auth only changes its URL.
 
 ## Validation
 

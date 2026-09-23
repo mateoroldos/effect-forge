@@ -32,7 +32,7 @@
 	<div class="min-h-screen bg-background">
 		<header class="border-b bg-card/80">
 			<div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-                <a href="/organizations" class="font-mono text-xs font-medium tracking-[0.14em] uppercase">
+                <a href="/" class="font-mono text-xs font-medium tracking-[0.14em] uppercase">
 					Effect Forge
 				</a>
 				<div class="flex items-center gap-4">

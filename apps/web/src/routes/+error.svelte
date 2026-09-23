@@ -14,15 +14,11 @@
 	<div>
 		<h1 class="text-4xl font-semibold tracking-tight">{heading}</h1>
 		<p class="mt-3 text-muted-foreground">{page.error?.message ?? 'Please try again.'}</p>
-		{#if page.status === 403}
-			<a class="mt-6 inline-block underline underline-offset-4" href="/organizations">Back to organizations</a>
-		{:else if page.status >= 500}
-			<div class="mt-6 flex gap-4">
+		<div class="mt-6 flex gap-4">
+			{#if page.status >= 500}
 				<a class="underline underline-offset-4" href={page.url.pathname + page.url.search} data-sveltekit-reload>Refresh page</a>
-				<a class="underline underline-offset-4" href="/">Back home</a>
-			</div>
-		{:else}
-			<a class="mt-6 inline-block underline underline-offset-4" href="/">Back home</a>
-		{/if}
+			{/if}
+			<a class="underline underline-offset-4" href="/">Back to your organizations</a>
+		</div>
 	</div>
 </main>

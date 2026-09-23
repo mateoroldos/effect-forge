@@ -25,7 +25,7 @@
 				return;
 			}
 			try {
-				await goto(`/organizations/${encodeURIComponent(result.data.slug)}/todos`, { refreshAll: true });
+				await goto(`/org/${encodeURIComponent(result.data.slug)}/todos`, { refreshAll: true });
 			} catch (failure) {
 				// oxlint-disable-next-line effecttsgo/global-console -- This navigation failure is recovered locally.
 				console.error(failure);
@@ -63,7 +63,7 @@
 							<li class="rounded-xl border bg-card p-5 shadow-sm">
 								<h2 class="break-words text-lg font-medium">{organization.name}</h2>
 								<p class="mt-1 break-all text-sm text-muted-foreground">{organization.slug}</p>
-								<Button class="mt-5" variant="outline" href={`/organizations/${encodeURIComponent(organization.slug)}/todos`} aria-label={`Open ${organization.name}`}>
+								<Button class="mt-5" variant="outline" href={`/org/${encodeURIComponent(organization.slug)}/todos`} aria-label={`Open ${organization.name}`}>
 									Open todos
 								</Button>
 							</li>
