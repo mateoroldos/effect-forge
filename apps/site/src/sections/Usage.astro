@@ -1,0 +1,41 @@
+---
+import Section from "../components/Section.astro";
+
+const usages = [
+  {
+    title: "Start a project",
+    description: "Use the starter prompt to shape a new product, then keep the parts of Effect Forge that fit.",
+    icon: `<path d="M12 5v14M5 12h14" /><rect x="3" y="3" width="18" height="18" rx="2" />`,
+  },
+  {
+    title: "Build with a coding agent",
+    description: "Keep developing your product with an agent that can follow the repository’s instructions, examples, and checks.",
+    icon: `<path d="m8 8-4 4 4 4m8-8 4 4-4 4m-3-10-2 20" />`,
+  },
+  {
+    title: "Reuse patterns",
+    description: "Borrow the architecture, conventions, and tools you need—even when the full stack is not a fit.",
+    icon: `<path d="m12 3-9 5 9 5 9-5-9-5ZM3 12l9 5 9-5M3 16l9 5 9-5" />`,
+  },
+];
+---
+
+<Section title="Use it your way.">
+  <p class="text-muted-foreground text-pretty">
+    I built Effect Forge as the starting point for my own TypeScript products—a place
+    to refine the structure, tooling, and standards once, then carry them into the next project.
+  </p>
+  <ul class="grid gap-6">
+    {
+      usages.map(({ title, description, icon }) => (
+        <li class="grid grid-cols-[1rem_1fr] gap-x-3 gap-y-1">
+          <svg aria-hidden="true" class="mt-1.5 size-4 text-primary" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" viewBox="0 0 24 24">
+            <Fragment set:html={icon} />
+          </svg>
+          <h3 class="font-serif text-lg">{title}</h3>
+          <p class="col-start-2 max-w-xl text-sm/6 text-muted-foreground text-pretty">{description}</p>
+        </li>
+      ))
+    }
+  </ul>
+</Section>

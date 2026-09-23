@@ -1,40 +1,23 @@
 ---
 import Section from "../components/Section.astro";
-
-// Rendered as one HTML string: JSX inside a <pre> would emit its own indentation.
-// Each comment names the layer, so the tree reads as the architecture rather than
-// a file listing.
-const rows = [
-  { path: "AGENTS.md", comment: "conventions every agent reads" },
-  { path: "skills/effect-forge/", comment: "playbooks, loaded per task" },
-  { path: "" },
-  { path: "apps/" },
-  { path: "├─ web", comment: "TanStack Start" },
-  { path: "└─ api", comment: "Effect HttpApi" },
-  { path: "" },
-  { path: "packages/" },
-  { path: "├─ domain", comment: "the domain model" },
-  { path: "├─ core", comment: "application services and ports" },
-  { path: "├─ contracts", comment: "typed HTTP contracts" },
-  { path: "└─ ui", comment: "shared visual vocabulary" },
-  { path: "" },
-  { path: "adapters/" },
-  { path: "├─ database-postgres", comment: "PostgreSQL" },
-  { path: "├─ auth-better", comment: "authentication" },
-  { path: "└─ telemetry-maple", comment: "runtime observability" },
-  { path: "" },
-  { path: "alchemy.run.ts", comment: "infrastructure as code" },
-] as const;
-
-const tree = rows
-  .map(({ comment, path }) =>
-    comment === undefined
-      ? path
-      : `${path.padEnd(26)}<span class="text-muted-foreground">${comment}</span>`,
-  )
-  .join("\n");
+import ExampleStack from "../components/ExampleStack.astro";
+import InstallCommand from "../components/InstallCommand.svelte";
+import { site } from "../site.ts";
 ---
 
-<Section boxed title="Structure">
-  <pre class="overflow-x-auto font-mono text-sm/6"><code set:html={tree} /></pre>
+<Section title="The principles, in a working app.">
+  <p class="text-muted-foreground text-pretty">
+    The template includes a small SaaS app with accounts, organizations, and shared todos
+    to show these principles in practice. Build on it, adapt it, or discard the example
+    and keep the engineering foundation for your own product.
+  </p>
+  <ExampleStack />
+  <div class="mt-2 flex flex-col gap-3 border-t pt-6">
+    <h3 class="font-serif text-xl">Copy the full template.</h3>
+    <p class="text-muted-foreground text-pretty">
+      I recommend starting with the agent prompt to choose what fits your product.
+      If you want the full stack, copy the template directly and follow the README to set it up.
+    </p>
+    <InstallCommand client:load command={site.install} />
+  </div>
 </Section>

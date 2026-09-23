@@ -1,0 +1,14 @@
+---
+import StartWithAgent from "../components/StartWithAgent.svelte";
+import { site } from "../site.ts";
+---
+
+<section class="flex flex-col items-center gap-6 py-12 text-center">
+  <div class="flex max-w-lg flex-col gap-3">
+    <h2 class="font-serif text-3xl tracking-tight text-balance">Make Effect Forge yours.</h2>
+    <p class="text-muted-foreground text-pretty">
+      Shape a new product with the starter prompt, or explore the complete foundation on GitHub.
+    </p>
+  </div>
+  <StartWithAgent id="final-start-with-agent" client:load prompt={site.starterPrompt} repository={site.repository} />
+</section>

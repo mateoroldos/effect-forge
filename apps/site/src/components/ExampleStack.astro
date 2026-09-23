@@ -1,0 +1,36 @@
+---
+import {
+  siBetterauth,
+  siBun,
+  siCloudflareworkers,
+  siDrizzle,
+  siEffect,
+  siPostgresql,
+  siSvelte,
+  siTypescript,
+} from "simple-icons";
+
+const stack = [
+  { icon: siTypescript, name: "TypeScript" },
+  { icon: siEffect, name: "Effect" },
+  { icon: siSvelte, name: "SvelteKit" },
+  { icon: siBetterauth, name: "Better Auth" },
+  { icon: siPostgresql, name: "PostgreSQL" },
+  { icon: siDrizzle, name: "Drizzle" },
+  { icon: siBun, name: "Bun" },
+  { icon: siCloudflareworkers, name: "Cloudflare" },
+];
+---
+
+<ul aria-label="Technology stack" class="flex flex-wrap gap-x-6 gap-y-4 text-muted-foreground">
+  {
+    stack.map(({ icon, name }) => (
+      <li class="flex items-center gap-2 text-sm">
+        <svg aria-hidden="true" class="size-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+          <path d={icon.path} />
+        </svg>
+        {name}
+      </li>
+    ))
+  }
+</ul>
