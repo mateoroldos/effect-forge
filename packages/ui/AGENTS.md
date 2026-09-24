@@ -10,7 +10,9 @@ state belong to consumers.
 - Fields own presentation, not validation or form state. Consumers connect explicit control IDs, labels, and error descriptions.
 - Inspect changes from component generators before accepting them; root `bump-ui` overwrites the shared component collection and is not a targeted edit command.
 
-The component project root is `packages/ui`: use this package's `components.json`, exports, and `@effect-forge/ui`
+For component work, load [Svelte core practices](../../.agents/skills/svelte-core-bestpractices/SKILL.md)
+and [shadcn-svelte](../../.agents/skills/shadcn-svelte/SKILL.md). Its project root is
+`packages/ui`: use this package's `components.json`, exports, and `@effect-forge/ui`
 aliases. Run component CLI commands here, or with `-c packages/ui` from the root.
 Verify installed Bits UI/component APIs; generic examples do not override local
 ownership, form policy, or intentional component customizations.

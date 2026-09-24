@@ -37,7 +37,8 @@ targets and domains through [project setup](../project-setup.md).
 ## Finish adoption
 
 Keep and rename the shared engineering skill for the product; update its metadata
-and incoming links. Keep area docs only with their consumers. Rewrite setup
+and incoming links. Keep area docs and external skills only with their consumers;
+use [skill maintenance](../../.agents/skills/README.md) for removal. Rewrite setup
 and deployment guides for retained infrastructure. Replace example walkthroughs
 and evaluation tasks with product examples.
 

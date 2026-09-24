@@ -15,6 +15,7 @@ Read by task:
 - Request composition, cancellation, or cleanup: [runtime](docs/runtime.md).
 - Instrumentation or debugging: [observability](docs/observability.md).
 
+For Svelte components/modules, load [Svelte core practices](../../.agents/skills/svelte-core-bestpractices/SKILL.md).
 For shared component usage, follow [UI guidance](../../packages/ui/AGENTS.md).
-Verify prerelease Kit APIs against installed sources/types. This app owns
-remote-function and recovery policy.
+Verify prerelease Kit APIs against installed sources/types; upstream skills do not
+establish compatibility. This app owns remote-function and recovery policy.

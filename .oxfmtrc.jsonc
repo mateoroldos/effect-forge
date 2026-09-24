@@ -1,4 +1,9 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": [".repos/**", "apps/web/src/routeTree.gen.ts"],
+  "ignorePatterns": [
+    ".repos/**",
+    "apps/web/src/routeTree.gen.ts",
+    ".agents/skills/svelte-core-bestpractices/**",
+    ".agents/skills/shadcn-svelte/**",
+  ],
 }

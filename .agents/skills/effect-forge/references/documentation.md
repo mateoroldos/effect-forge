@@ -51,6 +51,8 @@ discovery location, not permission to define another boundary's policy.
 - Keep shared engineering guidance during adoption. Adapt boundary guidance with its
   code; remove both together. Replace product identity and example-specific guidance.
   Template-only instructions belong in `docs/template/` and are removed after adoption.
+- Manage external skills through the [skill maintenance procedure](../../README.md).
+  Owning areas select them and resolve conflicts with installed APIs and local policy.
 
 ## Verify
 

@@ -27,6 +27,7 @@
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
     "prepare": "./scripts/prepare-effect.sh && effect-tsgo patch --oxlint",
+    "skills": "skills",
     "test": "turbo test && vitest run infra scripts"
   },
   "dependencies": {
@@ -44,6 +45,7 @@
     "oxfmt": "0.64.0",
     "oxlint": "1.78.0",
     "oxlint-tsgolint": "7.0.2001",
+    "skills": "1.7.0",
     "turbo": "2.10.11",
     "typescript": "7.0.2",
     "vitest": "catalog:"
