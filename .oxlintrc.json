@@ -3,10 +3,13 @@
   "extends": ["./node_modules/@effect/tsgo/oxlint-presets/recommended.json"],
   "ignorePatterns": [".agents/**", ".repos/**", "node_modules/**", "tools/oxlint/anti-slop/**"],
   "jsPlugins": [
+    { "name": "workspace-boundaries", "specifier": "./tools/oxlint/workspace-boundaries.ts" },
     { "name": "anti-slop", "specifier": "./tools/oxlint/anti-slop/index.ts" },
     { "name": "anti-slop-effect", "specifier": "./tools/oxlint/anti-slop/effect/index.ts" }
   ],
   "rules": {
+    "workspace-boundaries/no-cross-workspace-imports": "error",
+    "typescript/no-require-imports": "error",
     "oxc/no-barrel-file": "error",
     "vitest/no-restricted-vi-methods": [
       "error",
@@ -32,6 +35,17 @@
     "anti-slop-effect/no-service-constructor-imports": "error"
   },
   "overrides": [
+    {
+      "files": [
+        "scripts/check-guidance.ts",
+        "scripts/check-guidance.test.ts",
+        "scripts/check-workspaces.test.ts"
+      ],
+      "rules": {
+        // These small tooling CLIs/tests use direct filesystem/process I/O; application Effect conventions still apply elsewhere.
+        "effecttsgo/node-builtin-import": "off"
+      }
+    },
     {
       "files": ["packages/ui/src/ui/**"],
       "rules": {

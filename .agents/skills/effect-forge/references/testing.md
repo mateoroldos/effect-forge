@@ -63,7 +63,7 @@ Test an expected failure where its policy is owned. A service authorization fail
 bun run check-types
 bun run test
 bun run check
-bun run check:architecture
+bun run check:workspaces
 bun run knip
 ```
 

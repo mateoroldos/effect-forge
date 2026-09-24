@@ -3,7 +3,7 @@ const generatedPath = "/tmp/opencode/effect-forge-auth-schema.ts";
 const schemaPath = `${root}adapters/database-postgres/src/auth/schema.ts`;
 
 const run = (command: ReadonlyArray<string>) => {
-  const child = Bun.spawn(command, {
+  const child = Bun.spawn([...command], {
     cwd: root,
     stdout: "inherit",
     stderr: "inherit",

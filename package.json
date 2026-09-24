@@ -12,8 +12,9 @@
     "auth:schema:generate": "bun scripts/check-auth-schema.ts --write",
     "build": "turbo build",
     "bump-ui": "bunx shadcn-svelte@latest add --overwrite --yes -c packages/ui $(ls packages/ui/src/ui) && bun run format",
-    "check": "bun run format:check && bun run lint && bun run check:architecture && bun run auth:schema:check && bun run db:check && bun run knip && bun run check-types && bun run test",
-    "check:architecture": "bun scripts/check-architecture.ts",
+    "check": "bun run format:check && bun run lint && bun run check:guidance && bun run check:workspaces && bun run auth:schema:check && bun run db:check && bun run knip && bun run check-types && bun run test",
+    "check:guidance": "bun scripts/check-guidance.ts",
+    "check:workspaces": "bun scripts/check-workspaces.ts",
     "check-types": "tsc --noEmit && turbo check-types",
     "db:check": "bun scripts/check-migrations.ts",
     "db:generate": "bun run --cwd adapters/database-postgres db:generate",
@@ -26,7 +27,7 @@
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
     "prepare": "./scripts/prepare-effect.sh && effect-tsgo patch --oxlint",
-    "test": "turbo test && vitest run infra"
+    "test": "turbo test && vitest run infra scripts"
   },
   "dependencies": {
     "@effect/platform-bun": "catalog:",
