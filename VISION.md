@@ -1,80 +1,47 @@
 # Vision
 
-## What I am building
-
 A **TypeScript and Effect foundation for my products**.
 
-Each new project needs structure, tooling, and coding standards. I built Effect
-Forge to make those decisions once and make them well.
+Each project needs structure, tooling, and standards. I built Effect Forge to
+make those decisions once, refine them through use, and carry them into the next
+product. Others should be able to build on it or learn from it.
 
-It puts type-driven development and Effect into practice through clear boundaries,
-working examples, and automated checks. I refine these choices here so each product
-starts from a solid base for humans and agents.
+Code and guidance are both part of the foundation. They should make work easier
+to understand, adapt, and verify—for humans and agents.
 
-Others should be able to use it. Humans and agents should be able to learn from it.
+## Engineering baseline
 
-## The engineering baseline
-
-- **Type-driven models.** Parse untrusted input. Make valid states, expected
-  failures, and dependencies explicit in types.
-- **Clear ownership.** Keep domain logic separate from frameworks and providers.
+- **Type-driven models:** parse untrusted input; express valid states, failures,
+  and dependencies in types.
+- **Clear ownership:** separate application logic from frameworks and providers.
   Give each responsibility one home and a simple interface.
-- **Testable behavior.** Compose services with Effect Layers. Test through their
-  public interfaces with substitute dependencies.
-- **Enforced standards.** Check formatting, lint, types, architecture, migrations,
-  and tests together. Keep the feedback fast.
-- **Working infrastructure.** Include logs, traces, deployment, and separate
-  development and preview environments.
-- **Shared guidance.** Keep agent instructions and examples beside the code.
-  Explain the decisions so humans and agents can apply them consistently.
+- **Testable behavior:** compose Effect Layers and test public interfaces with
+  substitute dependencies.
+- **Enforced standards:** check formatting, lint, types, boundaries, migrations,
+  and tests together. Keep feedback fast and failures easy to investigate.
+- **Working infrastructure:** logs, traces, deployment, and separate development
+  and preview environments.
+- **Shared guidance:** keep instructions and working examples beside the code.
 
-The web app uses SvelteKit, Better Auth, PostgreSQL, Bun, Cloudflare, and Alchemy.
+## Scope
 
-## How to use it
+I mostly build SaaS products. The small example has accounts, organizations, and
+shared todos to demonstrate auth, permissions, and data isolation. It uses
+SvelteKit, Better Auth, PostgreSQL, Bun, Cloudflare, and Alchemy.
 
-### Start with an interview
+Keep the example useful and small, not a catalogue of SaaS features. Products own
+their code: adapt the stack, remove unneeded parts, or reuse patterns.
 
-Give your coding agent the starter prompt. It studies this repository and asks
-about your product, one question at a time. Agree on who it serves, what it does,
-and what it leaves out.
+## Choosing improvements
 
-The agent recommends what to keep, adapt, or omit. Once you agree, it writes your
-VISION.md, scaffolds the project, and documents setup and checks in README.md.
-Apply the existing engineering standards; adapt the application to your product.
+Prefer clarity and correctness. Maintain one working set of defaults. Add tools,
+abstractions, or features only to solve a recurring product need or demonstrate
+an important boundary—not to match other starters.
 
-If the whole stack fits, you can also copy the template directly.
+Start with the [product interview](docs/template/start-project.md), or follow the
+[README](README.md) to run the example and explore its patterns.
 
-### Build with an agent
+## North Star
 
-The agent follows an existing feature and the repository rules. It explains the
-change and reports which checks passed. You can review the code and inspect logs
-and traces when something fails.
-
-### Reuse the patterns
-
-Building a CLI or another kind of app? Use the repository as a reference for
-yourself or an agent. Take the patterns and tools you need.
-
-## How I choose improvements
-
-- **Clarity and correctness first.** Improve the foundation when a design becomes
-  simpler, clearer, or more correct. Every abstraction and tool should earn its place.
-- **Choose good defaults.** Maintain one stack that works well together.
-  Projects that start here own their code and can choose differently.
-- **Enforce important rules.** Use types and checks to catch mistakes.
-  Keep checks fast and failures easy to investigate.
-- **Make additions earn their place.** Solve a recurring problem in real projects
-  or demonstrate an important boundary. Avoid features added just to match other starters.
-
-## The example app
-
-I mostly want to build SaaS products. The example lets people sign up, create an
-organization, and share todos. It shows how auth, permissions, and data isolation work.
-
-Keep it small enough to understand and useful to build from. It should not become
-a catalogue of SaaS features. Keep what your product needs. Change the rest.
-
-## North star
-
-> Start with carefully considered decisions. Spend your energy building the
-> product. Keep the code a pleasure for humans and agents to understand and grow.
+> Make the engineering decisions once. Spend your energy on the product.
+> Keep the code a pleasure for humans and agents to understand and grow.

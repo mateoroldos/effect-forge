@@ -1,136 +1,67 @@
 <p align="center">
-  <img src=".github/assets/logo-light.svg#gh-light-mode-only" alt="effect-forge" width="400">
-  <img src=".github/assets/logo-dark.svg#gh-dark-mode-only" alt="effect-forge" width="400">
+  <img src=".github/assets/logo-light.svg#gh-light-mode-only" alt="Effect Forge" width="400">
+  <img src=".github/assets/logo-dark.svg#gh-dark-mode-only" alt="Effect Forge" width="400">
 </p>
 
-<p align="center">A TypeScript monorepo designed for <strong>human &lt;&gt; agent</strong> collaboration.</p>
+<p align="center">A TypeScript and Effect foundation for humans and agents.</p>
 
 <p align="center">
   <a href="https://effect-forge.com">Website</a>
   &nbsp;·&nbsp;
-  <a href="https://mateoroldos.com/blog/notes-on-agentic-coding/">Notes on agentic coding</a>
+  <a href="VISION.md">Vision</a>
   &nbsp;·&nbsp;
   <a href="LICENSE">MIT</a>
 </p>
 
-<p align="center"><code>bunx degit mateoroldos/effect-forge my-app</code></p>
+## Start a project
 
-## About
+Give your coding agent the [starter prompt](docs/template/start-project.md) to shape your
+product and choose [what to copy or change](docs/template/adapt-template.md).
+To try the full template, follow the setup below.
 
-Read the [vision](VISION.md) for the project's purpose, design principles, and scope.
+## Run the example
 
-Agents write code faster than anyone can review it. `effect-forge` is a monorepo template shaped around that problem — types and traces that make behaviour inspectable, boundaries that keep changes small, and checks fast enough that an agent proves its own work before you read a line of it.
+The example is a SvelteKit app with accounts, organizations, and shared todos.
+Running it needs Cloudflare and Neon access; deployment also needs a GitHub
+repository and a domain in Cloudflare.
 
-It is opinionated: Effect, Bun, PostgreSQL, and Cloudflare, wired together and deployed by Alchemy.
-
-```text
-AGENTS.md                conventions every agent reads
-.agents/skills/effect-forge/     playbooks, loaded per task
-
-apps/
-├─ web                   SvelteKit and Better Auth composition
-└─ site                  the project's landing page
-
-packages/
-├─ domain                the domain model
-├─ core                  application services and ports
-└─ ui                    shared visual vocabulary
-
-adapters/
-└─ database-postgres     PostgreSQL port implementations
-
-infra/                   shared deployment resources and stage policy
-alchemy.run.ts           application Stack summary
-```
-
-SvelteKit remote functions call application services directly. The Web Worker hosts Better Auth behind same-origin routes and projects authenticated principals into application operations. Independent API and CLI clients are added only when their concrete contracts and credentials are known.
-
-The example flow is a shared todo list: sign up, create an organization, and add or
-complete todos with its members. Better Auth owns organizations and memberships;
-`TodoDirectory` owns application permissions and `TodoStore` owns organization-scoped persistence.
-
-## Development
-
-Bootstrap a checkout and authenticate the local Alchemy profile:
+Install [Bun](https://bun.sh) and [mise](https://mise.jdx.dev/getting-started.html),
+then copy the template. Setup installs the repository's pinned tools and dependencies.
 
 ```sh
+bunx degit mateoroldos/effect-forge my-app
+cd my-app
 mise trust
 mise run setup
-bun alchemy profile edit
 ```
 
+Development uses Cloudflare and Neon resources through an Alchemy profile. For a
+new project, complete [project setup](docs/project-setup.md), including
+the first `staging` deployment. For an existing project, obtain the development
+profile credentials and access to staging.
+
 ```sh
+bun alchemy profile edit
 bun run dev
 ```
 
-`mise` derives `ALCHEMY_STAGE` from the user and checkout directory. Each clone, `git worktree`, or `jj workspace` therefore gets its own Neon branch and local Alchemy stage, branched from the staging project — so staging has to exist first.
+Open the Web URL printed by Alchemy. Sign up, create an organization, and add a
+todo; refresh to confirm it persists. If startup cannot find staging, check the
+profile and that the [staging deployment](docs/project-setup.md#5-create-staging) succeeded.
 
-### Local telemetry
-
-Start the viewer in one terminal:
-
-```sh
-docker run --rm -p 127.0.0.1:8000:8000 -p 127.0.0.1:4318:4318 \
-  ghcr.io/ctrlspice/otel-desktop-viewer:v0.5.0 --host 0.0.0.0 --open-browser=false
-```
-
-Then run the app in another:
+## Check your changes
 
 ```sh
-bun run dev:otel
-```
-
-Open <http://localhost:8000>, service `effect-forge.web`. Development uses native
-single-line logfmt; production uses JSON. Normal `bun run dev` needs no collector.
-
-See [operation logging](.agents/skills/effect-forge/references/observability.md) for examples.
-
-## Organization URLs
-
-`/` is the organization picker; an organization lives under its handle, for example
-`/org/my-org/todos`. The `/org` prefix keeps handles out of the root namespace, so a
-new top-level route can never shadow one. Authorization and persistence use the stable
-organization ID, so changing a handle through Better Auth only changes its URL.
-
-## Validation
-
-```sh
-bun run test    # colocated tests
-bun run check   # formatting, lint, types, and tests
+bun run check   # format, lint, types, tests, boundaries, schemas, migrations, dead code, guidance
 bun run build   # production builds
 ```
 
-CI runs `check` and `build`. Colocated tests cover domain and application behavior,
-provider HTTP handling, and SQL through PGlite.
+CI runs both commands. See the guides for [database changes](adapters/database-postgres/README.md),
+[local telemetry](apps/web/docs/observability.md#local-telemetry), and
+[deployment](docs/deployment.md).
 
-### Database changes
+## Find your way around
 
-After changing Better Auth options, run `bun run auth:schema:generate`. After changing
-either authentication or application table definitions, run `bun run db:generate`.
-Review and commit the generated SQL and snapshots with the schema change. Add new
-migrations instead of editing migrations already applied to a database.
-
-`bun run db:check` uses the existing Drizzle configuration and a disposable copy of
-the migration history to detect missing migrations. It runs as part of `check`;
-PGlite tests apply the checked-in SQL. Alchemy applies that migration directory to
-Neon during provisioning, before the Worker uses the database.
-
-## Deployment
-
-```text
-internal PR with preview label
-  → CI
-  → EffectForge:pr-<number>
-  → preview URL posted on the PR
-
-label removed or PR closed
-  → preview destroyed
-
-merge to main
-  → CI
-  → EffectForge:prod
-```
-
-Pull requests without the `preview` label run validation only. Forks cannot access deployment credentials. Deployments to the same stage are queued because `Cloudflare.state()` does not lock concurrent writes.
-
-[`docs/deployment.md`](docs/deployment.md) covers the stages and the one-time maintainer setup.
+- [Agent instructions](AGENTS.md) and [change workflow](.agents/skills/effect-forge/SKILL.md)
+- [Architecture](.agents/skills/effect-forge/references/architecture.md)
+- [Trace a todo](docs/trace-a-todo.md) through the code

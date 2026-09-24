@@ -1,42 +1,37 @@
 ---
 name: effect-forge
-description: Use when building, extending, reviewing, or debugging an Effect Forge repository. Triggers include SvelteKit routes and remote functions, Svelte UI, Effect services, ports, adapters, Layers, schemas, PostgreSQL, Better Auth, tests, packages, and Alchemy resources.
+description: Use when changing or reviewing Effect Forge code, architecture, tests, documentation, or agent guidance.
 ---
 
 # Effect Forge
 
-Effect Forge is an AI-first monorepo with a SvelteKit application that hosts Better Auth and composes application services over shared infrastructure.
+For documentation or skill work, follow [guidance maintenance](references/documentation.md).
+For code changes, use the workflow below. During a review, trace the same boundaries
+and report findings rather than implementing a change.
 
-## Read by task
+## 1. Locate the change
 
-- Repository structure, dependencies, transport, or deployment: [`references/architecture.md`](references/architecture.md)
-- Svelte, routing, remote functions, forms, or SSR: [`references/frontend.md`](references/frontend.md)
-- Effect services, ports, schemas, errors, or Layers: [`references/effect-conventions.md`](references/effect-conventions.md)
-- Adding an end-to-end capability: [`references/feature-workflow.md`](references/feature-workflow.md)
-- Test placement, test Layers, or validation: [`references/testing.md`](references/testing.md)
-- Operation logging, tracing, or exporter setup: [`references/observability.md`](references/observability.md)
+Read the affected local `AGENTS.md` files and follow the closest working example.
+Identify the requested behavior, failure cases, and owners. Agree on scope before
+editing when those choices are uncertain.
 
-Read the nearest `AGENTS.md`, inspect installed dependency versions, and follow an existing capability before writing code.
+Ready when the entrypoint, dependencies, and public test seams are known.
+Read [architecture](references/architecture.md) when changing their boundaries.
 
-## Repository model
+## 2. Build the smallest slice
 
-| Location                     | Responsibility                                     |
-| ---------------------------- | -------------------------------------------------- |
-| `apps/web`                   | SvelteKit, Better Auth, and server composition     |
-| `packages/domain`            | Pure shared values, schemas, and decisions         |
-| `packages/core`              | Application services and owned ports               |
-| `packages/ui`                | Shared Svelte components and visual vocabulary     |
-| `adapters/database-postgres` | PostgreSQL port implementations                    |
-| `apps/*`                     | Production Layers and runtime-native observability |
+Add only the layers the behavior needs. Keep policy with its owner and translate
+external input and failures at the boundary. Follow [Effect conventions](references/effect.md)
+for schemas, services, errors, and Layers.
 
-## Capability paths
+Ready when the requested behavior and expected failures are handled, and affected
+callers, composition, and local integration requirements are accounted for.
 
-```text
-browser
-  → SvelteKit remote function
-  → application service
-  → owned port
-  → adapter
-```
+## 3. Verify and finish
 
-Better Auth's Svelte client calls the provider handler on the same-origin Web route. Remote functions are the web application's native server boundary and invoke core directly. Add a public contract only when an independent client demonstrates one.
+Use [testing guidance](references/testing.md) to prove the changed behavior through
+its public interface. Update the documentation that owns any changed rule or workflow.
+Follow the root validation policy.
+
+Done when each material behavior change has evidence or a reported gap, and the
+handoff states what changed and which checks passed or failed.
