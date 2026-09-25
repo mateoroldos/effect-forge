@@ -20,7 +20,6 @@ const patterns = [
   "*.md",
   ".agents/skills/**/*.md",
   "docs/**/*.md",
-  "evals/**/*.md",
   "patches/**/*.md",
   "apps/*/*.md",
   "apps/*/docs/**/*.md",

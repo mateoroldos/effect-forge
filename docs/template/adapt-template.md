@@ -14,8 +14,7 @@ For pattern-only reuse, take just the pattern and its dependencies.
 - **Optional:** web, UI, site, auth, organizations, todos, database, cloud deployment.
   Keep only what the product needs.
 - **Remove:** unchosen integrations, unused dependencies/docs, and template branding.
-  Replace example evals with product tasks. Never copy credentials, `.env`, `.alchemy`,
-  caches, `node_modules`, or Git/Jujutsu history.
+  Never copy credentials, `.env`, `.alchemy`, caches, `node_modules`, or Git/Jujutsu history.
 
 ## Check connected files
 
@@ -40,7 +39,7 @@ Keep and rename the shared engineering skill for the product; update its metadat
 and incoming links. Keep area docs and external skills only with their consumers;
 use [skill maintenance](../../.agents/skills/README.md) for removal. Rewrite setup
 and deployment guides for retained infrastructure. Replace example walkthroughs
-and evaluation tasks with product examples.
+with product examples.
 
 Once product instructions and setup are ready, remove `docs/template/`, including
 this guide. Update README/vision links and remove or replace the site's starter-prompt

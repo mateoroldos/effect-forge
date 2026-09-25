@@ -60,8 +60,3 @@ Check claims against source and update incoming links. Run `bun run check:guidan
 and root validation. The checker validates skill YAML metadata and first-party
 local inline file links; it does not verify anchors, remote links, commands,
 or procedural correctness. Check commands in their documented working directory.
-
-For meaningful workflow or routing changes, run a relevant [guidance eval case](../../../../evals/guidance/README.md)
-three times with and three times without the guidance, and record the scores with the
-review. Wording-only changes need no agent trial. Judge discovery and task outcomes, not
-word counts or passing static checks alone.
