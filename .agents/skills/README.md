@@ -28,10 +28,11 @@ harness change; add a link only for another harness in use.
 
 After a change, review the bundle and lock diff, update the owner's reading link,
 and run root validation plus one relevant fresh-agent task. Keep upstream files
-unmodified and excluded from formatting; local link checks apply only
-to first-party guidance. `check:guidance` still validates every skill's required
-YAML metadata and checks that locked skills are present.
+unmodified; `.oxfmtrc.jsonc` excludes every installed bundle from formatting, so a new
+skill needs no formatter edit. Local link checks apply only to first-party guidance;
+`check:guidance` still validates every skill's required YAML metadata and checks that
+locked skills are present.
 
-When removing a boundary, remove skills with no remaining consumers, their reading
-links, and formatter exclusions. Adapt the project-owned skill rather than deleting
-the engineering workflow during template adoption.
+When removing a boundary, remove skills with no remaining consumers and their reading
+links. Adapt the project-owned skill rather than deleting the engineering workflow
+during template adoption.

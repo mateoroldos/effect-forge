@@ -3,7 +3,9 @@
   "ignorePatterns": [
     ".repos/**",
     "apps/web/src/routeTree.gen.ts",
-    ".agents/skills/svelte-core-bestpractices/**",
-    ".agents/skills/shadcn-svelte/**",
+    // Vendored skill bundles stay byte-identical to their upstream revision; the
+    // project-owned skill is formatted like the rest of the repository.
+    ".agents/skills/*/**",
+    "!.agents/skills/effect-forge/**",
   ],
 }
