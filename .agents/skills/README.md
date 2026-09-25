@@ -22,7 +22,9 @@ can write files; do not use it as a read-only CI check.
 
 Before adding a skill, inspect its instructions, references, license, version/tool
 requirements, and conflicts with the owning area's policy. Install only selected
-skills into `.agents/skills/`; add other harness links only when needed.
+skills into `.agents/skills/`. Harnesses reach that directory through committed
+symlinks—`.claude/skills` serves Claude Code—so installing a skill needs no
+harness change; add a link only for another harness in use.
 
 After a change, review the bundle and lock diff, update the owner's reading link,
 and run root validation plus one relevant fresh-agent task. Keep upstream files
